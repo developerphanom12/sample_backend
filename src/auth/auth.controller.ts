@@ -9,6 +9,7 @@ import { AUTH_ROUTES, AUTH_SWAGGER } from './auth.constants';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
 import { RegistrationDTO } from './dto/registration.dto';
+import { SocialLoginDTO } from './dto/social-auth.dto';
 import { AuthEntity } from './entityes/auth.entity';
 
 @ApiBearerAuth()
@@ -39,5 +40,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   public async signIn(@Body() body: LoginDTO) {
     return await this.authService.signIn(body);
+  }
+
+  @Post(AUTH_ROUTES.o_auth)
+  @ApiOperation({ summary: AUTH_SWAGGER.sign_in })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: AUTH_SWAGGER.success,
+    type: AuthEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async socialSignIn(@Body() body: SocialLoginDTO) {
+    return await this.authService.socialSignIn(body);
   }
 }
