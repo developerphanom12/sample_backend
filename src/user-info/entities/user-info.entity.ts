@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { AuthEntity } from 'src/auth/entityes/auth.entity';
+import { AuthEntity } from 'src/auth/entities/auth.entity';
 import {
   Column,
   CreateDateColumn,
@@ -17,14 +17,22 @@ export class UserInfoEntity {
   id: string;
 
   @CreateDateColumn()
+  @Exclude()
   created: Date;
 
   @UpdateDateColumn()
   @Exclude()
   updated: Date;
 
-  @Column()
+  @Column({
+    default: '',
+  })
   currency: string;
+
+  @Column({
+    default: '',
+  })
+  date_format: string;
 
   @OneToOne((type) => AuthEntity, (data) => data.userInfo)
   @JoinColumn()
