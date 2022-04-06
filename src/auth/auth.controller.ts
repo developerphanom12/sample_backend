@@ -5,7 +5,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { User } from 'src/shared/decorators/user.decorator';
+import { User } from '../shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
 import { AUTH_ROUTES, AUTH_SWAGGER } from './auth.constants';
 import { AuthService } from './auth.service';

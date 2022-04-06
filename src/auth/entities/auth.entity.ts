@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { SocialAuthEntity } from './social-auth.entity';
-import { UserInfoEntity } from 'src/user-info/entities/user-info.entity';
+import { UserInfoEntity } from '../../user-info/entities/user-info.entity';
 
 @Entity('auth')
 export class AuthEntity {
