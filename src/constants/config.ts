@@ -46,7 +46,7 @@ export const config = () => ({
     password: ENV_HASH_MAP.password[ENV],
     database: ENV_HASH_MAP.database[ENV],
     synchronize: true,
-    // dropSchema: true,
+    //dropSchema: true,
     logging: false,
     entities: ['dist/**/*.entity.js'],
     subscribers: ['dist/**/*.subscriber.js'],

@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuthEntity } from './entityes/auth.entity';
+import { AuthEntity } from './entities/auth.entity';
 import { JwtService } from '@nestjs/jwt';
 import { EXPIRE_JWT_TIME } from 'src/constants/jwt';
 import * as bcrypt from 'bcrypt';
@@ -10,8 +10,8 @@ import { deserialize, serialize } from 'class-transformer';
 import { RegistrationDTO } from './dto/registration.dto';
 import { LoginDTO } from './dto/login.dto';
 import { SocialLoginDTO } from './dto/social-auth.dto';
-import { SocialAuthEntity } from './entityes/social-auth.entity';
-import { UserInfoEntity } from 'src/user-info/entityes/user-info.entity';
+import { SocialAuthEntity } from './entities/social-auth.entity';
+import { UserInfoEntity } from 'src/user-info/entities/user-info.entity';
 
 @Injectable()
 export class AuthService {
@@ -175,5 +175,26 @@ export class AuthService {
         id,
       },
     });
+  }
+
+  async logOut(id: string) {
+    const user = await this.authRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    if (!user) {
+      throw new HttpException("NOT FOUND", HttpStatus.NOT_FOUND);
+    }
+
+    const publicKey = await bcrypt.genSalt(6);
+
+    await this.authRepository.save({
+      ...user,
+      publicKey,
+    });
+    return {
+      message: 'Success',
+    };
   }
 }

@@ -36,8 +36,6 @@ import { UserInfoModule } from './user-info/user-info.module';
       provide: APP_FILTER,
       useClass: HttpErrorFilter,
     },
-    UserInfoService,
   ],
-  controllers: [UserInfoController],
 })
 export class AppModule {}
