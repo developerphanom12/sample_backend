@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { AuthEntity } from 'src/auth/entities/auth.entity';
+import { AuthEntity } from '../../auth/entities/auth.entity';
 import {
   Column,
   CreateDateColumn,

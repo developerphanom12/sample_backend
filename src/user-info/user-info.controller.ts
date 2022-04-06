@@ -9,8 +9,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { User } from 'src/shared/decorators/user.decorator';
-import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { User } from '../shared/decorators/user.decorator';
+import { JwtAuthenticationGuard } from '../shared/guards';
 import { UpdateUserInfoDTO } from './dto/update-user-info.dto';
 import { UserInfoDTO } from './dto/user-info.dto';
 import { UserInfoEntity } from './entities/user-info.entity';

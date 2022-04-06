@@ -4,14 +4,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthEntity } from './entities/auth.entity';
 import { JwtService } from '@nestjs/jwt';
-import { EXPIRE_JWT_TIME } from 'src/constants/jwt';
+import { EXPIRE_JWT_TIME } from '../constants/jwt';
 import * as bcrypt from 'bcrypt';
 import { deserialize, serialize } from 'class-transformer';
 import { RegistrationDTO } from './dto/registration.dto';
 import { LoginDTO } from './dto/login.dto';
 import { SocialLoginDTO } from './dto/social-auth.dto';
 import { SocialAuthEntity } from './entities/social-auth.entity';
-import { UserInfoEntity } from 'src/user-info/entities/user-info.entity';
+import { UserInfoEntity } from '../user-info/entities/user-info.entity';
 
 @Injectable()
 export class AuthService {
@@ -197,4 +197,5 @@ export class AuthService {
       message: 'Success',
     };
   }
+  
 }
