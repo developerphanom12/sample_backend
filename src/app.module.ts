@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_FILTER } from '@nestjs/core/constants';
 import { HttpErrorFilter } from './shared/http-error.filter';
 import { UserInfoModule } from './user-info/user-info.module';
+import { CurrencyModule } from './currency/currency.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { UserInfoModule } from './user-info/user-info.module';
     ScheduleModule.forRoot(),
     AuthModule,
     UserInfoModule,
+    CurrencyModule,
   ],
   providers: [
     {

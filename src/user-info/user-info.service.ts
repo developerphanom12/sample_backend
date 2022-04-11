@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { UpdateUserInfoDTO } from './dto/update-user-info.dto';
 import { UserInfoDTO } from './dto/user-info.dto';
 import { UserInfoEntity } from './entities/user-info.entity';
+import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 
 @Injectable()
 export class UserInfoService {
@@ -13,6 +14,8 @@ export class UserInfoService {
     private userInfoRepository: Repository<UserInfoEntity>,
     @InjectRepository(AuthEntity)
     private authRepository: Repository<AuthEntity>,
+    @InjectRepository(CurrencyEntity)
+    private currencyRepository: Repository<CurrencyEntity>,
   ) {}
 
   async createUserInfo(id: string, body: UserInfoDTO) {
@@ -33,6 +36,7 @@ export class UserInfoService {
         HttpStatus.BAD_REQUEST,
       );
     }
+
     const payloadUserInfo = JSON.parse(JSON.stringify(body)); // Clear undefined
 
     await this.userInfoRepository.save({
@@ -53,14 +57,13 @@ export class UserInfoService {
   }
 
   async getUserInfo(id: string) {
-    const user = await this.authRepository.findOne({
+    const userInfo = await this.userInfoRepository.findOne({
       where: {
-        id: id,
+        user: { id: id },
       },
-      relations: ['userInfo'],
+      relations: ['currency'],
     });
-
-    return user.userInfo;
+    return userInfo;
   }
 
   async updateUserInfo(id: string, body: UpdateUserInfoDTO) {
@@ -75,14 +78,26 @@ export class UserInfoService {
       throw new HttpException('USER INFO NOT EXIST', HttpStatus.BAD_REQUEST);
     }
 
+    const currency = await this.currencyRepository.findOne({
+      where: { id: body.currency },
+    });
+    if (!currency) {
+      throw new HttpException(
+        'CURRENCY DOES NOT EXIST',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     await this.userInfoRepository.update(user.userInfo.id, {
-      ...body,
+      date_format: body.date_format,
+      currency: currency,
     });
 
     return await this.userInfoRepository.findOne({
       where: {
         id: user.userInfo.id,
       },
+      relations: ['currency'],
     });
   }
 }

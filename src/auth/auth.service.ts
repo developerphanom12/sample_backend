@@ -12,6 +12,7 @@ import { LoginDTO } from './dto/login.dto';
 import { SocialLoginDTO } from './dto/social-auth.dto';
 import { SocialAuthEntity } from './entities/social-auth.entity';
 import { UserInfoEntity } from '../user-info/entities/user-info.entity';
+import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,8 @@ export class AuthService {
     private socialAuthRepository: Repository<SocialAuthEntity>,
     @InjectRepository(UserInfoEntity)
     private userInfoRepository: Repository<UserInfoEntity>,
+    @InjectRepository(CurrencyEntity)
+    private currencyRepository: Repository<CurrencyEntity>,
     private configService: ConfigService,
   ) {}
 

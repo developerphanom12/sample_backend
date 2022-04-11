@@ -45,7 +45,7 @@ export const config = () => ({
     username: ENV_HASH_MAP.user_name[ENV],
     password: ENV_HASH_MAP.password[ENV],
     database: ENV_HASH_MAP.database[ENV],
-    synchronize: true,
+    synchronize: false,
     //dropSchema: true,
     logging: false,
     entities: ['dist/**/*.entity.js'],
@@ -55,6 +55,8 @@ export const config = () => ({
     cli: {
       migrationsDir: 'src/migration',
     },
+    seeds: ['src/seeds/**/*.seed.js'],
+    factories: ['src/factories/**/*.factory.js'],
   },
   urls: {
     apiUrl: ENV_HASH_MAP.api_url[ENV],
