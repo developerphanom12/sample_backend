@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 
 @Entity('user-info')
 export class UserInfoEntity {
@@ -27,14 +29,13 @@ export class UserInfoEntity {
   @Column({
     default: '',
   })
-  currency: string;
-
-  @Column({
-    default: '',
-  })
   date_format: string;
 
   @OneToOne((type) => AuthEntity, (data) => data.userInfo)
   @JoinColumn()
   user: AuthEntity;
+
+  @JoinColumn()
+  @ManyToOne((type) => CurrencyEntity, (data) => data.userInfo)
+  currency: CurrencyEntity;
 }

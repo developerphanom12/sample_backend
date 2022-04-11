@@ -6,7 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { User } from '../shared/decorators/user.decorator';
-import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { JwtAuthenticationGuard } from '../shared/guards';
 import { AUTH_ROUTES, AUTH_SWAGGER } from './auth.constants';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
