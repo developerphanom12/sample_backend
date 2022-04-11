@@ -4,6 +4,7 @@ import { EOAuthTypes } from '../auth.constants';
 
 export class SocialLoginDTO {
   @ApiProperty()
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   socialAccountId: string;

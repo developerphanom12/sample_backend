@@ -13,6 +13,7 @@ import { SocialLoginDTO } from './dto/social-auth.dto';
 import { SocialAuthEntity } from './entities/social-auth.entity';
 import { UserInfoEntity } from '../user-info/entities/user-info.entity';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
+import { EOAuthTypes } from './auth.constants';
 
 @Injectable()
 export class AuthService {
@@ -105,10 +106,31 @@ export class AuthService {
   async socialSignIn(data: SocialLoginDTO) {
     const { socialAccountId, type } = data;
 
-    const socialAccount = await this.socialAuthRepository.findOne({
-      where: { [`${type.toLowerCase()}Id`]: socialAccountId },
-      relations: ['auth'],
-    });
+    let socialAccount = null;
+
+    if (type === EOAuthTypes.capium) {
+      if (!data.email) {
+        throw new HttpException(
+          'Capium should contain email',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      socialAccount = await this.socialAuthRepository.findOne({
+        where: { [`${type.toLowerCase()}Email`]: data.email },
+        relations: ['auth'],
+      });
+    } else {
+      if (!data.socialAccountId) {
+        throw new HttpException(
+          'Apple should contain id',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      socialAccount = await this.socialAuthRepository.findOne({
+        where: { [`${type.toLowerCase()}Id`]: socialAccountId },
+        relations: ['auth'],
+      });
+    }
 
     if (!socialAccount) {
       const publicKey = await bcrypt.genSalt(6);
@@ -187,7 +209,7 @@ export class AuthService {
       },
     });
     if (!user) {
-      throw new HttpException("NOT FOUND", HttpStatus.NOT_FOUND);
+      throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
     }
 
     const publicKey = await bcrypt.genSalt(6);
@@ -200,5 +222,4 @@ export class AuthService {
       message: 'Success',
     };
   }
-  
 }
