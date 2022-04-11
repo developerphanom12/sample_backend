@@ -45,7 +45,7 @@ export const config = () => ({
     username: ENV_HASH_MAP.user_name[ENV],
     password: ENV_HASH_MAP.password[ENV],
     database: ENV_HASH_MAP.database[ENV],
-    synchronize: false,
+    synchronize: true,
     //dropSchema: true,
     logging: false,
     entities: ['dist/**/*.entity.js'],

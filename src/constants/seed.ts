@@ -1,10 +1,32 @@
 export const CurrencySeed = [
     {
+      value: "GBP",
+      country: "United Kingdom",
+      description: "Pounds",
+    },
+    {
       value: "USD",
-      description: "American dollar",
+      country: "United States",
+      description: "Dollars",
     },
     {
       value: "EUR",
-      description: "European Euro",
+      country: "Europa",
+      description: "Euros",
+    },
+    {
+      value: "CAD",
+      country: "Canada",
+      description: "Dollars",
+    },
+    {
+      value: "AUD",
+      country: "Australia",
+      description: "Dollars",
+    },
+    {
+      value: "AED",
+      country: "United Arab Emirates",
+      description: "Dollars",
     },
   ];

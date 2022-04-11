@@ -28,6 +28,9 @@ export class CurrencyEntity {
   value: string;
 
   @Column({ nullable: true })
+  country: string;
+
+  @Column({ nullable: true })
   description: string;
 
   @OneToMany((type) => UserInfoEntity, (data) => data.currency)
