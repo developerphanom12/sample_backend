@@ -109,16 +109,7 @@ export class AuthService {
     let socialAccount = null;
 
     if (type === EOAuthTypes.capium) {
-      if (!data.email) {
-        throw new HttpException(
-          'Capium should contain email',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      socialAccount = await this.socialAuthRepository.findOne({
-        where: { [`${type.toLowerCase()}Email`]: data.email },
-        relations: ['auth'],
-      });
+      return await this.signInWithCapium(data);
     } else {
       if (!data.socialAccountId) {
         throw new HttpException(
@@ -179,6 +170,71 @@ export class AuthService {
       user_info: await deserialize(UserInfoEntity, serializedUserInfo),
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Id`]: socialAccountId },
+      }),
+      showSetPassword: !!user.email && !user.password,
+    };
+  }
+
+  async signInWithCapium(data: SocialLoginDTO) {
+    const { email, type } = data;
+
+    if (!data.email) {
+      throw new HttpException(
+        'Capium should contain email',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const socialAccount = await this.socialAuthRepository.findOne({
+      where: { [`${type.toLowerCase()}Email`]: data.email },
+      relations: ['auth'],
+    });
+
+    if (!socialAccount) {
+      const publicKey = await bcrypt.genSalt(6);
+      const { email, fullName } = data;
+      const newUser = await this.authRepository.save({
+        fullName: fullName ? fullName.trim() : '',
+        publicKey,
+      });
+      await this.socialAuthRepository.save({
+        [`${type.toLowerCase()}Email`]: email,
+        auth: newUser,
+      });
+
+      const token = await this.createToken(newUser);
+      return {
+        user: await this.userSerializer(newUser),
+        user_info: null,
+        socialAccount: await this.socialAuthRepository.findOne({
+          where: { [`${type.toLowerCase()}Email`]: email },
+        }),
+        token,
+      };
+    }
+
+    const user = await this.authRepository.findOne({
+      where: { id: socialAccount.auth.id },
+      relations: ['userInfo'],
+    });
+
+    const userInfo = user.userInfo;
+    if (!userInfo) {
+      return {
+        user: await this.userSerializer(user),
+        token: await this.createToken(user),
+        user_info: null,
+        socialAccount: await this.socialAuthRepository.findOne({
+          where: { [`${type.toLowerCase()}Email`]: email },
+        }),
+      };
+    }
+    const serializedUserInfo = serialize(userInfo);
+    return {
+      user: await this.userSerializer(user),
+      token: await this.createToken(user),
+      user_info: await deserialize(UserInfoEntity, serializedUserInfo),
+      socialAccount: await this.socialAuthRepository.findOne({
+        where: { [`${type.toLowerCase()}Email`]: email },
       }),
       showSetPassword: !!user.email && !user.password,
     };
