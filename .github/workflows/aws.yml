@@ -16,41 +16,41 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Set env vars
+    - name: Set env vars (common)
       run: |
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
         echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
         echo "AWS_REGION=eu-west-2" >> $GITHUB_ENV
 
-        if [[ "${{github.base_ref}}" == "main" || "${{github.ref}}" == "refs/heads/main" ]]; then
-          echo "branch=development & env=development"
-          echo "ENV=development" >> $GITHUB_ENV
-          echo "DB_HOST=${{ secrets.DEVELOPMENT_DB_HOST }}" >> $GITHUB_ENV
-          echo "DB_NAME=${{ secrets.DEVELOPMENT_DB_NAME }}" >> $GITHUB_ENV
-          echo "DB_USERNAME=${{ secrets.DEVELOPMENT_DB_USERNAME }}" >> $GITHUB_ENV
-          echo "DB_PASSWORD=${{ secrets.DEVELOPMENT_DB_PASSWORD }}" >> $GITHUB_ENV
+    - name: Set env vars (development)
+      if: endsWith(github.ref, '/main')
+      run: |
+        echo "branch=development & env=development"
+        echo "ENV=development" >> $GITHUB_ENV
+        echo "DB_HOST=${{ secrets.DEVELOPMENT_DB_HOST }}" >> $GITHUB_ENV
+        echo "DB_NAME=${{ secrets.DEVELOPMENT_DB_NAME }}" >> $GITHUB_ENV
+        echo "DB_USERNAME=${{ secrets.DEVELOPMENT_DB_USERNAME }}" >> $GITHUB_ENV
+        echo "DB_PASSWORD=${{ secrets.DEVELOPMENT_DB_PASSWORD }}" >> $GITHUB_ENV
+        echo "ECR_REPOSITORY=rh-api-dev-repo" >> $GITHUB_ENV
+        echo "ECS_SERVICE=rh-dev-service" >> $GITHUB_ENV
+        echo "ECS_CLUSTER=receipt-hub-dev-cluster" >> $GITHUB_ENV
+        echo "CONTAINER_NAME=rh-dev-container" >> $GITHUB_ENV
+        echo "ECS_TASK_DEFINITION=deploy/task-definition-dev.json" >> $GITHUB_ENV
 
-          echo "ECR_REPOSITORY=rh-api-dev-repo" >> $GITHUB_ENV
-          echo "ECS_SERVICE=rh-dev-service" >> $GITHUB_ENV
-          echo "ECS_CLUSTER=receipt-hub-dev-cluster" >> $GITHUB_ENV
-          echo "CONTAINER_NAME=rh-dev-container" >> $GITHUB_ENV
-          echo "ECS_TASK_DEFINITION=deploy/task-definition-dev.json" >> $GITHUB_ENV
-
-        else
-          echo "branch=stage & ENV=staging"
-          echo "ENV=staging" >> $GITHUB_ENV
-          echo "DB_HOST=${{ secrets.STAGING_DB_HOST }}" >> $GITHUB_ENV
-          echo "DB_NAME=${{ secrets.STAGING_DB_NAME }}" >> $GITHUB_ENV
-          echo "DB_USERNAME=${{ secrets.STAGING_DB_USERNAME }}" >> $GITHUB_ENV
-          echo "DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}" >> $GITHUB_ENV
-
-          echo "ECR_REPOSITORY=rh-api-stage-repo" >> $GITHUB_ENV
-          echo "ECS_SERVICE=rh-stage-service" >> $GITHUB_ENV
-          echo "ECS_CLUSTER=receipt-hub-stage-cluster" >> $GITHUB_ENV
-          echo "CONTAINER_NAME=rh-stage-container" >> $GITHUB_ENV
-          echo "ECS_TASK_DEFINITION=deploy/task-definition-stage.json" >> $GITHUB_ENV
-          repo rh-api-stage-repo
-        fi
+    - name: Set env vars (stage)
+      if: endsWith(github.ref, '/staging')
+      run: |
+        echo "branch=stage & ENV=staging"
+        echo "ENV=staging" >> $GITHUB_ENV
+        echo "DB_HOST=${{ secrets.STAGING_DB_HOST }}" >> $GITHUB_ENV
+        echo "DB_NAME=${{ secrets.STAGING_DB_NAME }}" >> $GITHUB_ENV
+        echo "DB_USERNAME=${{ secrets.STAGING_DB_USERNAME }}" >> $GITHUB_ENV
+        echo "DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}" >> $GITHUB_ENV
+        echo "ECR_REPOSITORY=rh-api-stage-repo" >> $GITHUB_ENV
+        echo "ECS_SERVICE=rh-stage-service" >> $GITHUB_ENV
+        echo "ECS_CLUSTER=receipt-hub-stage-cluster" >> $GITHUB_ENV
+        echo "CONTAINER_NAME=rh-stage-container" >> $GITHUB_ENV
+        echo "ECS_TASK_DEFINITION=deploy/task-definition-stage.json" >> $GITHUB_ENV
 
     - name: Create env file
       run: |
@@ -62,7 +62,6 @@ jobs:
         echo JWT_SECRET=$JWT_SECRET >> .env.$ENV
         echo PORT=$PORT >> .env.$ENV
         cat .env.$ENV
-
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
