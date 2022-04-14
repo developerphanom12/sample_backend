@@ -10,7 +10,11 @@ export const AUTH_ROUTES = {
   sign_up: 'sign-up',
   sign_in: 'sign-in',
   o_auth: 'o-auth',
-  log_out: 'log-out'
+  log_out: 'log-out',
+  reset_password_request: 'reset-password-request',
+  redirect_password: 'redirect-password/:token',
+  update_password: 'update-password',
+  reset_password: 'reset-password',
 };
 
 export enum EOAuthTypes {

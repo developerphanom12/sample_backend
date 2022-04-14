@@ -7,6 +7,7 @@ import { UserInfoEntity } from '../user-info/entities/user-info.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthEntity } from './entities/auth.entity';
+import { ResetPasswordEntity } from './entities/reset-password.entity';
 import { SocialAuthEntity } from './entities/social-auth.entity';
 import { JwtStrategy } from './jwt.strategy';
 
@@ -14,6 +15,7 @@ import { JwtStrategy } from './jwt.strategy';
   imports: [
     TypeOrmModule.forFeature([
       AuthEntity,
+      ResetPasswordEntity,
       UserInfoEntity,
       SocialAuthEntity,
       CurrencyEntity,

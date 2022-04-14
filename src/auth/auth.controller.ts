@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Res, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -10,9 +10,14 @@ import { JwtAuthenticationGuard } from '../shared/guards';
 import { AUTH_ROUTES, AUTH_SWAGGER } from './auth.constants';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
+import { PasswordRequestDTO } from './dto/password-request.dto';
 import { RegistrationDTO } from './dto/registration.dto';
+import { PasswordRequestRedirectDTO } from './dto/reset-password-request-redirect.dto';
 import { SocialLoginDTO } from './dto/social-auth.dto';
 import { AuthEntity } from './entities/auth.entity';
+import { Response } from 'express';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
+import { ResetPasswordDTO } from './dto/resset-password.dto';
 
 @ApiBearerAuth()
 @ApiTags(AUTH_ROUTES.main)
@@ -66,5 +71,41 @@ export class AuthController {
   @UseGuards(JwtAuthenticationGuard)
   public async logout(@User('id') id: string) {
     return await this.authService.logOut(id);
+  }
+  
+  @Get(AUTH_ROUTES.reset_password_request)
+  @HttpCode(HttpStatus.OK)
+  public async resetPasswordRequest(@Query() body: PasswordRequestDTO) {
+    return await this.authService.updatePasswordRequest(body);
+  }
+
+  @Get(AUTH_ROUTES.redirect_password)
+  @HttpCode(HttpStatus.OK)
+  public async redirectPassword(
+    @Param() params: PasswordRequestRedirectDTO,
+    @Res() res: Response,
+  ) {
+    try {
+      const link = `http://receipthub.com/reset_password/${params.token}`;
+      return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
+    }
+  }
+
+  @Put(AUTH_ROUTES.update_password)
+  @HttpCode(HttpStatus.OK)
+  public async updatePassword(@Body() body: UpdatePasswordDTO) {
+    return await this.authService.updatePassword(body);
+  }
+
+  @Put(AUTH_ROUTES.reset_password)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthenticationGuard)
+  public async resetPassword(
+    @User('id') id: string,
+    @Body() body: ResetPasswordDTO,
+  ) {
+    return await this.authService.resetPassword(id, body);
   }
 }

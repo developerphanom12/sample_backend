@@ -4,7 +4,8 @@ require('dotenv-flow').config();
 const ENV = process.env.NODE_ENV || 'local';
 const ENV_HASH_MAP = {
   api_url: {
-    dev: 'http://localhost:3000/',
+    local: 'http://localhost:3000/',
+    development: 'http://3.9.95.221/',
   },
 };
 
@@ -40,6 +41,5 @@ export const config = () => ({
   aws: {
     key: process.env.AWS_KEY,
     secretKey: process.env.AWS_SECRET_KEY,
-    bucket: process.env.AWS_S3_BUCKET_NAME,
   },
 });

@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthEntity } from './entities/auth.entity';
 import { JwtService } from '@nestjs/jwt';
-import { EXPIRE_JWT_TIME } from '../constants/jwt';
+import { EXPIRE_JWT_TIME, EXPIRE_LINK_TIME } from '../constants/jwt';
 import * as bcrypt from 'bcrypt';
 import { deserialize, serialize } from 'class-transformer';
 import { RegistrationDTO } from './dto/registration.dto';
@@ -14,6 +14,13 @@ import { SocialAuthEntity } from './entities/social-auth.entity';
 import { UserInfoEntity } from '../user-info/entities/user-info.entity';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 import { EOAuthTypes } from './auth.constants';
+import { ResetPasswordEntity } from './entities/reset-password.entity';
+import { v4 as uuid } from 'uuid';
+import { PasswordRequestDTO } from './dto/password-request.dto';
+import { ResetPasswordDTO } from './dto/resset-password.dto';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
+import { createPasswordMailSes } from 'src/shared/emails/create-password-email';
+import { sesClient } from 'src/shared/emails/email';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +34,8 @@ export class AuthService {
     private userInfoRepository: Repository<UserInfoEntity>,
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
+    @InjectRepository(ResetPasswordEntity)
+    private resetPasswordRepository: Repository<ResetPasswordEntity>,
     private configService: ConfigService,
   ) {}
 
@@ -277,5 +286,116 @@ export class AuthService {
     return {
       message: 'Success',
     };
+  }
+
+  async updatePasswordRequest(body: PasswordRequestDTO) {
+    const { email } = body;
+
+    const user = await this.authRepository.findOne({
+      where: {
+        email: email.toLowerCase(),
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('Wrong email', HttpStatus.NOT_FOUND);
+    }
+
+    const isSend = await this.resetPasswordRepository.findOne({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (isSend) {
+      await this.resetPasswordRepository.delete(isSend.id);
+    }
+
+    const token = uuid();
+    await this.resetPasswordRepository.save({
+      email: email.toLowerCase(),
+      token,
+    });
+
+    const payload = createPasswordMailSes({
+      email: email.toLowerCase(),
+      token,
+      name: user.fullName,
+    });
+    sesClient.sendEmail(payload, (error) => {
+      console.error(error);
+    });
+    return {
+      message: 'Email sent',
+    };
+  }
+
+  async updatePassword(body: UpdatePasswordDTO) {
+    const resetPassModel = await this.resetPasswordRepository.findOne({
+      where: { token: body.token },
+    });
+
+    if (!resetPassModel) {
+      throw new HttpException('Request not found', HttpStatus.NOT_FOUND);
+    }
+
+    const user = await this.authRepository.findOne({
+      where: {
+        email: resetPassModel.email.toLowerCase(),
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (
+      resetPassModel &&
+      new Date().getTime() - new Date(resetPassModel.created).getTime() >
+        EXPIRE_LINK_TIME
+    ) {
+      await this.resetPasswordRepository.delete(resetPassModel.id);
+      throw new HttpException(
+        'Reset password link is expired',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.addNewPassword(body.newPassword, user.id);
+
+    await this.resetPasswordRepository.delete(resetPassModel.id);
+
+    return {
+      message: 'The password has been updated',
+    };
+  }
+
+  async resetPassword(userId: string, body: ResetPasswordDTO) {
+    const user = await this.authRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (
+      !!user.password &&
+      !(await bcrypt.compare(body.password, user.password))
+    ) {
+      throw new HttpException('Wrong password', HttpStatus.FORBIDDEN);
+    }
+    await this.addNewPassword(body.newPassword, user.id);
+
+    return {
+      message: 'The password has been updated',
+    };
+  }
+
+  async addNewPassword(password: string, userId: string) {
+    const newPassword = await bcrypt.hash(password, 10);
+    await this.authRepository.update(userId, {
+      password: newPassword,
+    });
   }
 }
