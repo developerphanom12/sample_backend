@@ -9,12 +9,10 @@ import { CurrencyEntity } from './entities/currency.entity';
 export class CurrencyService {
   constructor(
     @InjectRepository(CurrencyEntity)
-    private currencyEntity: Repository<CurrencyEntity>,
-    @InjectRepository(UserInfoEntity)
-    private userInfoRepository: Repository<UserInfoEntity>,
+    private currencyRepository: Repository<CurrencyEntity>,
   ) {}
 
-  async getCurrency(id: string) {
-    return await this.currencyEntity.find()
+  async getAllCurrency(id: string) {
+    return await this.currencyRepository.find();
   }
 }
