@@ -1,7 +1,8 @@
 // TODO: delete this file. Temporary solution before refactoring!
 require('dotenv-flow').config();
 
-const ENV = process.env.NODE_ENV || 'local';
+const ENV = process.env.NODE_ENV || 'development';
+
 const ENV_HASH_MAP = {
   api_url: {
     local: 'http://localhost:3000/',
