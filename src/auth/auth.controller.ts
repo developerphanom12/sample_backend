@@ -86,7 +86,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      const link = `http://receipthub.com/reset_password/${params.token}`;
+      const link = `http://localhost:3000/reset-password/${params.token}`;
       return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
