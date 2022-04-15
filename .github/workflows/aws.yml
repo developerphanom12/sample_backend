@@ -21,6 +21,9 @@ jobs:
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
         echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
         echo "AWS_REGION=eu-west-2" >> $GITHUB_ENV
+        echo "AWS_SES_ACCESS_KEY_ID=${{ secrets.AWS_SES_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SES_SECRET_ACCESS_KEY=${{ secrets.AWS_SES_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+        echo "TRANSPORTER_EMAIL=${{ secrets.TRANSPORTER_EMAIL }}" >> $GITHUB_ENV
 
     - name: Set env vars (development)
       if: endsWith(github.ref, '/main')
