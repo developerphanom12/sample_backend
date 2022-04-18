@@ -23,4 +23,4 @@ export enum EOAuthTypes {
 }
 
 export const EMAIL_VALIDATION = /^\w+([\.+-]?\w+)*@\w+([\.+-]?\w+)*(\.\w{2,})+$/;
-export const PASSWORD_VALIDATION = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/g;
+export const PASSWORD_VALIDATION = /[\w+@$^!%._*#?&]{8,30}$/

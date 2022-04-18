@@ -25,9 +25,15 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "cross-env NODE_ENV=local TS_NODE_PROJECT=tsconfig.ts-node.json TS_NODE_TRANSPILE_ONLY=true ts-node ./node_modules/typeorm/cli.js --config src/orm.config.ts",
+    "typeorm": "TS_NODE_PROJECT=tsconfig.ts-node.json TS_NODE_TRANSPILE_ONLY=true ts-node ./node_modules/typeorm/cli.js --config src/orm.config.ts",
     "typeorm:migration:generate": "npm run typeorm -- migration:create -n Seeding",
-    "typeorm:migration:run": "npm run typeorm -- migration:run"
+    "typeorm:migration:run": "npm run typeorm -- migration:run",
+    "seed:local": "cross-env NODE_ENV=local TS_NODE_PROJECT=tsconfig.ts-node.json TS_NODE_TRANSPILE_ONLY=true ts-node ./node_modules/typeorm/cli.js --config src/orm.config.ts",
+    "seed:development": "cross-env NODE_ENV=development TS_NODE_PROJECT=tsconfig.ts-node.json TS_NODE_TRANSPILE_ONLY=true ts-node ./node_modules/typeorm/cli.js --config src/orm.config.ts",
+    "seed:staging": "cross-env NODE_ENV=staging TS_NODE_PROJECT=tsconfig.ts-node.json TS_NODE_TRANSPILE_ONLY=true ts-node ./node_modules/typeorm/cli.js --config src/orm.config.ts",
+    "seed:local:run": "npm run seed:local -- migration:run",
+    "seed:development:run": "npm run seed:development -- migration:run",
+    "seed:staging:run": "npm run seed:staging -- migration:run"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

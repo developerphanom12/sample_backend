@@ -1,8 +1,6 @@
 // TODO: delete this file. Temporary solution before refactoring!
 require('dotenv-flow').config();
 
-//const ENV = process.env.NODE_ENV || 'local';
-
 export const config = () => ({
   database: {
     type: 'postgres' as 'postgres',
