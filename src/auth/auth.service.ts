@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { AuthEntity } from './entities/auth.entity';
 import { JwtService } from '@nestjs/jwt';
 import { EXPIRE_JWT_TIME, EXPIRE_LINK_TIME } from '../constants/jwt';
+import * as ses from 'node-ses';
 import * as bcrypt from 'bcrypt';
 import { deserialize, serialize } from 'class-transformer';
 import { RegistrationDTO } from './dto/registration.dto';
@@ -20,7 +21,6 @@ import { PasswordRequestDTO } from './dto/password-request.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { createPasswordMailSes } from 'src/shared/emails/create-password-email';
-import { sesClient } from 'src/shared/emails/email';
 
 @Injectable()
 export class AuthService {
@@ -38,6 +38,15 @@ export class AuthService {
     private resetPasswordRepository: Repository<ResetPasswordEntity>,
     private configService: ConfigService,
   ) {}
+  private createSESClient = () => {
+    const payload = {
+      key: this.configService.get('AWS_SES_ACCESS_KEY_ID'),
+      secret: this.configService.get('AWS_SES_SECRET_ACCESS_KEY'),
+      amazon: 'https://email.eu-west-2.amazonaws.com',
+    };
+    const sesClient = ses.createClient(payload);
+    return sesClient;
+  };
 
   async createToken(user: AuthEntity) {
     const expiresIn = EXPIRE_JWT_TIME + Date.now();
@@ -291,6 +300,7 @@ export class AuthService {
   async updatePasswordRequest(body: PasswordRequestDTO) {
     const { email } = body;
 
+    const sesClient = this.createSESClient();
     const user = await this.authRepository.findOne({
       where: {
         email: email.toLowerCase(),
@@ -319,7 +329,9 @@ export class AuthService {
       email: email.toLowerCase(),
       token,
       name: user.fullName,
+      host_url: this.configService.get('HOST_URL'),
     });
+
     sesClient.sendEmail(payload, (error) => {
       console.error(error);
     });
