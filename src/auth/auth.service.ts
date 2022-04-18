@@ -56,9 +56,11 @@ export class AuthService {
   }
 
   async signUp(body: RegistrationDTO) {
+    console.log(body.email)
     const user = await this.authRepository.findOne({
       where: { email: body.email.toLowerCase() },
     });
+    console.log(user)
     if (user) {
       throw new HttpException('USER ALREADY EXIST', HttpStatus.CONFLICT);
     }
@@ -336,6 +338,7 @@ export class AuthService {
       console.error(error);
     });
     return {
+      payload: payload,
       message: 'Email sent',
     };
   }

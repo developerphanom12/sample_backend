@@ -1,7 +1,4 @@
 import { EMAIL_CONFIG } from 'src/constants/email';
-import { config } from '../../constants/config';
-
-//const BASE_URL = config().urls.apiUrl;
 
 export const createPasswordMailSes = ({
   email,

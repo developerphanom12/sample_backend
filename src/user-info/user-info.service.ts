@@ -36,23 +36,32 @@ export class UserInfoService {
         HttpStatus.BAD_REQUEST,
       );
     }
+    const currency = await this.currencyRepository.findOne({
+      where: { id: body.currency },
+    });
 
-    const payloadUserInfo = JSON.parse(JSON.stringify(body)); // Clear undefined
+    if (!currency) {
+      throw new HttpException(
+        'CURRENCY DOES NOT EXIST',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-    await this.userInfoRepository.save({
-      ...payloadUserInfo,
+    const newUserInfo = await this.userInfoRepository.save({
+      date_format: body.date_format,
       user,
+      currency,
     });
 
     await this.authRepository.update(id, {
       isOnboardingDone: true,
     });
 
-    return this.userInfoRepository.findOne({
+    return await this.userInfoRepository.findOne({
       where: {
         user: { id: user.id },
       },
-      relations: ['user'],
+      relations: ['user', 'currency'],
     });
   }
 
