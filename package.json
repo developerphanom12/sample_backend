@@ -25,7 +25,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "TS_NODE_PROJECT=tsconfig.ts-node.json TS_NODE_TRANSPILE_ONLY=true ts-node ./node_modules/typeorm/cli.js --config src/orm.config.ts",
+    "typeorm": "cross-env NODE_ENV=local TS_NODE_PROJECT=tsconfig.ts-node.json TS_NODE_TRANSPILE_ONLY=true ts-node ./node_modules/typeorm/cli.js --config src/orm.config.ts",
     "typeorm:migration:generate": "npm run typeorm -- migration:create -n Seeding",
     "typeorm:migration:run": "npm run typeorm -- migration:run"
   },

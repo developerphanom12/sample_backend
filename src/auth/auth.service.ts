@@ -100,6 +100,7 @@ export class AuthService {
         token: await this.createToken(user),
         user_info: null,
         socialAuth: null,
+        currencies: await this.currencyRepository.find(),
       };
     }
     const serializedUserInfo = serialize(user.userInfo);
@@ -110,6 +111,7 @@ export class AuthService {
         user_info: await deserialize(UserInfoEntity, serializedUserInfo),
         socialAuth: null,
         showSetPassword: !!user.email && !user.password,
+        currencies: await this.currencyRepository.find(),
       };
     }
     const serializedSocialAuth = serialize(user.socialAuth);
@@ -119,6 +121,7 @@ export class AuthService {
       user_info: await deserialize(UserInfoEntity, serializedUserInfo),
       socialAuth: await deserialize(SocialAuthEntity, serializedSocialAuth),
       showSetPassword: !!user.email && !user.password,
+      currencies: await this.currencyRepository.find(),
     };
   }
 
@@ -182,6 +185,7 @@ export class AuthService {
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
         token,
+        currencies: await this.currencyRepository.find(),
       };
     }
     if (!userInfo) {
@@ -204,6 +208,7 @@ export class AuthService {
         where: { [`${type.toLowerCase()}Id`]: socialAccountId },
       }),
       showSetPassword: !!user.email && !user.password,
+      currencies: await this.currencyRepository.find(),
     };
   }
 
@@ -241,6 +246,7 @@ export class AuthService {
           where: { [`${type.toLowerCase()}Email`]: email },
         }),
         token,
+        currencies: await this.currencyRepository.find(),
       };
     }
 
@@ -258,6 +264,7 @@ export class AuthService {
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Email`]: email },
         }),
+        currencies: await this.currencyRepository.find(),
       };
     }
     const serializedUserInfo = serialize(userInfo);
@@ -269,6 +276,7 @@ export class AuthService {
         where: { [`${type.toLowerCase()}Email`]: email },
       }),
       showSetPassword: !!user.email && !user.password,
+      currencies: await this.currencyRepository.find(),
     };
   }
 
