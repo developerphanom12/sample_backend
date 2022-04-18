@@ -11,7 +11,6 @@ import { CurrencyModule } from './currency/currency.module';
 import { AppController } from './app.controller'
 
 const currentEnv = process.env.NODE_ENV || 'local';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
