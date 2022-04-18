@@ -56,11 +56,9 @@ export class AuthService {
   }
 
   async signUp(body: RegistrationDTO) {
-    console.log(body.email)
     const user = await this.authRepository.findOne({
       where: { email: body.email.toLowerCase() },
     });
-    console.log(user)
     if (user) {
       throw new HttpException('USER ALREADY EXIST', HttpStatus.CONFLICT);
     }
@@ -79,6 +77,7 @@ export class AuthService {
     return {
       user: await this.userSerializer(newUser),
       token: await this.createToken(newUser),
+      currencies: await this.currencyRepository.find(),
     };
   }
 
@@ -143,6 +142,13 @@ export class AuthService {
       });
     }
 
+    const user = await this.authRepository.findOne({
+      where: { id: socialAccount.auth.id },
+      relations: ['userInfo'],
+    });
+
+    const userInfo = user.userInfo;
+
     if (!socialAccount) {
       const publicKey = await bcrypt.genSalt(6);
       const { email, fullName } = data;
@@ -157,22 +163,27 @@ export class AuthService {
       });
 
       const token = await this.createToken(newUser);
+      if (!userInfo) {
+        return {
+          user: await this.userSerializer(newUser),
+          user_info: null,
+          socialAccount: await this.socialAuthRepository.findOne({
+            where: { [`${type.toLowerCase()}Id`]: socialAccountId },
+          }),
+          token,
+          currencies: await this.currencyRepository.find(),
+        };
+      }
+      const serializedUserInfo = serialize(userInfo);
       return {
         user: await this.userSerializer(newUser),
-        user_info: null,
+        user_info: await deserialize(UserInfoEntity, serializedUserInfo),
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
         token,
       };
     }
-
-    const user = await this.authRepository.findOne({
-      where: { id: socialAccount.auth.id },
-      relations: ['userInfo'],
-    });
-
-    const userInfo = user.userInfo;
     if (!userInfo) {
       return {
         user: await this.userSerializer(user),
@@ -181,6 +192,7 @@ export class AuthService {
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
+        currencies: await this.currencyRepository.find(),
       };
     }
     const serializedUserInfo = serialize(userInfo);
@@ -338,7 +350,6 @@ export class AuthService {
       console.error(error);
     });
     return {
-      payload: payload,
       message: 'Email sent',
     };
   }
