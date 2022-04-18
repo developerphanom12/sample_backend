@@ -1,18 +1,21 @@
+import { EMAIL_CONFIG } from 'src/constants/email';
 import { config } from '../../constants/config';
 
-const BASE_URL = config().urls.apiUrl;
+//const BASE_URL = config().urls.apiUrl;
 
 export const createPasswordMailSes = ({
   email,
   token,
   name,
+  host_url,
 }: {
   email: string;
   token: string;
   name: string;
+  host_url: string;
 }) => {
   return {
-    from: `${config().transport.companyName} <${config().transport.email}>`,
+    from: `${EMAIL_CONFIG.companyName} <${EMAIL_CONFIG.email}>`,
     to: email,
     subject: 'ReceiptHub password reset',
     message: `<!doctype html>
@@ -135,7 +138,7 @@ export const createPasswordMailSes = ({
                                 Not a problem, you can easily reset it here:
                               </p>
                               <p style="padding-bottom:15px" class="mobile_paragraph">
-                                    <a class="button_mobile" href=${BASE_URL}auth/redirect-password/${token} style="font-family:Helvetica, Verdana, Arial, sans-serif;display:block;background-color:#FF5252;border-radius:5px;padding:15px 60px;color:#ffffff;font-weight:bold;text-decoration:none;margin: 0;width:max-content">
+                                    <a class="button_mobile" href=${host_url}auth/redirect-password/${token} style="font-family:Helvetica, Verdana, Arial, sans-serif;display:block;background-color:#FF5252;border-radius:5px;padding:15px 60px;color:#ffffff;font-weight:bold;text-decoration:none;margin: 0;width:max-content">
                                       Reset Password
                                     </a>
                               </p>
