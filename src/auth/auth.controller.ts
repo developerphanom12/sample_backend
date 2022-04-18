@@ -18,6 +18,7 @@ import { AuthEntity } from './entities/auth.entity';
 import { Response } from 'express';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
+import { FRONT_END_URL } from 'src/constants/config';
 
 @ApiBearerAuth()
 @ApiTags(AUTH_ROUTES.main)
@@ -86,7 +87,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      const link = `http://localhost:3000/reset-password/${params.token}`;
+      const link = `${FRONT_END_URL.development}reset-password/${params.token}`;
       return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
