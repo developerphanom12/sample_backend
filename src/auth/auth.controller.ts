@@ -87,7 +87,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      const link = `${FRONT_END_URL.development}reset-password/${params.token}`;
+      const link = `${FRONT_END_URL.development}#/reset-password/${params.token}`;
       return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
