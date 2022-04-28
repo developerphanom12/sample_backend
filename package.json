@@ -36,6 +36,7 @@
     "seed:staging:run": "npm run seed:staging -- migration:run"
   },
   "dependencies": {
+    "@aws-sdk/client-textract": "^3.73.0",
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^2.0.0",
     "@nestjs/core": "^8.0.0",
@@ -45,6 +46,7 @@
     "@nestjs/schedule": "^1.0.2",
     "@nestjs/swagger": "^5.2.1",
     "@nestjs/typeorm": "^8.0.3",
+    "aws-sdk": "^2.1118.0",
     "bcrypt": "^5.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
@@ -52,6 +54,7 @@
     "dotenv-flow": "^3.2.0",
     "express-rate-limit": "^6.3.0",
     "helmet": "^5.0.2",
+    "multer": "^1.4.4",
     "node-ses": "^3.0.3",
     "passport": "^0.5.2",
     "passport-jwt": "^4.0.0",

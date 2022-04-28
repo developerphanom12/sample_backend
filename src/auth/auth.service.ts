@@ -38,6 +38,7 @@ export class AuthService {
     private resetPasswordRepository: Repository<ResetPasswordEntity>,
     private configService: ConfigService,
   ) {}
+
   private createSESClient = () => {
     const payload = {
       key: this.configService.get('AWS_SES_ACCESS_KEY_ID'),

@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -9,6 +10,7 @@ import {
 import { Exclude } from 'class-transformer';
 import { SocialAuthEntity } from './social-auth.entity';
 import { UserInfoEntity } from '../../user-info/entities/user-info.entity';
+import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 
 @Entity('auth')
 export class AuthEntity {
@@ -56,4 +58,7 @@ export class AuthEntity {
 
   @OneToOne((type) => SocialAuthEntity, (data) => data.auth)
   socialAuth: SocialAuthEntity;
+
+  @OneToMany((type) => ReceiptEntity, (data) => data.company)  // DELETE THIS WHEN CREATE COMPANY ENTITY
+  receipts: ReceiptEntity;
 }

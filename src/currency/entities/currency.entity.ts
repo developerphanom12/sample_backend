@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { UserInfoEntity } from '../../user-info/entities/user-info.entity';
+import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 
 @Entity('currency')
 export class CurrencyEntity {
@@ -35,4 +36,7 @@ export class CurrencyEntity {
 
   @OneToMany((type) => UserInfoEntity, (data) => data.currency)
   userInfo: UserInfoEntity;
+
+  @OneToMany((type) => ReceiptEntity, (data) => data.currency)
+  receipts: ReceiptEntity;
 }
