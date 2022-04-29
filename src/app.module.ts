@@ -9,6 +9,7 @@ import { HttpErrorFilter } from './shared/http-error.filter';
 import { UserInfoModule } from './user-info/user-info.module';
 import { CurrencyModule } from './currency/currency.module';
 import { AppController } from './app.controller'
+import { ReceiptModule } from './receipt/receipt.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -31,6 +32,7 @@ const currentEnv = process.env.NODE_ENV || 'local';
     AuthModule,
     UserInfoModule,
     CurrencyModule,
+    ReceiptModule,
   ],
   controllers: [AppController],
   providers: [
