@@ -23,8 +23,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           id: string;
         };
         const user = await this.authService.getById(decodedToken.id);
-
-        const JWT_SECRET = configService.get('JWT_SECRET');
+        console.log(decodedToken)
+        console.log(user)
+        if (!user) {
+          return "Error"
+        }
+        const JWT_SECRET = this.configService.get('JWT_SECRET');
         done(null, `${JWT_SECRET}${user.publicKey}`);
       },
     });

@@ -1,21 +1,20 @@
-import { Exclude } from 'class-transformer';
-import { AuthEntity } from '../../auth/entities/auth.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
+import { MemberEntity } from './member.entity';
 
-@Entity('user-info')
-export class UserInfoEntity {
+@Entity('company')
+export class CompanyEntity {
   @PrimaryGeneratedColumn('uuid')
-  @Exclude()
   id: string;
 
   @CreateDateColumn()
@@ -26,16 +25,18 @@ export class UserInfoEntity {
   @Exclude()
   updated: Date;
 
+  @Column({ default: '' })
+  name: string;
+
   @Column({
     default: '',
   })
   date_format: string;
 
-  @OneToOne((type) => AuthEntity, (data) => data.userInfo)
   @JoinColumn()
-  user: AuthEntity;
+  @ManyToOne((type) => CurrencyEntity, (data) => data.company)
+  currency: CurrencyEntity;
 
-  // @JoinColumn()
-  // @ManyToOne((type) => CurrencyEntity, (data) => data.userInfo)
-  // currency: CurrencyEntity;
+  @OneToMany((type) => MemberEntity, (data) => data.company)
+  members: MemberEntity[]
 }

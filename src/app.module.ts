@@ -10,6 +10,12 @@ import { UserInfoModule } from './user-info/user-info.module';
 import { CurrencyModule } from './currency/currency.module';
 import { AppController } from './app.controller'
 import { ReceiptModule } from './receipt/receipt.module';
+import { CompanyController } from './company/company.controller';
+import { CompanyModule } from './company/company.module';
+import { CompanyMemberController } from './company-member/company-member.controller';
+import { CompanyMemberModule } from './company-member/company-member.module';
+import { ReceiptLogController } from './receipt-log/receipt-log.controller';
+import { ReceiptLogModule } from './receipt-log/receipt-log.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -33,8 +39,11 @@ const currentEnv = process.env.NODE_ENV || 'local';
     UserInfoModule,
     CurrencyModule,
     ReceiptModule,
+    CompanyModule,
+    CompanyMemberModule,
+    ReceiptLogModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, CompanyMemberController, ReceiptLogController],
   providers: [
     {
       provide: APP_FILTER,

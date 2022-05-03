@@ -8,6 +8,7 @@ export const receiptPhotoStorage = {
   storage: diskStorage({
     destination: `./${receiptPhotoPath}`,
     filename: (req, file, cb) => {
+      console.log("FILE", file,)
       const filename: string =
         path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
       const extension: string = path.parse(file.originalname).ext;

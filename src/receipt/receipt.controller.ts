@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   Res,
   UploadedFiles,
   UseGuards,
@@ -43,7 +44,9 @@ export class ReceiptController {
     @User('id') id: string,
     @Body() body: CreateReceiptDTO,
     @UploadedFiles() files,
+    @Req() req,
   ) {
+    return req.headers
     return await this.ReceiptService.createReceipt(id, body, files);
   }
 
