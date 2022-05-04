@@ -6,6 +6,8 @@ import { ECompanyRoles } from 'src/company-member/company-member.constants';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 import { Repository } from 'typeorm';
+import { COMPANY_ERRORS } from './company.errors';
+import { ICreateCompany } from './company.types';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { CompanyEntity } from './entities/company.entity';
 
@@ -23,7 +25,10 @@ export class CompanyService {
     private configService: ConfigService,
   ) {}
 
-  async createCompany(id: string, body: CreateCompanyDTO) {
+  async createCompany(
+    id: string,
+    body: CreateCompanyDTO,
+  ): Promise<ICreateCompany> {
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
@@ -31,7 +36,7 @@ export class CompanyService {
       where: { id: body.currency },
     });
     if (!selectedCurrency) {
-      throw new HttpException('Invalid currency', HttpStatus.BAD_REQUEST);
+      throw new HttpException(COMPANY_ERRORS.currency, HttpStatus.NOT_FOUND);
     }
     const company = await this.companyRepository.save({
       currency: selectedCurrency,
@@ -60,6 +65,7 @@ export class CompanyService {
       }),
       company: await this.companyRepository.findOne({
         where: { id: company.id },
+        relations: ['currency'],
       }),
       user: await this.authRepository.findOne({
         where: { id: user.id },
@@ -68,17 +74,19 @@ export class CompanyService {
     };
   }
 
-  async getCompany(id: string, companyId: string) {
+  async getCompany(id: string, companyId: string): Promise<CompanyEntity> {
     const company = await this.companyRepository.findOne({
       where: { id: companyId },
     });
     if (!company) {
-      throw new HttpException('Company not found', HttpStatus.NOT_FOUND);
+      throw new HttpException(COMPANY_ERRORS.company, HttpStatus.NOT_FOUND);
     }
     return company;
   }
 
-  private async getAccountCompany(account: MemberEntity) {
+  private async getAccountCompany(
+    account: MemberEntity,
+  ): Promise<CompanyEntity> {
     const acc = await this.memberRepository.findOne({
       where: { id: account.id },
       relations: ['company'],
@@ -86,17 +94,14 @@ export class CompanyService {
     return acc.company;
   }
 
-  async getAllCompanies(id: string) {
+  async getAllCompanies(id: string): Promise<CompanyEntity[]> {
     const user = await this.authRepository.findOne({
       where: { id: id },
       relations: ['accounts'],
     });
     const accounts = user.accounts;
-
     const promises = accounts.map((account) => this.getAccountCompany(account));
-
     const result = await Promise.all(promises);
-
     return await result;
   }
 }

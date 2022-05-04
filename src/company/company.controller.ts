@@ -1,46 +1,39 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from '../shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from '../shared/guards';
+import { COMPANY_ROUTES, COMPANY_SWAGGER } from './company.constants';
 import { CompanyService } from './company.service';
 import { CreateCompanyDTO } from './dto/create-company.dto';
-import { CompanyEntity } from './entities/company.entity';
 
-@ApiTags('company')
-@Controller('company')
+@ApiTags(COMPANY_ROUTES.main)
+@Controller(COMPANY_ROUTES.main)
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
-  @Post('create')
+  @Post(COMPANY_ROUTES.create)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: 'Create company' })
+  @ApiOperation({ summary: COMPANY_SWAGGER.create })
   public async createCompany(
     @User('id') id: string,
     @Body() body: CreateCompanyDTO,
   ) {
     return await this.companyService.createCompany(id, body);
   }
-  @Get('get/:company')
+
+  @Get(COMPANY_ROUTES.get)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: 'Get one company' })
+  @ApiOperation({ summary: COMPANY_SWAGGER.get })
   public async getCompany(
     @User('id') id: string,
     @Param('company') company: string,
   ) {
     return await this.companyService.getCompany(id, company);
   }
-  @Get('get-all')
+
+  @Get(COMPANY_ROUTES.get_all)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: 'Get all companies' })
+  @ApiOperation({ summary: COMPANY_SWAGGER.get_all })
   public async getAllCompanies(@User('id') id: string) {
     return await this.companyService.getAllCompanies(id);
   }
