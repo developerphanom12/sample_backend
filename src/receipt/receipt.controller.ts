@@ -45,7 +45,6 @@ export class ReceiptController {
     @User('id') id: string,
     @Body() body: CreateReceiptDTO,
     @UploadedFiles() files,
-    @Req() req,
   ) {
     return await this.ReceiptService.createReceipt(id, body, files);
   }
@@ -86,10 +85,5 @@ export class ReceiptController {
   @UseGuards(new JwtAuthenticationGuard())
   public async deleteReceipt(@User('id') id: string, @Param('id') receiptId) {
     return await this.ReceiptService.receiptDelete(id, receiptId);
-  }
-  // DELETE THIS AFTER FIX!
-  @Delete('delete-all-images')
-  public async fn() {
-    return await this.ReceiptService.deleteAllImages();
   }
 }

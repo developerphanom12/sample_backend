@@ -29,15 +29,21 @@ export class CompanyService {
     id: string,
     body: CreateCompanyDTO,
   ): Promise<ICreateCompany> {
+
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
+    if (!user) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+
     const selectedCurrency = await this.currencyRepository.findOne({
       where: { id: body.currency },
     });
     if (!selectedCurrency) {
       throw new HttpException(COMPANY_ERRORS.currency, HttpStatus.NOT_FOUND);
     }
+  
     const company = await this.companyRepository.save({
       currency: selectedCurrency,
       name: body.name || 'Default',
@@ -95,10 +101,15 @@ export class CompanyService {
   }
 
   async getAllCompanies(id: string): Promise<CompanyEntity[]> {
+  
     const user = await this.authRepository.findOne({
       where: { id: id },
       relations: ['accounts'],
     });
+    if (!user) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+  
     const accounts = user.accounts;
     const promises = accounts.map((account) => this.getAccountCompany(account));
     const result = await Promise.all(promises);

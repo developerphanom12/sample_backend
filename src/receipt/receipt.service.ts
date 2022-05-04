@@ -22,7 +22,6 @@ import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { CompanyEntity } from 'src/company/entities/company.entity';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
-import path = require('path');
 
 @Injectable()
 export class ReceiptService {
@@ -55,7 +54,9 @@ export class ReceiptService {
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
-
+    if (!user) {
+      throw new HttpException('USER DOES NOT EXIST', HttpStatus.BAD_REQUEST);
+    }
     const account = await this.memberRepository.findOne({
       where: { id: user.active_account },
       relations: ['company'],
@@ -267,21 +268,6 @@ export class ReceiptService {
       },
     );
     return 'Success';
-  }
-  // DELETE THIS AFTER FIX!
-  async deleteAllImages() {
-    const directory = path.join(process.cwd(), `${receiptPhotoPath}`);
-
-    fs.readdir(directory, (err, files) => {
-      if (err) throw err;
-
-      for (const file of files) {
-        fs.unlink(path.join(directory, file), (err) => {
-          if (err) throw err;
-        });
-      }
-    });
-    return 'Ok';
   }
 
   async receiptDelete(id: string, receiptId: string) {
