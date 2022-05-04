@@ -28,7 +28,7 @@ export class CurrencyController {
   })
   @HttpCode(HttpStatus.OK)
   public async getCurrency(@User('id') id: string) {
-    return await this.CurrencyService.getAllCurrency(id);
+    return await this.CurrencyService.getAllCurrency();
   }
 
   @Get(CURRENCY_ROUTES.get)
@@ -41,7 +41,6 @@ export class CurrencyController {
   })
   @HttpCode(HttpStatus.OK)
   public async getOneCurrency(@User('id') id: string, @Param('currencyId') currencyId: string) {
-    console.log(currencyId)
     return await this.CurrencyService.getOneCurrency(id, currencyId);
   }
 }

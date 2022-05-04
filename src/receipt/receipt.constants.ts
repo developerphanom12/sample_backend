@@ -25,6 +25,7 @@ export const RECEIPT_ROUTES = {
   main: 'receipt',
   create: 'create',
   update: 'update',
+  get_all: 'get-all',
   delete: 'delete/:id',
   get_image: 'get-image/:imagename',
   delete_image: 'delete-image/:imagename',

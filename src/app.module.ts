@@ -11,6 +11,7 @@ import { AppController } from './app.controller'
 import { ReceiptModule } from './receipt/receipt.module';
 import { CompanyModule } from './company/company.module';
 import { CompanyMemberModule } from './company-member/company-member.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -35,6 +36,7 @@ const currentEnv = process.env.NODE_ENV || 'local';
     ReceiptModule,
     CompanyModule,
     CompanyMemberModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

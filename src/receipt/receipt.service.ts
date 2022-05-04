@@ -22,6 +22,7 @@ import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { CompanyEntity } from 'src/company/entities/company.entity';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
+import path = require('path');
 
 @Injectable()
 export class ReceiptService {
@@ -170,9 +171,21 @@ export class ReceiptService {
 
   async getReceipts(id: string, paginationParameters: PaginationDTO) {
     const company = this.extractCompanyFromUser(id);
-
+    if (!paginationParameters.filter_status) {
+      const [result, total] = await this.receiptRepository.findAndCount({
+        where: { company: company },
+        order: { created: 'DESC' },
+        take: paginationParameters.take ?? 10,
+        skip: paginationParameters.skip ?? 0,
+        relations: ['currency'],
+      });
+      return {
+        data: result,
+        count: total,
+      };
+    }
     const [result, total] = await this.receiptRepository.findAndCount({
-      where: { company: company },
+      where: { company: company, status: paginationParameters.filter_status },
       order: { created: 'DESC' },
       take: paginationParameters.take ?? 10,
       skip: paginationParameters.skip ?? 0,
@@ -228,7 +241,7 @@ export class ReceiptService {
 
     return await this.receiptRepository.findOne({
       where: { id: receiptId },
-      relations: ["currency"]
+      relations: ['currency'],
     });
   }
 
@@ -254,6 +267,21 @@ export class ReceiptService {
       },
     );
     return 'Success';
+  }
+  // DELETE THIS AFTER FIX!
+  async deleteAllImages() {
+    const directory = path.join(process.cwd(), `${receiptPhotoPath}`);
+
+    fs.readdir(directory, (err, files) => {
+      if (err) throw err;
+
+      for (const file of files) {
+        fs.unlink(path.join(directory, file), (err) => {
+          if (err) throw err;
+        });
+      }
+    });
+    return 'Ok';
   }
 
   async receiptDelete(id: string, receiptId: string) {

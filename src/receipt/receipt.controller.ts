@@ -50,11 +50,11 @@ export class ReceiptController {
     return await this.ReceiptService.createReceipt(id, body, files);
   }
 
-  @Get('get-all')
+  @Post(RECEIPT_ROUTES.get_all)
   @UseGuards(new JwtAuthenticationGuard())
   public async getReceipts(
     @User('id') id: string,
-    @Query() body: PaginationDTO,
+    @Body() body: PaginationDTO,
   ) {
     return await this.ReceiptService.getReceipts(id, body);
   }
@@ -86,5 +86,10 @@ export class ReceiptController {
   @UseGuards(new JwtAuthenticationGuard())
   public async deleteReceipt(@User('id') id: string, @Param('id') receiptId) {
     return await this.ReceiptService.receiptDelete(id, receiptId);
+  }
+  // DELETE THIS AFTER FIX!
+  @Delete('delete-all-images')
+  public async fn() {
+    return await this.ReceiptService.deleteAllImages();
   }
 }
