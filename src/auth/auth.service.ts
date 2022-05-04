@@ -12,7 +12,6 @@ import { RegistrationDTO } from './dto/registration.dto';
 import { LoginDTO } from './dto/login.dto';
 import { SocialLoginDTO } from './dto/social-auth.dto';
 import { SocialAuthEntity } from './entities/social-auth.entity';
-import { UserInfoEntity } from '../user-info/entities/user-info.entity';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
 import { EOAuthTypes } from './auth.constants';
 import { ResetPasswordEntity } from './entities/reset-password.entity';
@@ -21,6 +20,8 @@ import { PasswordRequestDTO } from './dto/password-request.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { createPasswordMailSes } from 'src/shared/emails/create-password-email';
+import { CompanyEntity } from 'src/company/entities/company.entity';
+import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 
 @Injectable()
 export class AuthService {
@@ -30,8 +31,8 @@ export class AuthService {
     private authRepository: Repository<AuthEntity>,
     @InjectRepository(SocialAuthEntity)
     private socialAuthRepository: Repository<SocialAuthEntity>,
-    @InjectRepository(UserInfoEntity)
-    private userInfoRepository: Repository<UserInfoEntity>,
+    @InjectRepository(CompanyEntity)
+    private companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
     @InjectRepository(ResetPasswordEntity)
@@ -86,7 +87,7 @@ export class AuthService {
     const { email, password } = data;
     const user = await this.authRepository.findOne({
       where: { email: email.toLowerCase() },
-      relations: ['socialAuth', 'userInfo'],
+      relations: ['socialAuth', 'accounts'],
     });
 
     if (!user) {
@@ -95,21 +96,18 @@ export class AuthService {
     if (!(await bcrypt.compare(password, user.password))) {
       throw new HttpException('WRONG PASSWORD', HttpStatus.BAD_REQUEST);
     }
-    if (!user.userInfo) {
+    if (!user.accounts || user.accounts.length === 0) {
       return {
         user: await this.userSerializer(user),
         token: await this.createToken(user),
-        user_info: null,
         socialAuth: null,
         currencies: await this.currencyRepository.find(),
       };
     }
-    const serializedUserInfo = serialize(user.userInfo);
     if (!user.socialAuth) {
       return {
         user: await this.userSerializer(user),
         token: await this.createToken(user),
-        user_info: await deserialize(UserInfoEntity, serializedUserInfo),
         socialAuth: null,
         showSetPassword: !!user.email && !user.password,
         currencies: await this.currencyRepository.find(),
@@ -119,7 +117,6 @@ export class AuthService {
     return {
       user: await this.userSerializer(user),
       token: await this.createToken(user),
-      user_info: await deserialize(UserInfoEntity, serializedUserInfo),
       socialAuth: await deserialize(SocialAuthEntity, serializedSocialAuth),
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),
@@ -129,29 +126,20 @@ export class AuthService {
   async socialSignIn(data: SocialLoginDTO) {
     const { socialAccountId, type } = data;
 
-    let socialAccount = null;
-
     if (type === EOAuthTypes.capium) {
       return await this.signInWithCapium(data);
-    } else {
-      if (!data.socialAccountId) {
-        throw new HttpException(
-          'Apple should contain id',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      socialAccount = await this.socialAuthRepository.findOne({
-        where: { [`${type.toLowerCase()}Id`]: socialAccountId },
-        relations: ['auth'],
-      });
     }
 
-    const user = await this.authRepository.findOne({
-      where: { id: socialAccount.auth.id },
-      relations: ['userInfo'],
+    if (!data.socialAccountId) {
+      throw new HttpException(
+        'Apple should contain id',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const socialAccount = await this.socialAuthRepository.findOne({
+      where: { [`${type.toLowerCase()}Id`]: socialAccountId },
+      relations: ['auth'],
     });
-
-    const userInfo = user.userInfo;
 
     if (!socialAccount) {
       const publicKey = await bcrypt.genSalt(6);
@@ -167,21 +155,8 @@ export class AuthService {
       });
 
       const token = await this.createToken(newUser);
-      if (!userInfo) {
-        return {
-          user: await this.userSerializer(newUser),
-          user_info: null,
-          socialAccount: await this.socialAuthRepository.findOne({
-            where: { [`${type.toLowerCase()}Id`]: socialAccountId },
-          }),
-          token,
-          currencies: await this.currencyRepository.find(),
-        };
-      }
-      const serializedUserInfo = serialize(userInfo);
       return {
         user: await this.userSerializer(newUser),
-        user_info: await deserialize(UserInfoEntity, serializedUserInfo),
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
@@ -189,22 +164,16 @@ export class AuthService {
         currencies: await this.currencyRepository.find(),
       };
     }
-    if (!userInfo) {
-      return {
-        user: await this.userSerializer(user),
-        token: await this.createToken(user),
-        user_info: null,
-        socialAccount: await this.socialAuthRepository.findOne({
-          where: { [`${type.toLowerCase()}Id`]: socialAccountId },
-        }),
-        currencies: await this.currencyRepository.find(),
-      };
-    }
-    const serializedUserInfo = serialize(userInfo);
+
+    const user = await this.authRepository.findOne({
+      where: { id: socialAccount.auth.id },
+      relations: ['accounts'],
+    });
+    const account = user.active_account;
+
     return {
       user: await this.userSerializer(user),
       token: await this.createToken(user),
-      user_info: await deserialize(UserInfoEntity, serializedUserInfo),
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Id`]: socialAccountId },
       }),
@@ -242,7 +211,6 @@ export class AuthService {
       const token = await this.createToken(newUser);
       return {
         user: await this.userSerializer(newUser),
-        user_info: null,
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Email`]: email },
         }),
@@ -253,26 +221,11 @@ export class AuthService {
 
     const user = await this.authRepository.findOne({
       where: { id: socialAccount.auth.id },
-      relations: ['userInfo'],
     });
 
-    const userInfo = user.userInfo;
-    if (!userInfo) {
-      return {
-        user: await this.userSerializer(user),
-        token: await this.createToken(user),
-        user_info: null,
-        socialAccount: await this.socialAuthRepository.findOne({
-          where: { [`${type.toLowerCase()}Email`]: email },
-        }),
-        currencies: await this.currencyRepository.find(),
-      };
-    }
-    const serializedUserInfo = serialize(userInfo);
     return {
       user: await this.userSerializer(user),
       token: await this.createToken(user),
-      user_info: await deserialize(UserInfoEntity, serializedUserInfo),
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Email`]: email },
       }),

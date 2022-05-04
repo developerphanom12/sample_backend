@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -9,8 +10,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { SocialAuthEntity } from './social-auth.entity';
-import { UserInfoEntity } from '../../user-info/entities/user-info.entity';
-import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
+import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 
 @Entity('auth')
 export class AuthEntity {
@@ -48,17 +48,13 @@ export class AuthEntity {
   @Exclude()
   publicKey: string;
 
-  @Column({
-    default: false,
-  })
-  isOnboardingDone: boolean;
-
-  @OneToOne((type) => UserInfoEntity, (data) => data.user)
-  userInfo: UserInfoEntity;
-
   @OneToOne((type) => SocialAuthEntity, (data) => data.auth)
   socialAuth: SocialAuthEntity;
 
-  @OneToMany((type) => ReceiptEntity, (data) => data.company)  // DELETE THIS WHEN CREATE COMPANY ENTITY
-  receipts: ReceiptEntity;
+  @Column({ nullable: true })
+  active_account: string;
+
+  @JoinColumn()
+  @OneToMany((type) => MemberEntity, (data) => data.user)
+  accounts: MemberEntity[];
 }

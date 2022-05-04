@@ -10,7 +10,8 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
-import { MemberEntity } from './member.entity';
+import { MemberEntity } from 'src/company-member/entities/company-member.entity';
+import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 
 @Entity('company')
 export class CompanyEntity {
@@ -39,4 +40,7 @@ export class CompanyEntity {
 
   @OneToMany((type) => MemberEntity, (data) => data.company)
   members: MemberEntity[]
+
+  @OneToMany((type) => ReceiptEntity, (data) => data.company)
+  receipts: ReceiptEntity[]
 }

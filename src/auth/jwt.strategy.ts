@@ -23,8 +23,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           id: string;
         };
         const user = await this.authService.getById(decodedToken.id);
-        console.log(decodedToken)
-        console.log(user)
         if (!user) {
           return "Error"
         }

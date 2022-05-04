@@ -11,6 +11,7 @@ import { Exclude } from 'class-transformer';
 import { EReceiptStatus } from '../receipt.constants';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
+import { CompanyEntity } from 'src/company/entities/company.entity';
 
 @Entity('receipt')
 export class ReceiptEntity {
@@ -61,9 +62,9 @@ export class ReceiptEntity {
   @Column('simple-array', { nullable: true })
   photos: string[];
 
-  @ManyToOne((type) => AuthEntity, (data) => data.receipts)
+  @ManyToOne((type) => CompanyEntity, (data) => data.receipts)
   @JoinColumn()
-  company: AuthEntity;
+  company: CompanyEntity;
 
   @ManyToOne((type) => CurrencyEntity, (data) => data.receipts)
   @JoinColumn()
