@@ -19,6 +19,9 @@ import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
 import { CurrencyEntity } from 'src/currency/entities/currency.entity';
+import { MemberEntity } from 'src/company-member/entities/company-member.entity';
+import { CompanyEntity } from 'src/company/entities/company.entity';
+import { UpdateReceiptDTO } from './dto/update-receipt.dto';
 
 @Injectable()
 export class ReceiptService {
@@ -27,6 +30,10 @@ export class ReceiptService {
     private receiptRepository: Repository<ReceiptEntity>,
     @InjectRepository(AuthEntity)
     private authRepository: Repository<AuthEntity>,
+    @InjectRepository(MemberEntity)
+    private memberRepository: Repository<MemberEntity>,
+    @InjectRepository(CompanyEntity)
+    private companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
     private configService: ConfigService,
@@ -41,6 +48,33 @@ export class ReceiptService {
       region: 'eu-west-2',
     });
     return textractClient;
+  }
+
+  private async extractCompanyFromUser(id: string) {
+    const user = await this.authRepository.findOne({
+      where: { id: id },
+    });
+
+    const account = await this.memberRepository.findOne({
+      where: { id: user.active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
   }
 
   async getImageData(photo, textractClient) {
@@ -69,8 +103,12 @@ export class ReceiptService {
     }
   }
 
-  async saveReceipt(receiptData, description: string, company: AuthEntity, currency: CurrencyEntity) {
-
+  async saveReceipt(
+    receiptData,
+    description: string,
+    company: CompanyEntity,
+    currency: CurrencyEntity,
+  ) {
     try {
       return await this.receiptRepository.save({
         ...receiptData,
@@ -107,13 +145,7 @@ export class ReceiptService {
   }
 
   async createReceipt(id: string, body: CreateReceiptDTO, photos) {
-    const company = await this.authRepository.findOne({
-      where: { id: id },
-    });
-
-    if (!company) {
-      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
-    }
+    const company = await this.extractCompanyFromUser(id);
 
     const currency = await this.currencyRepository.findOne({
       where: { id: body.currency },
@@ -137,14 +169,7 @@ export class ReceiptService {
   }
 
   async getReceipts(id: string, paginationParameters: PaginationDTO) {
-    const company = await this.authRepository.findOne({
-      where: { id: id },
-      relations: ['receipts'],
-    });
-
-    if (!company) {
-      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
-    }
+    const company = this.extractCompanyFromUser(id);
 
     const [result, total] = await this.receiptRepository.findAndCount({
       where: { company: company },
@@ -159,42 +184,51 @@ export class ReceiptService {
     };
   }
 
-  async updateReceipt(id: string, body) {
+  async updateReceipt(id: string, body: UpdateReceiptDTO) {
     const receiptId = body.id;
-    const company = await this.authRepository.findOne({
-      where: { id: id },
-      relations: ['receipts'],
-    });
-
-    if (!company) {
-      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
-    }
+    const company = await this.extractCompanyFromUser(id);
 
     if (!company.receipts) {
       throw new HttpException('NO RECEIPTS IN COMPANY', HttpStatus.BAD_REQUEST);
     }
 
     const receipt = await this.receiptRepository.findOne({
-      where: { id: receiptId },
-      relations: ['company'],
+      where: { id: receiptId, company: company.id },
     });
 
     if (!receipt) {
       throw new HttpException('RECEIPT NOT FOUND', HttpStatus.BAD_REQUEST);
     }
+    const isCurrencyChanged =
+      body.currency && body.currency !== receipt.currency.id;
 
-    if (receipt.company.id !== company.id) {
-      throw new HttpException(
-        'CAN`T EDIT RECEIPT FOR DIFFERENT COMPANY',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    const payload = JSON.parse(
+      JSON.stringify({
+        ...body,
+        id: undefined,
+        currency: undefined,
+      }),
+    );
 
     await this.receiptRepository.update(receiptId, {
-      ...body,
+      ...payload,
     });
+
+    if (isCurrencyChanged) {
+      const currency = await this.currencyRepository.findOne({
+        where: { id: body.currency },
+      });
+      if (!currency) {
+        throw new HttpException('CURRENCY NOT FOUND', HttpStatus.NOT_FOUND);
+      }
+      await this.receiptRepository.update(receiptId, {
+        currency: currency,
+      });
+    }
+
     return await this.receiptRepository.findOne({
       where: { id: receiptId },
+      relations: ["currency"]
     });
   }
 
@@ -223,33 +257,20 @@ export class ReceiptService {
   }
 
   async receiptDelete(id: string, receiptId: string) {
-    const company = await this.authRepository.findOne({
-      where: { id: id },
-      relations: ['receipts'],
-    });
-
-    if (!company) {
-      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
-    }
+    const company = await this.extractCompanyFromUser(id);
 
     if (!company.receipts) {
       throw new HttpException('NO RECEIPTS IN COMPANY', HttpStatus.BAD_REQUEST);
     }
 
     const receipt = await this.receiptRepository.findOne({
-      where: { id: receiptId },
+      where: { id: receiptId, company: company.id },
     });
 
     if (!receipt) {
       throw new HttpException('RECEIPT NOT FOUND', HttpStatus.BAD_REQUEST);
     }
 
-    if (company.id !== receipt.id) {
-      throw new HttpException(
-        'CANT DELETE RECEIPT FOR DIFFERENT COMPANY',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
     receipt.photos.forEach((el) => this.deleteImage(el));
     try {
       await this.receiptRepository.remove(receipt);

@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   Res,
   UploadedFiles,
   UseGuards,
@@ -24,6 +25,7 @@ import {
 import { User } from 'src/shared/decorators/user.decorator';
 import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
+import { UpdateReceiptDTO } from './dto/update-receipt.dto';
 
 @ApiTags(RECEIPT_ROUTES.main)
 @Controller(RECEIPT_ROUTES.main)
@@ -43,11 +45,12 @@ export class ReceiptController {
     @User('id') id: string,
     @Body() body: CreateReceiptDTO,
     @UploadedFiles() files,
+    @Req() req,
   ) {
     return await this.ReceiptService.createReceipt(id, body, files);
   }
 
-  @Get('get-receipts')
+  @Get('get-all')
   @UseGuards(new JwtAuthenticationGuard())
   public async getReceipts(
     @User('id') id: string,
@@ -58,7 +61,7 @@ export class ReceiptController {
 
   @Put(RECEIPT_ROUTES.update)
   @UseGuards(new JwtAuthenticationGuard())
-  public async updateReceipt(@User('id') id: string, @Body() body) {
+  public async updateReceipt(@User('id') id: string, @Body() body: UpdateReceiptDTO) {
     return await this.ReceiptService.updateReceipt(id, body);
   }
 

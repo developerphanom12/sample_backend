@@ -7,5 +7,5 @@ export const CURRENCY_SWAGGER = {
 export const CURRENCY_ROUTES = {
   main: 'currency',
   get_all: 'get-all',
-  get: 'get',
+  get: 'get/:currencyId',
 };

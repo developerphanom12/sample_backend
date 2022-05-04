@@ -6,10 +6,11 @@ import { DatabaseConfig } from './shared/configs/database.config';
 import { AuthModule } from './auth/auth.module';
 import { APP_FILTER } from '@nestjs/core/constants';
 import { HttpErrorFilter } from './shared/http-error.filter';
-import { UserInfoModule } from './user-info/user-info.module';
 import { CurrencyModule } from './currency/currency.module';
 import { AppController } from './app.controller'
 import { ReceiptModule } from './receipt/receipt.module';
+import { CompanyModule } from './company/company.module';
+import { CompanyMemberModule } from './company-member/company-member.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -30,9 +31,10 @@ const currentEnv = process.env.NODE_ENV || 'local';
     }),
     ScheduleModule.forRoot(),
     AuthModule,
-    UserInfoModule,
     CurrencyModule,
     ReceiptModule,
+    CompanyModule,
+    CompanyMemberModule,
   ],
   controllers: [AppController],
   providers: [

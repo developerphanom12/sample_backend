@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { UserInfoEntity } from '../../user-info/entities/user-info.entity';
 import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
+import { CompanyEntity } from 'src/company/entities/company.entity';
 
 @Entity('currency')
 export class CurrencyEntity {
@@ -34,8 +34,8 @@ export class CurrencyEntity {
   @Column({ nullable: true })
   description: string;
 
-  @OneToMany((type) => UserInfoEntity, (data) => data.currency)
-  userInfo: UserInfoEntity;
+  @OneToMany((type) => CompanyEntity, (data) => data.currency)
+  company: CompanyEntity;
 
   @OneToMany((type) => ReceiptEntity, (data) => data.currency)
   receipts: ReceiptEntity;
