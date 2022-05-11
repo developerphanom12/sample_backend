@@ -1,4 +1,4 @@
-import { EMAIL_CONFIG } from 'src/constants/email';
+import { EMAIL_CONFIG } from '../../constants/email';
 
 export const createPasswordMailSes = ({
   email,

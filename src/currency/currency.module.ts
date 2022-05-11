@@ -3,7 +3,7 @@ import { CurrencyService } from './currency.service';
 import { CurrencyController } from './currency.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CurrencyEntity } from './entities/currency.entity';
-import { CompanyEntity } from 'src/company/entities/company.entity';
+import { CompanyEntity } from '../company/entities/company.entity';
 
 @Module({
   imports: [

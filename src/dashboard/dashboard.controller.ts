@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { User } from 'src/shared/decorators/user.decorator';
-import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { User } from '../shared/decorators/user.decorator';
+import { JwtAuthenticationGuard } from '../shared/guards';
 import { DASHBOARD_ROUTES, DASHBOARD_SWAGGER } from './dashboard.constants';
 import { DashboardService } from './dashboard.service';
 import { DashboardStatisticDTO } from './dto/dashboard-get-statistic.dto';
@@ -11,12 +11,12 @@ import { DashboardStatisticDTO } from './dto/dashboard-get-statistic.dto';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-    @Post(DASHBOARD_ROUTES.statistic)
-    @UseGuards(new JwtAuthenticationGuard())
+    @Get(DASHBOARD_ROUTES.statistic)
+    @UseGuards(new JwtAuthenticationGuard)
     @ApiOperation({ summary: DASHBOARD_SWAGGER.get_statistic })
     async getDashboardData (
         @User('id') id,
-        @Body() body: DashboardStatisticDTO
+        @Query() body: DashboardStatisticDTO
     ) {
         return await this.dashboardService.getDashboardInfo(id, body);
     }

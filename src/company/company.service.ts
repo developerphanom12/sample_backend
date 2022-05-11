@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthEntity } from 'src/auth/entities/auth.entity';
-import { ECompanyRoles } from 'src/company-member/company-member.constants';
-import { MemberEntity } from 'src/company-member/entities/company-member.entity';
-import { CurrencyEntity } from 'src/currency/entities/currency.entity';
+import { AuthEntity } from '../auth/entities/auth.entity';
+import { ECompanyRoles } from '../company-member/company-member.constants';
+import { MemberEntity } from '../company-member/entities/company-member.entity';
+import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { Repository } from 'typeorm';
 import { COMPANY_ERRORS } from './company.errors';
 import { ICreateCompany } from './company.types';

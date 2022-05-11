@@ -18,5 +18,10 @@ export interface ICompanyDetails {
 export interface IDashboardStatistic {
   metric: IReceiptMetric | null;
   companies: ICompanyDetails[] | null;
-  receipts: ReceiptEntity[] | null;
+  receipts: IDashboardRecent | null;
+}
+
+export interface IDashboardRecent {
+  data: ReceiptEntity[];
+  count: number;
 }

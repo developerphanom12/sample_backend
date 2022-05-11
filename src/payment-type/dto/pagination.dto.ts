@@ -1,6 +1,5 @@
 import { Transform } from 'class-transformer';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
-import { EReceiptStatus } from '../receipt.constants';
 
 export class PaginationDTO {
   @IsOptional()
@@ -15,17 +14,5 @@ export class PaginationDTO {
 
   @IsOptional()
   @IsString()
-  status?: EReceiptStatus;
-
-  @IsOptional()
-  @IsString()
   search?: string;
-
-  @IsOptional()
-  @IsString()
-  date_start?: Date;
-
-  @IsOptional()
-  @IsString()
-  date_end?: Date;
 }

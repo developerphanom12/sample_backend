@@ -1,17 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthEntity } from 'src/auth/entities/auth.entity';
-import { ECompanyRoles } from 'src/company-member/company-member.constants';
-import { MemberEntity } from 'src/company-member/entities/company-member.entity';
-import { CompanyEntity } from 'src/company/entities/company.entity';
-import { CurrencyEntity } from 'src/currency/entities/currency.entity';
-import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
-import { EReceiptStatus } from 'src/receipt/receipt.constants';
-import { Repository } from 'typeorm';
+import { AuthEntity } from '../auth/entities/auth.entity';
+import { ECompanyRoles } from '../company-member/company-member.constants';
+import { MemberEntity } from '../company-member/entities/company-member.entity';
+import { CompanyEntity } from '../company/entities/company.entity';
+import { CurrencyEntity } from '../currency/entities/currency.entity';
+import { ReceiptEntity } from '../receipt/entities/receipt.entity';
+import { EReceiptStatus } from '../receipt/receipt.constants';
+import { MoreThan, Repository } from 'typeorm';
 import { DASHBOARD_ERRORS } from './dashboard.errors';
 import {
   ICompanyDetails,
+  IDashboardRecent,
   IDashboardStatistic,
   IReceiptMetric,
 } from './dashboard.types';
@@ -128,22 +129,20 @@ export class DashboardService {
   async getRecentReceipts(
     id: string,
     body?: DashboardStatisticDTO,
-  ): Promise<ReceiptEntity[] | null> {
+  ): Promise<IDashboardRecent | null> {
     const today = new Date(new Date().setHours(0, 0, 0, 0));
-    const sort_date = body.start_date || today;
+    const sort_date = body.date_start || today;
 
     const company = await this.extractCompanyFromUser(id);
-    const receipts = await this.receiptRepository.find({
-      where: { company: company },
+    const [receipts, total] = await this.receiptRepository.findAndCount({
+      where: { company: company, created: MoreThan(sort_date) },
       order: { created: 'DESC' },
     });
 
-    if (!receipts) {
-      return null;
+    return {
+      data: receipts,
+      count: total,
     }
-
-    const result = receipts.filter((receipt) => receipt.created > sort_date);
-    return result.length > 10 ? result.slice(0, 10) : result;
   }
 
   public async getDashboardInfo(

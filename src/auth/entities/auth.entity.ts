@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { SocialAuthEntity } from './social-auth.entity';
-import { MemberEntity } from 'src/company-member/entities/company-member.entity';
+import { MemberEntity } from '../../company-member/entities/company-member.entity';
 
 @Entity('auth')
 export class AuthEntity {
