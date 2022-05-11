@@ -101,11 +101,11 @@ export class DashboardService {
           review: receipts.filter(
             (receipt) => receipt.status === EReceiptStatus.review,
           ).length,
-          declined: receipts.filter(
-            (receipt) => receipt.status === EReceiptStatus.declined,
+          rejected: receipts.filter(
+            (receipt) => receipt.status === EReceiptStatus.rejected,
           ).length,
-          completed: receipts.filter(
-            (receipt) => receipt.status === EReceiptStatus.completed,
+          accepted: receipts.filter(
+            (receipt) => receipt.status === EReceiptStatus.accepted,
           ).length,
         }
       : null;

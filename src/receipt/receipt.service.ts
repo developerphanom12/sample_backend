@@ -99,7 +99,7 @@ export class ReceiptService {
     } catch (err) {
       console.log('Error', err);
       return {
-        status: EReceiptStatus.declined,
+        status: EReceiptStatus.rejected,
         photos: [photo.filename],
       };
     }
@@ -135,7 +135,7 @@ export class ReceiptService {
     if (!(receiptData.receipt_date || receiptData.total || receiptData.tax)) {
       return {
         ...receiptData,
-        status: EReceiptStatus.declined,
+        status: EReceiptStatus.rejected,
         photos: [photo],
       };
     }
