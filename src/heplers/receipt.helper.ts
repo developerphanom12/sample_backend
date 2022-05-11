@@ -74,16 +74,3 @@ export const extractTax = (text: string) => {
     return null;
   }
 };
-
-
-export const filterReceipts = (receipts: ReceiptEntity[], filter: any) => {
-  const filters = {
-    date: {
-      start: new Date(),
-      end: new Date(),
-    },
-    status: [EReceiptStatus.review, EReceiptStatus.declined, EReceiptStatus.completed],
-    search: "ASD",
-    
-  }
-}
