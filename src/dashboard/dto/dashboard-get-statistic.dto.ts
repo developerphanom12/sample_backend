@@ -1,7 +1,7 @@
-import { IsDate, IsOptional } from "class-validator";
+import { IsOptional, IsString } from "class-validator";
 
 export class DashboardStatisticDTO {
     @IsOptional()
-    @IsDate()
-    start_date?: Date;
+    @IsString()
+    date_start?: Date;
 }

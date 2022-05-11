@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthEntity } from 'src/auth/entities/auth.entity';
-import { MemberEntity } from 'src/company-member/entities/company-member.entity';
-import { CompanyEntity } from 'src/company/entities/company.entity';
-import { CurrencyEntity } from 'src/currency/entities/currency.entity';
+import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
+import { AuthEntity } from '../auth/entities/auth.entity';
+import { MemberEntity } from '../company-member/entities/company-member.entity';
+import { CompanyEntity } from '../company/entities/company.entity';
+import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { ReceiptEntity } from './entities/receipt.entity';
 import { ReceiptController } from './receipt.controller';
 import { ReceiptService } from './receipt.service';
@@ -16,6 +17,7 @@ import { ReceiptService } from './receipt.service';
       CurrencyEntity,
       CompanyEntity,
       MemberEntity,
+      SupplierEntity,
     ]),
   ],
   controllers: [ReceiptController],

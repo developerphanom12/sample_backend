@@ -15,14 +15,14 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { JwtAuthenticationGuard } from '../shared/guards';
 import { ReceiptService } from './receipt.service';
 import {
   receiptPhotoStorage,
   RECEIPT_PHOTOS_LIMIT,
   RECEIPT_ROUTES,
 } from './receipt.constants';
-import { User } from 'src/shared/decorators/user.decorator';
+import { User } from '../shared/decorators/user.decorator';
 import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
@@ -49,11 +49,11 @@ export class ReceiptController {
     return await this.ReceiptService.createReceipt(id, body, files);
   }
 
-  @Post(RECEIPT_ROUTES.get_all)
+  @Get(RECEIPT_ROUTES.get_all)
   @UseGuards(new JwtAuthenticationGuard())
   public async getReceipts(
     @User('id') id: string,
-    @Body() body: PaginationDTO,
+    @Query() body: PaginationDTO,
   ) {
     return await this.ReceiptService.getReceipts(id, body);
   }

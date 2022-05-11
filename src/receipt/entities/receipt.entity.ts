@@ -9,9 +9,11 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { EReceiptStatus } from '../receipt.constants';
-import { AuthEntity } from 'src/auth/entities/auth.entity';
-import { CurrencyEntity } from 'src/currency/entities/currency.entity';
-import { CompanyEntity } from 'src/company/entities/company.entity';
+import { CurrencyEntity } from '../../currency/entities/currency.entity';
+import { CompanyEntity } from '../../company/entities/company.entity';
+import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
+import { CategoryEntity } from 'src/category/entities/category.entity';
+import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 
 @Entity('receipt')
 export class ReceiptEntity {
@@ -30,16 +32,13 @@ export class ReceiptEntity {
   status: EReceiptStatus;
 
   @Column({ nullable: true })
+  custom_id: string;
+
+  @Column({ nullable: true })
   receipt_date: Date;
 
   @Column({ nullable: true })
-  supplier: string;
-
-  @Column({ nullable: true })
   supplier_account: string;
-
-  @Column({ nullable: true })
-  category: string;
 
   @Column({ nullable: true })
   vat_code: string;
@@ -69,4 +68,16 @@ export class ReceiptEntity {
   @ManyToOne((type) => CurrencyEntity, (data) => data.receipts)
   @JoinColumn()
   currency: CurrencyEntity;
+
+  @ManyToOne((type) => SupplierEntity, (data) => data.receipts, { cascade: true, onDelete: "SET NULL" })
+  @JoinColumn()
+  supplier: SupplierEntity;
+
+  @ManyToOne((type) => CategoryEntity, (data) => data.receipts, { cascade: true, onDelete: "SET NULL" })
+  @JoinColumn()
+  category: CategoryEntity;
+
+  @ManyToOne((type) => PaymentTypeEntity, (data) => data.receipts, { cascade: true, onDelete: "SET NULL" })
+  @JoinColumn()
+  payment_type: PaymentTypeEntity;
 }

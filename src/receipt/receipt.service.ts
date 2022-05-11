@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Like, Repository, LessThan } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
   AnalyzeDocumentCommand,
@@ -12,16 +12,17 @@ import {
   extractDate,
   extractTax,
   extractTotal,
-} from 'src/heplers/receipt.helper';
+} from '../heplers/receipt.helper';
 import { EReceiptStatus, receiptPhotoPath } from './receipt.constants';
 import { join } from 'path';
-import { AuthEntity } from 'src/auth/entities/auth.entity';
+import { AuthEntity } from '../auth/entities/auth.entity';
 import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
-import { CurrencyEntity } from 'src/currency/entities/currency.entity';
-import { MemberEntity } from 'src/company-member/entities/company-member.entity';
-import { CompanyEntity } from 'src/company/entities/company.entity';
+import { CurrencyEntity } from '../currency/entities/currency.entity';
+import { MemberEntity } from '../company-member/entities/company-member.entity';
+import { CompanyEntity } from '../company/entities/company.entity';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
+import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 
 @Injectable()
 export class ReceiptService {
@@ -36,6 +37,8 @@ export class ReceiptService {
     private companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
+    @InjectRepository(SupplierEntity)
+    private supplierRepository: Repository<SupplierEntity>,
     private configService: ConfigService,
   ) {}
 
@@ -70,7 +73,7 @@ export class ReceiptService {
     }
     const company = await this.companyRepository.findOne({
       where: { id: account.company.id },
-      relations: ['receipts'],
+      relations: ['receipts', 'currency'],
     });
 
     if (!company) {
@@ -79,7 +82,7 @@ export class ReceiptService {
     return company;
   }
 
-  async getImageData(photo, textractClient) {
+  async getImageData(photo, customId: number, textractClient) {
     try {
       const buf = await fs.promises.readFile(photo.path);
       const params = {
@@ -93,13 +96,16 @@ export class ReceiptService {
       const lines = response.Blocks.filter((b) => b.BlockType === 'LINE').map(
         (i) => i.Text,
       );
-      const test = await this.extractData(lines, photo.filename);
-
-      return test;
+      const data = await this.extractData(lines, photo.filename);
+      return {
+        ...data,
+        custom_id: `rc${customId + 1}`,
+      };
     } catch (err) {
       console.log('Error', err);
       return {
         status: EReceiptStatus.declined,
+        custom_id: `rc${customId + 1}`,
         photos: [photo.filename],
       };
     }
@@ -112,11 +118,15 @@ export class ReceiptService {
     currency: CurrencyEntity,
   ) {
     try {
-      return await this.receiptRepository.save({
+      const receipt = await this.receiptRepository.save({
         ...receiptData,
         description: description,
         currency: currency,
         company: company,
+      });
+      return await this.receiptRepository.findOne({
+        where: { id: receipt.id },
+        relations: ['currency', 'company'],
       });
     } catch (error) {
       console.log(error);
@@ -130,7 +140,18 @@ export class ReceiptService {
       receipt_date: extractDate(text),
       tax: extractTax(text),
       total: extractTotal(text),
+      net: null,
+      vat_code: null,
     };
+    if (receiptData.total && receiptData.tax) {
+      receiptData.net = receiptData.total - receiptData.tax;
+      receiptData.vat_code =
+        Math.floor(
+          (receiptData.tax / (receiptData.total - receiptData.tax)) * 10000,
+        ) /
+          100 +
+        '%';
+    }
 
     if (!(receiptData.receipt_date || receiptData.total || receiptData.tax)) {
       return {
@@ -150,13 +171,21 @@ export class ReceiptService {
     const company = await this.extractCompanyFromUser(id);
 
     const currency = await this.currencyRepository.findOne({
-      where: { id: body.currency },
+      where: { id: company.currency.id },
+    });
+
+    const receipts = await this.receiptRepository.find({
+      where: { company: company },
     });
 
     const textractClient = await this.createTextractClient();
 
-    const promises = photos.map((photo) =>
-      this.getImageData(photo, textractClient),
+    const promises = photos.map((photo, i) =>
+      this.getImageData(
+        photo,
+        (receipts ? receipts.length : 0) + i,
+        textractClient,
+      ),
     );
 
     const textractData = await Promise.all(promises);
@@ -170,27 +199,56 @@ export class ReceiptService {
     return await createdReceipts;
   }
 
-  async getReceipts(id: string, paginationParameters: PaginationDTO) {
+  async getReceipts(id: string, body: PaginationDTO) {
     const company = this.extractCompanyFromUser(id);
-    if (!paginationParameters.filter_status) {
-      const [result, total] = await this.receiptRepository.findAndCount({
-        where: { company: company },
-        order: { created: 'DESC' },
-        take: paginationParameters.take ?? 10,
-        skip: paginationParameters.skip ?? 0,
-        relations: ['currency'],
-      });
-      return {
-        data: result,
-        count: total,
-      };
-    }
+
+    const today = new Date(new Date().setHours(0, 0, 0, 0));
+    const nextDay = new Date(
+      new Date(today).setDate(new Date(today).getDate() + 1),
+    );
+
+    const dateFilter =
+      body.date_start && body.date_end
+        ? Between(body.date_start, body.date_end)
+        : LessThan(nextDay);
+
     const [result, total] = await this.receiptRepository.findAndCount({
-      where: { company: company, status: paginationParameters.filter_status },
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      where: [
+        {
+          company: company,
+          status: Like(`%${body.status || ''}%`),
+          created: dateFilter,
+          custom_id: Like(`%${body.search || ''}%`),
+        },
+        {
+          company: company,
+          status: Like(`%${body.status || ''}%`),
+          created: dateFilter,
+          supplier: {
+            name: Like(`%${body.search || ''}%`),
+          },
+        },
+        {
+          company: company,
+          status: Like(`%${body.status || ''}%`),
+          created: dateFilter,
+          category: {
+            name: Like(`%${body.search || ''}%`),
+          },
+        },
+        {
+          company: company,
+          status: Like(`%${body.status || ''}%`),
+          created: dateFilter,
+          payment_type: {
+            name: Like(`%${body.search || ''}%`),
+          },
+        },
+      ],
       order: { created: 'DESC' },
-      take: paginationParameters.take ?? 10,
-      skip: paginationParameters.skip ?? 0,
-      relations: ['currency'],
+      take: body.take ?? 10,
+      skip: body.skip ?? 0,
     });
     return {
       data: result,
@@ -242,7 +300,7 @@ export class ReceiptService {
 
     return await this.receiptRepository.findOne({
       where: { id: receiptId },
-      relations: ['currency'],
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
     });
   }
 

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MemberEntity } from 'src/company-member/entities/company-member.entity';
+import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { AuthEntity } from '../auth/entities/auth.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { ReceiptEntity } from '../receipt/entities/receipt.entity';

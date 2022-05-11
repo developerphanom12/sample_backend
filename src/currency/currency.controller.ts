@@ -7,8 +7,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { User } from 'src/shared/decorators/user.decorator';
-import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { User } from '../shared/decorators/user.decorator';
+import { JwtAuthenticationGuard } from '../shared/guards';
 import { CURRENCY_ROUTES, CURRENCY_SWAGGER } from './currency.constants';
 import { CurrencyService } from './currency.service';
 import { CurrencyEntity } from './entities/currency.entity';
@@ -40,7 +40,10 @@ export class CurrencyController {
     type: CurrencyEntity,
   })
   @HttpCode(HttpStatus.OK)
-  public async getOneCurrency(@User('id') id: string, @Param('currencyId') currencyId: string) {
+  public async getOneCurrency(
+    @User('id') id: string,
+    @Param('currencyId') currencyId: string,
+  ) {
     return await this.CurrencyService.getOneCurrency(id, currencyId);
   }
 }

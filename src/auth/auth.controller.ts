@@ -18,7 +18,7 @@ import { AuthEntity } from './entities/auth.entity';
 import { Response } from 'express';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
-import { FRONT_END_URL } from 'src/constants/config';
+import { FRONT_END_URL } from '../constants/config';
 
 @ApiBearerAuth()
 @ApiTags(AUTH_ROUTES.main)
