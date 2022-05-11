@@ -45,4 +45,10 @@ export class UpdateReceiptDTO {
   @IsOptional()
   @IsString()
   currency: string;
+
+  @IsOptional()
+  publish_status: boolean;
+  
+  @IsOptional()
+  payment_status: boolean;
 }
