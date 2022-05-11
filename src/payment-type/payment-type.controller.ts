@@ -15,7 +15,7 @@ export class PaymentTypeController {
   constructor(private readonly paymentTypeService: PaymentTypeService) {}
 
   @Post(PAYMENT_TYPE_ROUTES.create)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async createSupplier(
     @User('id') id: string,
     @Body() body: CreatePaymentTypeDTO,
@@ -24,7 +24,7 @@ export class PaymentTypeController {
   }
 
   @Put(PAYMENT_TYPE_ROUTES.update)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async updateSupplier(
     @User('id') id: string,
     @Body() body: UpdatePaymentTypeDTO,
@@ -33,7 +33,7 @@ export class PaymentTypeController {
   }
 
   @Get(PAYMENT_TYPE_ROUTES.get)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async getSupplier(
     @User('id') id: string,
     @Param('paymentTypeId') paymentTypeId: string,
@@ -42,13 +42,13 @@ export class PaymentTypeController {
   }
 
   @Get(PAYMENT_TYPE_ROUTES.get_all)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async getAllSuppliers(@User('id') id: string) {
     return await this.paymentTypeService.getAllPaymentTypes(id);
   }
 
   @Get(PAYMENT_TYPE_ROUTES.get_many)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async getSuppliers(
     @User('id') id: string,
     @Query() body: PaginationDTO,
@@ -57,7 +57,7 @@ export class PaymentTypeController {
   }
 
   @Delete(PAYMENT_TYPE_ROUTES.delete)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async deleteReceipt(@User('id') id: string, @Param('paymentTypeId') paymentTypeId) {
     return await this.paymentTypeService.deletePaymentType(id, paymentTypeId);
   }
