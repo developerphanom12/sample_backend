@@ -24,7 +24,7 @@ export class CategoryController {
   constructor(private readonly CategoryService: CategoryService) {}
 
   @Post(CATEGORY_ROUTES.create)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async createCategory(
     @User('id') id: string,
     @Body() body: CreateCategoryDTO,
@@ -33,7 +33,7 @@ export class CategoryController {
   }
 
   @Put(CATEGORY_ROUTES.update)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async updateCategory(
     @User('id') id: string,
     @Body() body: UpdateCategoryDTO,
@@ -42,7 +42,7 @@ export class CategoryController {
   }
 
   @Get(CATEGORY_ROUTES.get)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async getCategory(
     @User('id') id: string,
     @Param('categoryId') categoryId: string,
@@ -51,13 +51,13 @@ export class CategoryController {
   }
 
   @Get(CATEGORY_ROUTES.get_all)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async getAllCategories(@User('id') id: string) {
     return await this.CategoryService.getAllCategories(id);
   }
 
   @Get(CATEGORY_ROUTES.get_many)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async getCategories(
     @User('id') id: string,
     @Query() body: PaginationDTO,
@@ -66,7 +66,7 @@ export class CategoryController {
   }
 
   @Delete(CATEGORY_ROUTES.delete)
-  @UseGuards(new JwtAuthenticationGuard())
+  @UseGuards(new JwtAuthenticationGuard)
   public async deleteReceipt(
     @User('id') id: string,
     @Param('categoryId') categoryId,
