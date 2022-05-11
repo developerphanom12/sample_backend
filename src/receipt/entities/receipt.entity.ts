@@ -58,6 +58,12 @@ export class ReceiptEntity {
   @Column({ nullable: true })
   description: string;
 
+  @Column({ nullable: true, default: false })
+  publish_status: boolean;
+
+  @Column({ nullable: true, default: false })
+  payment_status: boolean;
+
   @Column('simple-array', { nullable: true })
   photos: string[];
 
@@ -69,15 +75,24 @@ export class ReceiptEntity {
   @JoinColumn()
   currency: CurrencyEntity;
 
-  @ManyToOne((type) => SupplierEntity, (data) => data.receipts, { cascade: true, onDelete: "SET NULL" })
+  @ManyToOne((type) => SupplierEntity, (data) => data.receipts, {
+    cascade: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn()
   supplier: SupplierEntity;
 
-  @ManyToOne((type) => CategoryEntity, (data) => data.receipts, { cascade: true, onDelete: "SET NULL" })
+  @ManyToOne((type) => CategoryEntity, (data) => data.receipts, {
+    cascade: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn()
   category: CategoryEntity;
 
-  @ManyToOne((type) => PaymentTypeEntity, (data) => data.receipts, { cascade: true, onDelete: "SET NULL" })
+  @ManyToOne((type) => PaymentTypeEntity, (data) => data.receipts, {
+    cascade: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn()
   payment_type: PaymentTypeEntity;
 }
