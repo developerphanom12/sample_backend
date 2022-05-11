@@ -42,6 +42,6 @@ export const RECEIPT_TAX_REGEX = /tax(?=\s|$)/g;
 export enum EReceiptStatus {
   processing = 'processing',
   review = 'review',
-  declined = 'declined',
-  completed = 'completed',
+  rejected = 'rejected',
+  accepted = 'accepted',
 }

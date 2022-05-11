@@ -5,8 +5,8 @@ import { CompanyEntity } from '../company/entities/company.entity';
 export interface IReceiptMetric {
   processing: number;
   review: number;
-  declined: number;
-  completed: number;
+  rejected: number;
+  accepted: number;
 }
 
 export interface ICompanyDetails {
