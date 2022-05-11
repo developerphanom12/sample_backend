@@ -1,8 +1,10 @@
+import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 import {
+  EReceiptStatus,
   RECEIPT_DATE_REGEX,
   RECEIPT_TAX_REGEX,
   RECEIPT_TOTAL_REGEX,
-} from 'src/receipt/receipt.constants';
+} from '../receipt/receipt.constants';
 
 export const extractDate = (text: string) => {
   try {
@@ -72,3 +74,16 @@ export const extractTax = (text: string) => {
     return null;
   }
 };
+
+
+export const filterReceipts = (receipts: ReceiptEntity[], filter: any) => {
+  const filters = {
+    date: {
+      start: new Date(),
+      end: new Date(),
+    },
+    status: [EReceiptStatus.review, EReceiptStatus.declined, EReceiptStatus.completed],
+    search: "ASD",
+    
+  }
+}

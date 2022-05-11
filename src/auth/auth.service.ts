@@ -12,16 +12,15 @@ import { RegistrationDTO } from './dto/registration.dto';
 import { LoginDTO } from './dto/login.dto';
 import { SocialLoginDTO } from './dto/social-auth.dto';
 import { SocialAuthEntity } from './entities/social-auth.entity';
-import { CurrencyEntity } from 'src/currency/entities/currency.entity';
+import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { EOAuthTypes } from './auth.constants';
 import { ResetPasswordEntity } from './entities/reset-password.entity';
 import { v4 as uuid } from 'uuid';
 import { PasswordRequestDTO } from './dto/password-request.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
-import { createPasswordMailSes } from 'src/shared/emails/create-password-email';
-import { CompanyEntity } from 'src/company/entities/company.entity';
-import { MemberEntity } from 'src/company-member/entities/company-member.entity';
+import { createPasswordMailSes } from '../shared/emails/create-password-email';
+import { CompanyEntity } from '../company/entities/company.entity';
 
 @Injectable()
 export class AuthService {

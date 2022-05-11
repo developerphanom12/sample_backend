@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
-import { CompanyEntity } from 'src/company/entities/company.entity';
+import { ReceiptEntity } from '../../receipt/entities/receipt.entity';
+import { CompanyEntity } from '../../company/entities/company.entity';
 
 @Entity('currency')
 export class CurrencyEntity {

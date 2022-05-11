@@ -1,4 +1,4 @@
-import { CurrencySeed } from 'src/constants/seed';
+import { CurrencySeed } from '../constants/seed';
 import { getRepository, MigrationInterface, QueryRunner } from 'typeorm';
 
 export class Seeding1649685951420 implements MigrationInterface {
