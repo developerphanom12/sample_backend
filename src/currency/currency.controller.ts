@@ -20,7 +20,7 @@ export class CurrencyController {
 
   @Get(CURRENCY_ROUTES.get_all)
   @ApiOperation({ summary: CURRENCY_SWAGGER.get_all })
-  @UseGuards(new JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard)
   @ApiResponse({
     status: HttpStatus.OK,
     description: CURRENCY_SWAGGER.success,
@@ -33,7 +33,7 @@ export class CurrencyController {
 
   @Get(CURRENCY_ROUTES.get)
   @ApiOperation({ summary: CURRENCY_SWAGGER.get })
-  @UseGuards(new JwtAuthenticationGuard)
+  @UseGuards(JwtAuthenticationGuard)
   @ApiResponse({
     status: HttpStatus.OK,
     description: CURRENCY_SWAGGER.success,

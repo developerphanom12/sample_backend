@@ -12,7 +12,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
     @Get(DASHBOARD_ROUTES.statistic)
-    @UseGuards(new JwtAuthenticationGuard)
+    @UseGuards(JwtAuthenticationGuard)
     @ApiOperation({ summary: DASHBOARD_SWAGGER.get_statistic })
     async getDashboardData (
         @User('id') id,
