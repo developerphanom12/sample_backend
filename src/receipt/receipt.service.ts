@@ -200,7 +200,7 @@ export class ReceiptService {
   }
 
   async getReceipts(id: string, body: PaginationDTO) {
-    const company = this.extractCompanyFromUser(id);
+    const company = await this.extractCompanyFromUser(id);
 
     const today = new Date(new Date().setHours(0, 0, 0, 0));
     const nextDay = new Date(

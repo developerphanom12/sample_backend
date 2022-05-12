@@ -243,18 +243,18 @@ export class AuthService {
     return deserialize(AuthEntity, serializedUser);
   }
 
-  async getById(id: string) {
+  async getById(userId: string) {
     return this.authRepository.findOne({
       where: {
-        id,
+        id: userId,
       },
     });
   }
 
-  async logOut(id: string) {
+  async logOut(userId: string) {
     const user = await this.authRepository.findOne({
       where: {
-        id,
+        id: userId,
       },
     });
     if (!user) {
