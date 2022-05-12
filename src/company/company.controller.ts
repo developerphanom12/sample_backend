@@ -12,7 +12,7 @@ export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
   @Post(COMPANY_ROUTES.create)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: COMPANY_SWAGGER.create })
   public async createCompany(
     @User('id') id: string,
@@ -22,7 +22,7 @@ export class CompanyController {
   }
 
   @Get(COMPANY_ROUTES.get)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: COMPANY_SWAGGER.get })
   public async getCompany(
     @User('id') id: string,
@@ -32,7 +32,7 @@ export class CompanyController {
   }
 
   @Get(COMPANY_ROUTES.get_all)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: COMPANY_SWAGGER.get_all })
   public async getAllCompanies(@User('id') id: string) {
     return await this.companyService.getAllCompanies(id);

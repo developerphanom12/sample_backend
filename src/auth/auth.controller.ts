@@ -69,7 +69,7 @@ export class AuthController {
     description: AUTH_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async logout(@User('id') id: string) {
     return await this.authService.logOut(id);
   }
@@ -102,7 +102,7 @@ export class AuthController {
 
   @Put(AUTH_ROUTES.reset_password)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async resetPassword(
     @User('id') id: string,
     @Body() body: ResetPasswordDTO,

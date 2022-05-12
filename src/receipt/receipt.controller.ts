@@ -33,7 +33,7 @@ export class ReceiptController {
   constructor(private readonly ReceiptService: ReceiptService) {}
 
   @Post(RECEIPT_ROUTES.create)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   @UseInterceptors(
     FilesInterceptor(
       'receipt_photos',
@@ -50,7 +50,7 @@ export class ReceiptController {
   }
 
   @Get(RECEIPT_ROUTES.get_all)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async getReceipts(
     @User('id') id: string,
     @Query() body: PaginationDTO,
@@ -59,7 +59,7 @@ export class ReceiptController {
   }
 
   @Put(RECEIPT_ROUTES.update)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async updateReceipt(@User('id') id: string, @Body() body: UpdateReceiptDTO) {
     return await this.ReceiptService.updateReceipt(id, body);
   }
@@ -73,7 +73,7 @@ export class ReceiptController {
   }
 
   @Delete(RECEIPT_ROUTES.delete_image)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async deleteReceiptImage(
     @User('id') id: string,
     @Param('imagename') imagename: string,
@@ -82,7 +82,7 @@ export class ReceiptController {
   }
 
   @Delete(RECEIPT_ROUTES.delete)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async deleteReceipt(@User('id') id: string, @Param('id') receiptId) {
     return await this.ReceiptService.receiptDelete(id, receiptId);
   }

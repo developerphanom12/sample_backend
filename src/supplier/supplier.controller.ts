@@ -24,7 +24,7 @@ export class SupplierController {
   constructor(private readonly SupplierService: SupplierService) {}
 
   @Post(SUPPLIER_ROUTES.create)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async createSupplier(
     @User('id') id: string,
     @Body() body: CreateSupplierDTO,
@@ -33,7 +33,7 @@ export class SupplierController {
   }
 
   @Put(SUPPLIER_ROUTES.update)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async updateSupplier(
     @User('id') id: string,
     @Body() body: UpdateSupplierDTO,
@@ -42,7 +42,7 @@ export class SupplierController {
   }
 
   @Get(SUPPLIER_ROUTES.get)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async getSupplier(
     @User('id') id: string,
     @Param('supplierId') supplierId: string,
@@ -51,13 +51,13 @@ export class SupplierController {
   }
 
   @Get(SUPPLIER_ROUTES.get_all)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async getAllSuppliers(@User('id') id: string) {
     return await this.SupplierService.getAllSuppliers(id);
   }
 
   @Get(SUPPLIER_ROUTES.get_many)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async getSuppliers(
     @User('id') id: string,
     @Query() body: PaginationDTO,
@@ -66,7 +66,7 @@ export class SupplierController {
   }
 
   @Delete(SUPPLIER_ROUTES.delete)
-  @UseGuards(JwtAuthenticationGuard)
+  @UseGuards(new JwtAuthenticationGuard())
   public async deleteReceipt(@User('id') id: string, @Param('supplierId') supplierId) {
     return await this.SupplierService.deleteSupplier(id, supplierId);
   }
