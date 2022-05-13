@@ -27,7 +27,7 @@ export const RECEIPT_ROUTES = {
   update: 'update',
   get_all: 'get-all',
   delete: 'delete/:id',
-  get_image: 'get-image/:imagename',
+  get_image: 'images/:imagename',
   delete_image: 'delete-image/:imagename',
 };
 

@@ -3,18 +3,21 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
   Query,
   Req,
   Res,
+  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { ReceiptService } from './receipt.service';
 import {
@@ -34,13 +37,7 @@ export class ReceiptController {
 
   @Post(RECEIPT_ROUTES.create)
   @UseGuards(new JwtAuthenticationGuard())
-  @UseInterceptors(
-    FilesInterceptor(
-      'receipt_photos',
-      RECEIPT_PHOTOS_LIMIT,
-      receiptPhotoStorage,
-    ),
-  )
+  @UseInterceptors(FilesInterceptor('receipt_photos', RECEIPT_PHOTOS_LIMIT))
   public async creteReceipt(
     @User('id') id: string,
     @Body() body: CreateReceiptDTO,
@@ -48,6 +45,19 @@ export class ReceiptController {
   ) {
     return await this.ReceiptService.createReceipt(id, body, files);
   }
+
+  // @Post(`create-receipt`)
+  // @UseGuards(new JwtAuthenticationGuard())
+  // @ApiConsumes('multipart/form-data')
+  // @HttpCode(HttpStatus.CREATED)
+  // @UseInterceptors(FileInterceptor('file'))
+  // public async postPhoto(
+  //   @Body() body,
+  //   @UploadedFile() file,
+  //   @User('id') id: string,
+  // ) {
+  //   return this.ReceiptService.postPhoto(body, file, id);
+  // }
 
   @Get(RECEIPT_ROUTES.get_all)
   @UseGuards(new JwtAuthenticationGuard())
@@ -60,16 +70,21 @@ export class ReceiptController {
 
   @Put(RECEIPT_ROUTES.update)
   @UseGuards(new JwtAuthenticationGuard())
-  public async updateReceipt(@User('id') id: string, @Body() body: UpdateReceiptDTO) {
+  public async updateReceipt(
+    @User('id') id: string,
+    @Body() body: UpdateReceiptDTO,
+  ) {
     return await this.ReceiptService.updateReceipt(id, body);
   }
 
   @Get(RECEIPT_ROUTES.get_image)
+  @UseGuards(new JwtAuthenticationGuard())
   public async findReceiptImage(
+    @User('id') id: string,
     @Param('imagename') imagename: string,
     @Res() res,
   ) {
-    return await this.ReceiptService.getReceiptDetails(imagename, res);
+    return await this.ReceiptService.getReceiptImage(id, imagename, res);
   }
 
   @Delete(RECEIPT_ROUTES.delete_image)
