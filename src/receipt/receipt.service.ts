@@ -265,6 +265,7 @@ export class ReceiptService {
     }
 
     const receipt = await this.receiptRepository.findOne({
+      relations: ['currency'],
       where: { id: receiptId, company: company.id },
     });
 
