@@ -135,6 +135,7 @@ export class DashboardService {
 
     const company = await this.extractCompanyFromUser(id);
     const [receipts, total] = await this.receiptRepository.findAndCount({
+      relations: ['currency'],
       where: { company: company, created: MoreThan(sort_date) },
       order: { created: 'DESC' },
     });
@@ -142,7 +143,7 @@ export class DashboardService {
     return {
       data: receipts,
       count: total,
-    }
+    };
   }
 
   public async getDashboardInfo(

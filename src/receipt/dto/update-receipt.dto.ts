@@ -5,50 +5,49 @@ export class UpdateReceiptDTO {
   id: string;
   @IsOptional()
   @IsString()
-  description?: string;
+  description?: string | null;
 
   @IsOptional()
   status?: EReceiptStatus;
 
   @IsOptional()
-  receipt_date: Date;
+  receipt_date?: Date | null;
 
   @IsOptional()
   @IsString()
-  supplier: string;
+  supplier?: string | null;
 
   @IsOptional()
   @IsString()
-  supplier_account: string;
+  supplier_account?: string | null;
 
   @IsOptional()
   @IsString()
-  category: string;
+  category?: string | null;
 
   @IsOptional()
   @IsString()
-  vat_code: string;
+  vat_code?: string | null;
 
   @IsOptional()
-  net: number;
+  net?: number | null;
 
   @IsOptional()
-  tax: number;
+  tax?: number | null;
 
   @IsOptional()
-  total: number;
-
-  @IsOptional()
-  @IsString()
-  type: string;
+  total?: number | null;
 
   @IsOptional()
   @IsString()
-  currency: string;
+  type?: string | null;
 
   @IsOptional()
-  publish_status: boolean;
-  
+  currency?: string | null;
+
   @IsOptional()
-  payment_status: boolean;
+  publish_status?: boolean;
+
+  @IsOptional()
+  payment_status?: boolean;
 }
