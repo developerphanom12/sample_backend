@@ -17,8 +17,14 @@ export const receiptPhotoStorage = {
 };
 
 export const RECEIPT_SWAGGER = {
-  create: 'Create Receipt',
   success: 'Success',
+  create: 'Create receipt',
+  update: 'Update receipt',
+  get_image: 'Get receipt photo',
+  get_all: 'Get all receipts',
+  get_many: 'Get receipts with pagination',
+  delete: 'Delete receipt',
+  delete_image: 'Delete receipt image',
 };
 
 export const RECEIPT_ROUTES = {

@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCompanyDTO {
-  @ApiProperty()
+  @ApiProperty({required: false})
   @IsOptional()
   name?: string;
   @ApiProperty()

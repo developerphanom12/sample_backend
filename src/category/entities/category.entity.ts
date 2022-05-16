@@ -12,9 +12,11 @@ import { Exclude } from 'class-transformer';
 import { CompanyEntity } from '../../company/entities/company.entity';
 import { ReceiptEntity } from '../../receipt/entities/receipt.entity';
 import { MemberEntity } from '../../company-member/entities/company-member.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('category')
 export class CategoryEntity {
+  @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -25,6 +27,7 @@ export class CategoryEntity {
   @Exclude()
   updated: Date;
 
+  @ApiProperty()
   @Column()
   name: string;
 
@@ -39,6 +42,7 @@ export class CategoryEntity {
   @JoinColumn()
   company: CompanyEntity;
 
+  @ApiProperty({nullable: true})
   @OneToMany((type) => ReceiptEntity, (data) => data.category)
   receipts: ReceiptEntity[];
 }

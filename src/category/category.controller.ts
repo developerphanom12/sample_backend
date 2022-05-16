@@ -3,20 +3,23 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
-import { CATEGORY_ROUTES } from './category.constants';
+import { CATEGORY_ROUTES, CATEGORY_SWAGGER } from './category.constants';
 import { CategoryService } from './category.service';
 import { CreateCategoryDTO } from './dto/create-category.dto';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCategoryDTO } from './dto/update-category.dto';
+import { CategoryEntity } from './entities/category.entity';
 
 @ApiTags(CATEGORY_ROUTES.main)
 @Controller(CATEGORY_ROUTES.main)
@@ -25,6 +28,13 @@ export class CategoryController {
 
   @Post(CATEGORY_ROUTES.create)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: CATEGORY_SWAGGER.create })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: CATEGORY_SWAGGER.success,
+    type: CategoryEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async createCategory(
     @User('id') id: string,
     @Body() body: CreateCategoryDTO,
@@ -34,6 +44,13 @@ export class CategoryController {
 
   @Put(CATEGORY_ROUTES.update)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: CATEGORY_SWAGGER.update })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: CATEGORY_SWAGGER.success,
+    type: CategoryEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async updateCategory(
     @User('id') id: string,
     @Body() body: UpdateCategoryDTO,
@@ -43,6 +60,13 @@ export class CategoryController {
 
   @Get(CATEGORY_ROUTES.get)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: CATEGORY_SWAGGER.get })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: CATEGORY_SWAGGER.success,
+    type: CategoryEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async getCategory(
     @User('id') id: string,
     @Param('categoryId') categoryId: string,
@@ -51,6 +75,13 @@ export class CategoryController {
   }
 
   @Get(CATEGORY_ROUTES.get_all)
+  @ApiOperation({ summary: CATEGORY_SWAGGER.get_all })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: CATEGORY_SWAGGER.success,
+    type: CategoryEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   @UseGuards(new JwtAuthenticationGuard())
   public async getAllCategories(@User('id') id: string) {
     return await this.CategoryService.getAllCategories(id);
@@ -58,6 +89,13 @@ export class CategoryController {
 
   @Get(CATEGORY_ROUTES.get_many)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: CATEGORY_SWAGGER.get_many })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: CATEGORY_SWAGGER.success,
+    type: CategoryEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async getCategories(
     @User('id') id: string,
     @Query() body: PaginationDTO,
@@ -66,6 +104,12 @@ export class CategoryController {
   }
 
   @Delete(CATEGORY_ROUTES.delete)
+  @ApiOperation({ summary: CATEGORY_SWAGGER.delete })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: CATEGORY_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
   @UseGuards(new JwtAuthenticationGuard())
   public async deleteReceipt(
     @User('id') id: string,

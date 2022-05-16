@@ -12,9 +12,11 @@ import { Exclude } from 'class-transformer';
 import { CompanyEntity } from 'src/company/entities/company.entity';
 import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('supplier')
 export class SupplierEntity {
+  @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -25,10 +27,11 @@ export class SupplierEntity {
   @Exclude()
   updated: Date;
 
+  @ApiProperty()
   @Column()
   name: string;
 
-  @ManyToOne((type) => MemberEntity, data => data.suppliers)
+  @ManyToOne((type) => MemberEntity, (data) => data.suppliers)
   @JoinColumn()
   creator: MemberEntity;
 

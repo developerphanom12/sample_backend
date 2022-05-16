@@ -1,5 +1,5 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, Query, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from '../shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { DASHBOARD_ROUTES, DASHBOARD_SWAGGER } from './dashboard.constants';
@@ -14,6 +14,11 @@ export class DashboardController {
     @Get(DASHBOARD_ROUTES.statistic)
     @UseGuards(new JwtAuthenticationGuard())
     @ApiOperation({ summary: DASHBOARD_SWAGGER.get_statistic })
+    @ApiResponse({
+      status: HttpStatus.OK,
+      description: DASHBOARD_SWAGGER.success,
+    })
+    @HttpCode(HttpStatus.OK)
     async getDashboardData (
         @User('id') id,
         @Query() body: DashboardStatisticDTO

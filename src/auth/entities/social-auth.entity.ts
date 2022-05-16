@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import {
   Column,
@@ -12,6 +13,7 @@ import { AuthEntity } from './auth.entity';
 
 @Entity('social-auth')
 export class SocialAuthEntity {
+  @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -23,19 +25,25 @@ export class SocialAuthEntity {
   @Exclude()
   updated: Date;
 
+  @ApiProperty({ nullable: true })
   @Column({
     nullable: true,
   })
   appleId: string;
+
+  @ApiProperty({ nullable: true })
   @Column({
     nullable: true,
   })
   appleEmail: string;
 
+  @ApiProperty({ nullable: true })
   @Column({
     nullable: true,
   })
   capiumId: string;
+
+  @ApiProperty({ nullable: true })
   @Column({
     nullable: true,
   })

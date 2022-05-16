@@ -1,13 +1,28 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
 import { CreatePaymentTypeDTO } from './dto/create-payment-type.dto';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdatePaymentTypeDTO } from './dto/update-payment-type.dto';
-import { PAYMENT_TYPE_ROUTES } from './payment-type.constants';
+import { PaymentTypeEntity } from './entities/payment-type.entity';
+import {
+  PAYMENT_TYPE_ROUTES,
+  PAYMENT_TYPE_SWAGGER,
+} from './payment-type.constants';
 import { PaymentTypeService } from './payment-type.service';
-
 
 @ApiTags(PAYMENT_TYPE_ROUTES.main)
 @Controller(PAYMENT_TYPE_ROUTES.main)
@@ -16,6 +31,13 @@ export class PaymentTypeController {
 
   @Post(PAYMENT_TYPE_ROUTES.create)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: PAYMENT_TYPE_SWAGGER.create })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PAYMENT_TYPE_SWAGGER.success,
+    type: PaymentTypeEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async createSupplier(
     @User('id') id: string,
     @Body() body: CreatePaymentTypeDTO,
@@ -25,6 +47,13 @@ export class PaymentTypeController {
 
   @Put(PAYMENT_TYPE_ROUTES.update)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: PAYMENT_TYPE_SWAGGER.update })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PAYMENT_TYPE_SWAGGER.success,
+    type: PaymentTypeEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async updateSupplier(
     @User('id') id: string,
     @Body() body: UpdatePaymentTypeDTO,
@@ -34,21 +63,45 @@ export class PaymentTypeController {
 
   @Get(PAYMENT_TYPE_ROUTES.get)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: PAYMENT_TYPE_SWAGGER.get })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PAYMENT_TYPE_SWAGGER.success,
+    type: PaymentTypeEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async getSupplier(
     @User('id') id: string,
     @Param('paymentTypeId') paymentTypeId: string,
   ) {
-    return await this.paymentTypeService.getPaymentTypeDetails(id, paymentTypeId);
+    return await this.paymentTypeService.getPaymentTypeDetails(
+      id,
+      paymentTypeId,
+    );
   }
 
   @Get(PAYMENT_TYPE_ROUTES.get_all)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: PAYMENT_TYPE_SWAGGER.get_all })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PAYMENT_TYPE_SWAGGER.success,
+    type: PaymentTypeEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async getAllSuppliers(@User('id') id: string) {
     return await this.paymentTypeService.getAllPaymentTypes(id);
   }
 
   @Get(PAYMENT_TYPE_ROUTES.get_many)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: PAYMENT_TYPE_SWAGGER.get_many })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PAYMENT_TYPE_SWAGGER.success,
+    type: PaymentTypeEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async getSuppliers(
     @User('id') id: string,
     @Query() body: PaginationDTO,
@@ -58,7 +111,17 @@ export class PaymentTypeController {
 
   @Delete(PAYMENT_TYPE_ROUTES.delete)
   @UseGuards(new JwtAuthenticationGuard())
-  public async deleteReceipt(@User('id') id: string, @Param('paymentTypeId') paymentTypeId) {
+  @ApiOperation({ summary: PAYMENT_TYPE_SWAGGER.delete })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PAYMENT_TYPE_SWAGGER.success,
+    type: PaymentTypeEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async deleteReceipt(
+    @User('id') id: string,
+    @Param('paymentTypeId') paymentTypeId,
+  ) {
     return await this.paymentTypeService.deletePaymentType(id, paymentTypeId);
   }
 }

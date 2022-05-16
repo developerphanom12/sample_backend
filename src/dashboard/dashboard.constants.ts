@@ -5,4 +5,5 @@ export const DASHBOARD_ROUTES = {
 
 export const DASHBOARD_SWAGGER = {
     get_statistic: 'Get Dashboard Statistic',
+    success: 'Success',
 }

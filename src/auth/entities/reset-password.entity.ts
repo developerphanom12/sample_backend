@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,12 +8,15 @@ import {
 
 @Entity('reset-password')
 export class ResetPasswordEntity {
+  @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty()
   @Column()
   email: string;
 
+  @ApiProperty()
   @Column()
   token: string;
 

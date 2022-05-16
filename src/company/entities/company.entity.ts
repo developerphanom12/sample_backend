@@ -15,9 +15,11 @@ import { ReceiptEntity } from '../../receipt/entities/receipt.entity';
 import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('company')
 export class CompanyEntity {
+  @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -29,30 +31,38 @@ export class CompanyEntity {
   @Exclude()
   updated: Date;
 
+  @ApiProperty()
   @Column({ default: '' })
   name: string;
 
+  @ApiProperty()
   @Column({
     default: '',
   })
   date_format: string;
 
+  @ApiProperty({nullable: true})
   @ManyToOne((type) => CurrencyEntity, (data) => data.company)
   @JoinColumn()
   currency: CurrencyEntity;
 
+  @ApiProperty({nullable: true})
   @OneToMany((type) => MemberEntity, (data) => data.company)
   members: MemberEntity[];
 
+  @ApiProperty({nullable: true})
   @OneToMany((type) => ReceiptEntity, (data) => data.company,)
   receipts: ReceiptEntity[];
 
+  @ApiProperty({nullable: true})
   @OneToMany((type) => SupplierEntity, (data) => data.company)
   suppliers: SupplierEntity[];
 
+  @ApiProperty({nullable: true})
   @OneToMany((type) => CategoryEntity, (data) => data.company)
   categories: CategoryEntity[];
 
+  @ApiProperty({nullable: true})
   @OneToMany((type) => PaymentTypeEntity, (data) => data.company)
   payment_types: PaymentTypeEntity[];
 }

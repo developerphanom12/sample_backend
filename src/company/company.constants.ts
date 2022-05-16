@@ -10,4 +10,6 @@ export const COMPANY_SWAGGER = {
   create: 'Create company',
   get: 'Get one company',
   get_all: 'Get all companies',
+  delete: "Delete company",
+  success: "Success",
 };

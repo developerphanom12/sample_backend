@@ -1,7 +1,9 @@
-import { IsOptional, IsString } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class DashboardStatisticDTO {
-    @IsOptional()
-    @IsString()
-    date_start?: Date;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  date_start?: Date;
 }

@@ -17,18 +17,25 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { ReceiptService } from './receipt.service';
 import {
   receiptPhotoStorage,
   RECEIPT_PHOTOS_LIMIT,
   RECEIPT_ROUTES,
+  RECEIPT_SWAGGER,
 } from './receipt.constants';
 import { User } from '../shared/decorators/user.decorator';
 import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
+import { ReceiptEntity } from './entities/receipt.entity';
 
 @ApiTags(RECEIPT_ROUTES.main)
 @Controller(RECEIPT_ROUTES.main)
@@ -38,6 +45,13 @@ export class ReceiptController {
   @Post(RECEIPT_ROUTES.create)
   @UseGuards(new JwtAuthenticationGuard())
   @UseInterceptors(FilesInterceptor('receipt_photos', RECEIPT_PHOTOS_LIMIT))
+  @ApiOperation({ summary: RECEIPT_SWAGGER.create })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+    type: ReceiptEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async creteReceipt(
     @User('id') id: string,
     @Body() body: CreateReceiptDTO,
@@ -46,21 +60,15 @@ export class ReceiptController {
     return await this.ReceiptService.createReceipt(id, body, files);
   }
 
-  // @Post(`create-receipt`)
-  // @UseGuards(new JwtAuthenticationGuard())
-  // @ApiConsumes('multipart/form-data')
-  // @HttpCode(HttpStatus.CREATED)
-  // @UseInterceptors(FileInterceptor('file'))
-  // public async postPhoto(
-  //   @Body() body,
-  //   @UploadedFile() file,
-  //   @User('id') id: string,
-  // ) {
-  //   return this.ReceiptService.postPhoto(body, file, id);
-  // }
-
   @Get(RECEIPT_ROUTES.get_all)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.get_all })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+    type: ReceiptEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async getReceipts(
     @User('id') id: string,
     @Query() body: PaginationDTO,
@@ -70,6 +78,13 @@ export class ReceiptController {
 
   @Put(RECEIPT_ROUTES.update)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.update })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+    type: ReceiptEntity,
+  })
+  @HttpCode(HttpStatus.OK)
   public async updateReceipt(
     @User('id') id: string,
     @Body() body: UpdateReceiptDTO,
@@ -79,6 +94,12 @@ export class ReceiptController {
 
   @Get(RECEIPT_ROUTES.get_image)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.get_image })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
   public async findReceiptImage(
     @User('id') id: string,
     @Param('imagename') imagename: string,
@@ -89,6 +110,12 @@ export class ReceiptController {
 
   @Delete(RECEIPT_ROUTES.delete_image)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.delete_image })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
   public async deleteReceiptImage(
     @User('id') id: string,
     @Param('imagename') imagename: string,
@@ -98,6 +125,12 @@ export class ReceiptController {
 
   @Delete(RECEIPT_ROUTES.delete)
   @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.delete })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
   public async deleteReceipt(@User('id') id: string, @Param('id') receiptId) {
     return await this.ReceiptService.receiptDelete(id, receiptId);
   }

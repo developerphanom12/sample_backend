@@ -7,3 +7,13 @@ export const SUPPLIER_ROUTES = {
   get_many: 'get-many',
   delete: 'delete/:supplierId',
 };
+
+export const SUPPLIER_SWAGGER = {
+  success: 'Success',
+  create: 'Create supplier',
+  update: 'Update supplier',
+  get: 'Get supplier details',
+  get_all: 'Get all suppliers',
+  get_many: 'Get suppliers with pagination',
+  delete: 'Delete supplier',
+};
