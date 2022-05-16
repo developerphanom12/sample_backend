@@ -36,7 +36,10 @@ export class MemberEntity {
   role: ECompanyRoles;
 
   @JoinColumn()
-  @ManyToOne((type) => CompanyEntity, (data) => data.members)
+  @ManyToOne((type) => CompanyEntity, (data) => data.members, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   company: CompanyEntity;
 
   @OneToMany((type) => SupplierEntity, (data) => data.creator)

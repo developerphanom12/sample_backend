@@ -32,7 +32,10 @@ export class CategoryEntity {
   @JoinColumn()
   creator: MemberEntity;
 
-  @ManyToOne((type) => CompanyEntity, (data) => data.categories)
+  @ManyToOne((type) => CompanyEntity, (data) => data.categories, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   company: CompanyEntity;
 

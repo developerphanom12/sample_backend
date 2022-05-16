@@ -10,6 +10,8 @@ import { COMPANY_ERRORS } from './company.errors';
 import { ICreateCompany } from './company.types';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { CompanyEntity } from './entities/company.entity';
+import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
+import { S3Service } from 'src/s3/s3.service';
 
 @Injectable()
 export class CompanyService {
@@ -22,6 +24,7 @@ export class CompanyService {
     private currencyRepository: Repository<CurrencyEntity>,
     @InjectRepository(MemberEntity)
     private memberRepository: Repository<MemberEntity>,
+    private s3Service: S3Service,
     private configService: ConfigService,
   ) {}
 
@@ -29,7 +32,6 @@ export class CompanyService {
     id: string,
     body: CreateCompanyDTO,
   ): Promise<ICreateCompany> {
-
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
@@ -43,7 +45,7 @@ export class CompanyService {
     if (!selectedCurrency) {
       throw new HttpException(COMPANY_ERRORS.currency, HttpStatus.NOT_FOUND);
     }
-  
+
     const company = await this.companyRepository.save({
       currency: selectedCurrency,
       name: body.name || 'Default',
@@ -101,7 +103,6 @@ export class CompanyService {
   }
 
   async getAllCompanies(id: string): Promise<CompanyEntity[]> {
-  
     const user = await this.authRepository.findOne({
       where: { id: id },
       relations: ['accounts'],
@@ -109,10 +110,40 @@ export class CompanyService {
     if (!user) {
       throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
     }
-  
+
     const accounts = user.accounts;
     const promises = accounts.map((account) => this.getAccountCompany(account));
     const result = await Promise.all(promises);
     return await result;
+  }
+
+  async companyDelete(id: string, companyId: string) {
+    const user = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
+    });
+
+    if (!user) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: companyId },
+      relations: ['receipts'],
+    });
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+    if (company.receipts) {
+      this.s3Service.deleteFolder(company.id);
+    }
+
+    try {
+      await this.companyRepository.remove(company);
+      return 'COMPANY DELETED';
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('DELETE ERROR', HttpStatus.FORBIDDEN);
+    }
   }
 }

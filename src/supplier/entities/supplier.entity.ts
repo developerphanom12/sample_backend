@@ -32,7 +32,10 @@ export class SupplierEntity {
   @JoinColumn()
   creator: MemberEntity;
 
-  @ManyToOne((type) => CompanyEntity, (data) => data.suppliers)
+  @ManyToOne((type) => CompanyEntity, (data) => data.suppliers, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   company: CompanyEntity;
 

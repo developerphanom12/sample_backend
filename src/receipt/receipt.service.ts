@@ -3,10 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Like, Repository, LessThan } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
-import {
-  AnalyzeDocumentCommand,
-  TextractClient,
-} from '@aws-sdk/client-textract';
 import * as fs from 'fs';
 import {
   extractDate,
@@ -23,6 +19,7 @@ import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CompanyEntity } from '../company/entities/company.entity';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
 import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
+import { S3Service } from 'src/s3/s3.service';
 
 @Injectable()
 export class ReceiptService {
@@ -40,18 +37,8 @@ export class ReceiptService {
     @InjectRepository(SupplierEntity)
     private supplierRepository: Repository<SupplierEntity>,
     private configService: ConfigService,
+    private s3Service: S3Service,
   ) {}
-
-  private async createTextractClient() {
-    const textractClient = new TextractClient({
-      credentials: {
-        accessKeyId: this.configService.get('AWS_SES_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get('AWS_SES_SECRET_ACCESS_KEY'),
-      },
-      region: 'eu-west-2',
-    });
-    return textractClient;
-  }
 
   private async extractCompanyFromUser(id: string) {
     const user = await this.authRepository.findOne({
@@ -82,21 +69,12 @@ export class ReceiptService {
     return company;
   }
 
-  async getImageData(photo, customId: number, textractClient) {
+  async getImageData(photo, customId: number, companyId: string) {
+    const photoPath = await this.uploadPhotoToBucket(photo, companyId);
     try {
-      const buf = await fs.promises.readFile(photo.path);
-      const params = {
-        Document: {
-          Bytes: buf,
-        },
-        FeatureTypes: ['TABLES', 'FORMS'],
-      };
-      const analyzeDoc = new AnalyzeDocumentCommand(params);
-      const response = await textractClient.send(analyzeDoc);
-      const lines = response.Blocks.filter((b) => b.BlockType === 'LINE').map(
-        (i) => i.Text,
-      );
-      const data = await this.extractData(lines, photo.filename);
+      const textractImage = await this.s3Service.textractFile(photoPath);
+
+      const data = await this.extractData(textractImage, photoPath.link);
       return {
         ...data,
         custom_id: `rc${customId + 1}`,
@@ -178,13 +156,11 @@ export class ReceiptService {
       where: { company: company },
     });
 
-    const textractClient = await this.createTextractClient();
-
     const promises = photos.map((photo, i) =>
       this.getImageData(
         photo,
         (receipts ? receipts.length : 0) + i,
-        textractClient,
+        company.id,
       ),
     );
 
@@ -197,6 +173,20 @@ export class ReceiptService {
     const createdReceipts = await Promise.all(generateReceipt);
 
     return await createdReceipts;
+  }
+
+  async uploadPhotoToBucket(file, companyId: string) {
+    if (!file) {
+      throw new HttpException('NO RECEIPT PHOTO', HttpStatus.BAD_REQUEST);
+    }
+
+    const folderName = `${companyId}/receipts`;
+    const response = await this.s3Service.loadFile(file, folderName);
+
+    return {
+      link: response.location,
+      key: response.key,
+    };
   }
 
   async getReceipts(id: string, body: PaginationDTO) {
@@ -305,28 +295,28 @@ export class ReceiptService {
     });
   }
 
-  async getReceiptDetails(imagename: string, res) {
+  async getReceiptImage(id: string, image_name: string, res) {
+    const company = await this.extractCompanyFromUser(id);
     try {
-      const image = await res.sendFile(
-        join(process.cwd(), `${receiptPhotoPath}/` + imagename),
+      const readStream = await this.s3Service.getFilesStream(
+        `${company.id}/receipts/${image_name}`,
       );
-      return image;
+      readStream.pipe(res);
     } catch (e) {
-      throw new HttpException('GETTING IMAGE ERROR', HttpStatus.BAD_REQUEST);
+      console.log(e);
+      throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
     }
   }
 
-  async deleteImage(imagename: string) {
-    await fs.unlink(
-      join(process.cwd(), `${receiptPhotoPath}/` + imagename),
-      (err) => {
-        if (err) {
-          console.error(err);
-          return err;
-        }
-      },
-    );
-    return 'Success';
+  async deleteImage(id: string, image_name: string) {
+    const company = await this.extractCompanyFromUser(id);
+    try {
+      await this.s3Service.deleteFile(`${company.id}/receipts/${image_name}`);
+      return 'Image Delete Success';
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+    }
   }
 
   async receiptDelete(id: string, receiptId: string) {
@@ -344,7 +334,10 @@ export class ReceiptService {
       throw new HttpException('RECEIPT NOT FOUND', HttpStatus.BAD_REQUEST);
     }
 
-    receipt.photos.forEach((el) => this.deleteImage(el));
+    receipt.photos.forEach((el) => {
+      this.s3Service.deleteFile(`${company.id}/receipts/${el}`);
+    });
+
     try {
       await this.receiptRepository.remove(receipt);
       return 'RECEIPT DELETED';

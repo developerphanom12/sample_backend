@@ -44,7 +44,7 @@ export class CompanyEntity {
   @OneToMany((type) => MemberEntity, (data) => data.company)
   members: MemberEntity[];
 
-  @OneToMany((type) => ReceiptEntity, (data) => data.company)
+  @OneToMany((type) => ReceiptEntity, (data) => data.company,)
   receipts: ReceiptEntity[];
 
   @OneToMany((type) => SupplierEntity, (data) => data.company)
