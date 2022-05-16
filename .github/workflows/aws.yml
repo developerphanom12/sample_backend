@@ -24,7 +24,6 @@ jobs:
         echo "AWS_SES_ACCESS_KEY_ID=${{ secrets.AWS_SES_ACCESS_KEY_ID }}" >> $GITHUB_ENV
         echo "AWS_SES_SECRET_ACCESS_KEY=${{ secrets.AWS_SES_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
         echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> $GITHUB_ENV
-        echo "AWS_BUCKET_REGION"=${{ secrets.AWS_BUCKET_REGION }}" >> $GITHUB_ENV
 
     - name: Set env vars (development)
       if: endsWith(github.ref, '/main')
@@ -37,7 +36,6 @@ jobs:
         echo "DB_PASSWORD=${{ secrets.DEVELOPMENT_DB_PASSWORD }}" >> $GITHUB_ENV
         echo "AWS_SES_ACCESS_KEY_ID=${{ secrets.AWS_SES_ACCESS_KEY_ID }}" >> $GITHUB_ENV
         echo "AWS_SES_SECRET_ACCESS_KEY=${{ secrets.AWS_SES_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
-        echo "AWS_BUCKET_REGION"=${{ secrets.AWS_BUCKET_REGION }}" >> $GITHUB_ENV
         echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> $GITHUB_ENV
         echo "HOST_URL=${{ secrets.DEVELOPMENT_HOST_URL }}" >> $GITHUB_ENV
         echo "ECR_REPOSITORY=rh-api-dev-repo" >> $GITHUB_ENV
@@ -57,7 +55,6 @@ jobs:
         echo "DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}" >> $GITHUB_ENV
         echo "AWS_SES_ACCESS_KEY_ID=${{ secrets.AWS_SES_ACCESS_KEY_ID }}" >> $GITHUB_ENV
         echo "AWS_SES_SECRET_ACCESS_KEY=${{ secrets.AWS_SES_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
-        echo "AWS_BUCKET_REGION"=${{ secrets.AWS_BUCKET_REGION }}" >> $GITHUB_ENV
         echo "AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}" >> $GITHUB_ENV
         echo "HOST_URL=${{ secrets.STAGING_HOST_URL }}" >> $GITHUB_ENV
         echo "ECR_REPOSITORY=rh-api-stage-repo" >> $GITHUB_ENV
@@ -76,8 +73,7 @@ jobs:
 
         echo AWS_SES_ACCESS_KEY_ID=$AWS_SES_ACCESS_KEY_ID >> .env.$ENV
         echo AWS_SES_SECRET_ACCESS_KEY=$AWS_SES_SECRET_ACCESS_KEY >> .env.$ENV
-        echo AWS_BUCKET_REGION=$AWS_BUCKET_REGION >> $GITHUB_ENV
-        echo AWS_BUCKET_NAME=$AWS_BUCKET_NAME >> $GITHUB_ENV
+        echo AWS_BUCKET_NAME=$AWS_BUCKET_NAME >> .env.$ENV
 
         echo JWT_SECRET=$JWT_SECRET >> .env.$ENV
         echo PORT=$PORT >> .env.$ENV
