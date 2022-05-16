@@ -74,7 +74,9 @@ export class ReceiptService {
     try {
       const textractImage = await this.s3Service.textractFile(photoPath);
 
-      const data = await this.extractData(textractImage, photoPath.key);
+      const imageName = photoPath.key.split('/')[2];
+      const data = await this.extractData(textractImage, imageName);
+
       return {
         ...data,
         custom_id: `rc${customId + 1}`,
