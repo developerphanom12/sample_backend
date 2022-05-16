@@ -3,6 +3,7 @@ export const COMPANY_ROUTES = {
   create: 'create',
   get: 'get/:company',
   get_all: 'get-all',
+  delete: 'delete/:id'
 };
 
 export const COMPANY_SWAGGER = {

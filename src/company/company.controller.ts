@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from '../shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from '../shared/guards';
@@ -36,5 +36,11 @@ export class CompanyController {
   @ApiOperation({ summary: COMPANY_SWAGGER.get_all })
   public async getAllCompanies(@User('id') id: string) {
     return await this.companyService.getAllCompanies(id);
+  }
+
+  @Delete(COMPANY_ROUTES.delete)
+  @UseGuards(new JwtAuthenticationGuard())
+  public async deleteReceipt(@User('id') id: string, @Param('id') companyId) {
+    return await this.companyService.companyDelete(id, companyId);
   }
 }

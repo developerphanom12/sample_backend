@@ -67,7 +67,10 @@ export class ReceiptEntity {
   @Column('simple-array', { nullable: true })
   photos: string[];
 
-  @ManyToOne((type) => CompanyEntity, (data) => data.receipts)
+  @ManyToOne((type) => CompanyEntity, (data) => data.receipts, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   company: CompanyEntity;
 
@@ -75,10 +78,7 @@ export class ReceiptEntity {
   @JoinColumn()
   currency: CurrencyEntity;
 
-  @ManyToOne((type) => SupplierEntity, (data) => data.receipts, {
-    cascade: true,
-    onDelete: 'SET NULL',
-  })
+  @ManyToOne((type) => SupplierEntity, (data) => data.receipts)
   @JoinColumn()
   supplier: SupplierEntity;
 

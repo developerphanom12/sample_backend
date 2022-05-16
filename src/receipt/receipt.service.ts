@@ -307,17 +307,15 @@ export class ReceiptService {
     }
   }
 
-  async deleteImage(imagename: string) {
-    await fs.unlink(
-      join(process.cwd(), `${receiptPhotoPath}/` + imagename),
-      (err) => {
-        if (err) {
-          console.error(err);
-          return err;
-        }
-      },
-    );
-    return 'Success';
+  async deleteImage(id: string, image_name: string) {
+    const company = await this.extractCompanyFromUser(id);
+    try {
+      await this.s3Service.deleteFile(`${company.id}/receipts/${image_name}`);
+      return 'Image Delete Success';
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+    }
   }
 
   async receiptDelete(id: string, receiptId: string) {
@@ -335,7 +333,10 @@ export class ReceiptService {
       throw new HttpException('RECEIPT NOT FOUND', HttpStatus.BAD_REQUEST);
     }
 
-    receipt.photos.forEach((el) => this.deleteImage(el));
+    receipt.photos.forEach((el) => {
+      this.s3Service.deleteFile(`${company.id}/receipts/${el}`);
+    });
+
     try {
       await this.receiptRepository.remove(receipt);
       return 'RECEIPT DELETED';

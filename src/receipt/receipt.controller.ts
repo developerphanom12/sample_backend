@@ -93,7 +93,7 @@ export class ReceiptController {
     @User('id') id: string,
     @Param('imagename') imagename: string,
   ) {
-    return await this.ReceiptService.deleteImage(imagename);
+    return await this.ReceiptService.deleteImage(id, imagename);
   }
 
   @Delete(RECEIPT_ROUTES.delete)

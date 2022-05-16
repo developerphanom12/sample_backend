@@ -14,7 +14,7 @@ export class S3Service {
   private readonly s3 = new S3({
     accessKeyId: this.configService.get('AWS_SES_ACCESS_KEY_ID'),
     secretAccessKey: this.configService.get('AWS_SES_SECRET_ACCESS_KEY'),
-    region: this.configService.get('AWS_BUCKET_REGION'),
+    region: this.configService.get('AWS_REGION'),
   });
   private readonly textractClient = new TextractClient({
     credentials: {

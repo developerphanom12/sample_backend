@@ -7,6 +7,7 @@ import { ReceiptEntity } from '../receipt/entities/receipt.entity';
 import { CompanyController } from './company.controller';
 import { CompanyService } from './company.service';
 import { CompanyEntity } from './entities/company.entity';
+import { S3Module } from 'src/s3/s3.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { CompanyEntity } from './entities/company.entity';
       AuthEntity,
       CurrencyEntity,
     ]),
+    S3Module,
   ],
   controllers: [CompanyController],
   providers: [CompanyService],
