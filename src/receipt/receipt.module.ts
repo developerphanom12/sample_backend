@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DownloadModule } from 'src/download/download.module';
 import { S3Module } from 'src/s3/s3.module';
 import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { AuthEntity } from '../auth/entities/auth.entity';
@@ -21,6 +22,7 @@ import { ReceiptService } from './receipt.service';
       SupplierEntity,
     ]),
     S3Module,
+    DownloadModule,
   ],
   controllers: [ReceiptController],
   providers: [ReceiptService],

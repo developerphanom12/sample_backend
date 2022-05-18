@@ -18,6 +18,7 @@ import { CategoryModule } from './category/category.module';
 import { PaymentTypeController } from './payment-type/payment-type.controller';
 import { PaymentTypeModule } from './payment-type/payment-type.module';
 import { S3Module } from './s3/s3.module';
+import { DownloadModule } from './download/download.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -38,6 +39,7 @@ const currentEnv = process.env.NODE_ENV || 'local';
     }),
     ScheduleModule.forRoot(),
     S3Module,
+    DownloadModule,
     AuthModule,
     CurrencyModule,
     ReceiptModule,

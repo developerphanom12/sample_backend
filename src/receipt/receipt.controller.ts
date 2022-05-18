@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Param,
@@ -36,6 +37,7 @@ import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
 import { ReceiptEntity } from './entities/receipt.entity';
+import { DownloadCSVDTO } from './dto/download-csv.dto';
 
 @ApiTags(RECEIPT_ROUTES.main)
 @Controller(RECEIPT_ROUTES.main)
@@ -58,6 +60,24 @@ export class ReceiptController {
     @UploadedFiles() files,
   ) {
     return await this.ReceiptService.createReceipt(id, body, files);
+  }
+
+  @Post(RECEIPT_ROUTES.download_csv)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.download_csv })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  @Header('Content-Type', 'text/csv')
+  public async downloadCSV(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+    @Res() res,
+  ) {
+    const result = await this.ReceiptService.downloadCSV(id, body);
+    res.download(`${result}`)
   }
 
   @Get(RECEIPT_ROUTES.get_all)

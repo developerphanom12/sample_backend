@@ -23,6 +23,7 @@ export const RECEIPT_SWAGGER = {
   get_image: 'Get receipt photo',
   get_all: 'Get all receipts',
   get_many: 'Get receipts with pagination',
+  download_csv: 'Download CSV File',
   delete: 'Delete receipt',
   delete_image: 'Delete receipt image',
 };
@@ -32,6 +33,7 @@ export const RECEIPT_ROUTES = {
   create: 'create',
   update: 'update',
   get_all: 'get-all',
+  download_csv: 'download-csv',
   delete: 'delete/:id',
   get_image: 'images/:imagename',
   delete_image: 'delete-image/:imagename',

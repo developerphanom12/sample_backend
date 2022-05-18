@@ -1,16 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Like, Repository, LessThan } from 'typeorm';
+import { Between, Like, Repository, LessThan, In } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
-import * as fs from 'fs';
 import {
   extractDate,
   extractTax,
   extractTotal,
 } from '../heplers/receipt.helper';
-import { EReceiptStatus, receiptPhotoPath } from './receipt.constants';
-import { join } from 'path';
+import { EReceiptStatus } from './receipt.constants';
 import { AuthEntity } from '../auth/entities/auth.entity';
 import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
@@ -20,6 +18,10 @@ import { CompanyEntity } from '../company/entities/company.entity';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
 import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { S3Service } from 'src/s3/s3.service';
+import { DownloadCSVDTO } from './dto/download-csv.dto';
+import { Workbook } from 'exceljs';
+import * as tmp from 'tmp';
+import { DownloadService } from 'src/download/download.service';
 
 @Injectable()
 export class ReceiptService {
@@ -38,6 +40,7 @@ export class ReceiptService {
     private supplierRepository: Repository<SupplierEntity>,
     private configService: ConfigService,
     private s3Service: S3Service,
+    private downloadService: DownloadService,
   ) {}
 
   private async extractCompanyFromUser(id: string) {
@@ -246,6 +249,60 @@ export class ReceiptService {
       data: result,
       count: total,
     };
+  }
+
+  async downloadCSV(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      where: {
+        company: company,
+        id: In(receiptsId),
+      },
+      order: { custom_id: 'ASC' },
+    });
+
+    const exportedData = receipts.map((receipt) => {
+      return {
+        id: receipt.custom_id.toUpperCase(),
+        date: receipt.receipt_date || null,
+        supplier: receipt.supplier ? receipt.supplier.name : null,
+        supplierAccount: receipt.supplier_account || null,
+        category: receipt.category ? receipt.category.name : null,
+        vatCode: receipt.vat_code || null,
+        currency: receipt.currency ? receipt.currency.value : null,
+        net: receipt.net || null,
+        tax: receipt.tax || null,
+        total: receipt.total || null,
+        publish: receipt.publish_status,
+        paid: receipt.payment_status,
+        status: receipt.status,
+      };
+    });
+
+    const fields = [
+      'ID',
+      'Date',
+      'Supplier',
+      'Supplier Account',
+      'Category',
+      'VAT code',
+      'Currency',
+      'Net',
+      'Tax',
+      'Total',
+      'Publish',
+      'Paid',
+      'Status',
+    ];
+
+    return await this.downloadService.downloadCSV(exportedData, fields);
   }
 
   async updateReceipt(id: string, body: UpdateReceiptDTO) {
