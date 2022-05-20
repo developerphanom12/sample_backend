@@ -9,12 +9,15 @@ import {
 export const extractDate = (text: string) => {
   try {
     const receiptData: string[] | null = text.match(RECEIPT_DATE_REGEX);
-
     if (!receiptData) {
       return null;
     }
-
-    const timestamp = Date.parse(receiptData[0]);
+    const timeString = receiptData[0]
+      .replace(/\./g, '/')
+      .split('/')
+      .reverse()
+      .join('/');
+    const timestamp = Date.parse(timeString);
 
     if (isNaN(timestamp)) {
       return null;

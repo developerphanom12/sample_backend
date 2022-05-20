@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmailsModule } from 'src/emails/emails.module';
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CompanyEntity } from '../company/entities/company.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
@@ -24,6 +25,7 @@ import { JwtStrategy } from './jwt.strategy';
     ]),
     PassportModule.register({}),
     JwtModule.register({}),
+    EmailsModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

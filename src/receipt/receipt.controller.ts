@@ -38,6 +38,7 @@ import { CreateReceiptDTO } from './dto/create-receipt.dto';
 import { UpdateReceiptDTO } from './dto/update-receipt.dto';
 import { ReceiptEntity } from './entities/receipt.entity';
 import { DownloadCSVDTO } from './dto/download-csv.dto';
+import { SendReceiptEmailDTO } from './dto/send-receipt-email.dto';
 
 @ApiTags(RECEIPT_ROUTES.main)
 @Controller(RECEIPT_ROUTES.main)
@@ -78,6 +79,21 @@ export class ReceiptController {
   ) {
     const result = await this.ReceiptService.downloadCSV(id, body);
     res.download(`${result}`)
+  }
+
+  @Post(RECEIPT_ROUTES.send_email)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.send_email })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async sendEmail(
+    @User('id') id: string,
+    @Body() body: SendReceiptEmailDTO,
+  ) {
+    return await this.ReceiptService.sendEmail(id, body);
   }
 
   @Get(RECEIPT_ROUTES.get_all)

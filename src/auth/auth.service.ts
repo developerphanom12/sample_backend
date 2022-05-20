@@ -21,6 +21,7 @@ import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { createPasswordMailSes } from '../shared/emails/create-password-email';
 import { CompanyEntity } from '../company/entities/company.entity';
+import { EmailsService } from 'src/emails/emails.service';
 
 @Injectable()
 export class AuthService {
@@ -37,17 +38,8 @@ export class AuthService {
     @InjectRepository(ResetPasswordEntity)
     private resetPasswordRepository: Repository<ResetPasswordEntity>,
     private configService: ConfigService,
+    private emailsService: EmailsService,
   ) {}
-
-  private createSESClient = () => {
-    const payload = {
-      key: this.configService.get('AWS_SES_ACCESS_KEY_ID'),
-      secret: this.configService.get('AWS_SES_SECRET_ACCESS_KEY'),
-      amazon: 'https://email.eu-west-2.amazonaws.com',
-    };
-    const sesClient = ses.createClient(payload);
-    return sesClient;
-  };
 
   async createToken(user: AuthEntity) {
     const expiresIn = EXPIRE_JWT_TIME + Date.now();
@@ -275,7 +267,6 @@ export class AuthService {
   async updatePasswordRequest(body: PasswordRequestDTO) {
     const { email } = body;
 
-    const sesClient = this.createSESClient();
     const user = await this.authRepository.findOne({
       where: {
         email: email.toLowerCase(),
@@ -300,19 +291,12 @@ export class AuthService {
       token,
     });
 
-    const payload = createPasswordMailSes({
+    return await this.emailsService.sendResetPasswordEmail({
       email: email.toLowerCase(),
       token,
       name: user.fullName,
       host_url: this.configService.get('HOST_URL'),
     });
-
-    sesClient.sendEmail(payload, (error) => {
-      console.error(error);
-    });
-    return {
-      message: 'Email sent',
-    };
   }
 
   async updatePassword(body: UpdatePasswordDTO) {

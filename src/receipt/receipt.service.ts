@@ -19,9 +19,12 @@ import { UpdateReceiptDTO } from './dto/update-receipt.dto';
 import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { S3Service } from 'src/s3/s3.service';
 import { DownloadCSVDTO } from './dto/download-csv.dto';
-import { Workbook } from 'exceljs';
-import * as tmp from 'tmp';
 import { DownloadService } from 'src/download/download.service';
+import { SendReceiptEmailDTO } from './dto/send-receipt-email.dto';
+import * as ses from 'node-ses';
+import { EMAIL_CONFIG } from 'src/constants/email';
+import * as fs from 'fs';
+import { EmailsService } from 'src/emails/emails.service';
 
 @Injectable()
 export class ReceiptService {
@@ -41,6 +44,7 @@ export class ReceiptService {
     private configService: ConfigService,
     private s3Service: S3Service,
     private downloadService: DownloadService,
+    private emailsService: EmailsService,
   ) {}
 
   private async extractCompanyFromUser(id: string) {
@@ -251,60 +255,6 @@ export class ReceiptService {
     };
   }
 
-  async downloadCSV(id: string, body: DownloadCSVDTO) {
-    const receiptsId: string[] = body.receipts;
-    if (!receiptsId) {
-      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
-    }
-
-    const company = await this.extractCompanyFromUser(id);
-
-    const receipts = await this.receiptRepository.find({
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
-      where: {
-        company: company,
-        id: In(receiptsId),
-      },
-      order: { custom_id: 'ASC' },
-    });
-
-    const exportedData = receipts.map((receipt) => {
-      return {
-        id: receipt.custom_id.toUpperCase(),
-        date: receipt.receipt_date || null,
-        supplier: receipt.supplier ? receipt.supplier.name : null,
-        supplierAccount: receipt.supplier_account || null,
-        category: receipt.category ? receipt.category.name : null,
-        vatCode: receipt.vat_code || null,
-        currency: receipt.currency ? receipt.currency.value : null,
-        net: receipt.net || null,
-        tax: receipt.tax || null,
-        total: receipt.total || null,
-        publish: receipt.publish_status,
-        paid: receipt.payment_status,
-        status: receipt.status,
-      };
-    });
-
-    const fields = [
-      'ID',
-      'Date',
-      'Supplier',
-      'Supplier Account',
-      'Category',
-      'VAT code',
-      'Currency',
-      'Net',
-      'Tax',
-      'Total',
-      'Publish',
-      'Paid',
-      'Status',
-    ];
-
-    return await this.downloadService.downloadCSV(exportedData, fields);
-  }
-
   async updateReceipt(id: string, body: UpdateReceiptDTO) {
     const receiptId = body.id;
     const company = await this.extractCompanyFromUser(id);
@@ -403,5 +353,131 @@ export class ReceiptService {
     } catch (e) {
       throw new HttpException('DELETE ERROR', HttpStatus.FORBIDDEN);
     }
+  }
+
+  async downloadCSV(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      where: {
+        company: company,
+        id: In(receiptsId),
+      },
+      order: { custom_id: 'ASC' },
+    });
+
+    const exportedData = receipts.map((receipt) => {
+      return {
+        id: receipt.custom_id.toUpperCase(),
+        date: receipt.receipt_date || null,
+        supplier: receipt.supplier ? receipt.supplier.name : null,
+        supplierAccount: receipt.supplier_account || null,
+        category: receipt.category ? receipt.category.name : null,
+        vatCode: receipt.vat_code || null,
+        currency: receipt.currency ? receipt.currency.value : null,
+        net: receipt.net || null,
+        tax: receipt.tax || null,
+        total: receipt.total || null,
+        publish: receipt.publish_status,
+        paid: receipt.payment_status,
+        status: receipt.status,
+      };
+    });
+
+    const fields = [
+      'ID',
+      'Date',
+      'Supplier',
+      'Supplier Account',
+      'Category',
+      'VAT code',
+      'Currency',
+      'Net',
+      'Tax',
+      'Total',
+      'Publish',
+      'Paid',
+      'Status',
+    ];
+
+    return await this.downloadService.downloadCSV(exportedData, fields);
+  }
+
+  async sendEmail(id: string, body: SendReceiptEmailDTO) {
+    const receiptsId: string[] = body.receipts;
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      where: {
+        company: company,
+        id: In(receiptsId),
+      },
+      order: { custom_id: 'ASC' },
+    });
+
+    const exportedData = receipts.map((receipt) => {
+      return {
+        id: receipt.custom_id.toUpperCase(),
+        date: receipt.receipt_date || null,
+        supplier: receipt.supplier ? receipt.supplier.name : null,
+        supplierAccount: receipt.supplier_account || null,
+        category: receipt.category ? receipt.category.name : null,
+        vatCode: receipt.vat_code || null,
+        currency: receipt.currency ? receipt.currency.value : null,
+        net: receipt.net || null,
+        tax: receipt.tax || null,
+        total: receipt.total || null,
+        publish: receipt.publish_status,
+        paid: receipt.payment_status,
+        status: receipt.status,
+      };
+    });
+
+    const fields = [
+      'ID',
+      'Date',
+      'Supplier',
+      'Supplier Account',
+      'Category',
+      'VAT code',
+      'Currency',
+      'Net',
+      'Tax',
+      'Total',
+      'Publish',
+      'Paid',
+      'Status',
+    ];
+
+    const user = await this.authRepository.findOne({
+      where: { email: body.to.toLocaleLowerCase() },
+    });
+
+    const File = await this.downloadService.createXLSX(exportedData, fields);
+
+    const payload = {
+      name: user ? user.fullName : '',
+      email: body.to,
+      attachedFile: await this.getBase64(File),
+      messageBody: body.message,
+      subject: body.subject,
+    };
+
+    return await this.emailsService.sendEmailXLSX(payload);
+  }
+
+  async getBase64(file) {
+    return await fs.readFileSync(file, 'base64');
   }
 }

@@ -24,6 +24,7 @@ export const RECEIPT_SWAGGER = {
   get_all: 'Get all receipts',
   get_many: 'Get receipts with pagination',
   download_csv: 'Download CSV File',
+  send_email: 'Send Email with Receipts',
   delete: 'Delete receipt',
   delete_image: 'Delete receipt image',
 };
@@ -34,6 +35,7 @@ export const RECEIPT_ROUTES = {
   update: 'update',
   get_all: 'get-all',
   download_csv: 'download-csv',
+  send_email: 'send-email',
   delete: 'delete/:id',
   get_image: 'images/:imagename',
   delete_image: 'delete-image/:imagename',
@@ -42,7 +44,7 @@ export const RECEIPT_ROUTES = {
 export const RECEIPT_PHOTOS_LIMIT = 10;
 
 export const RECEIPT_DATE_REGEX =
-  /\d{2}(?:\d{2})?([.\-/])\d{1,2}([.\-/])\d{2}(?:\d{2})?(?=[/]|,\s|.\s|\s|$)/g;
+  /\d{2}(?:\d{2})?([.\-\/])\d{1,2}([.\-\/])\d{2}(?:\d{2})?(?=[\/]|,\s|.\s|\s|$)/g;
 export const RECEIPT_TOTAL_REGEX =
   /(total\samount\s:)|(total\samount)|(total\s:)|total(?=\s|$)/g;
 export const RECEIPT_TAX_REGEX = /tax(?=\s|$)/g;
