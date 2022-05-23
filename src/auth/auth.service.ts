@@ -21,6 +21,7 @@ import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { CompanyEntity } from '../company/entities/company.entity';
 import { EmailsService } from 'src/emails/emails.service';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
+import { ILogin } from './auth.types';
 
 @Injectable()
 export class AuthService {
@@ -49,7 +50,7 @@ export class AuthService {
     return this.jwtService.sign(data, { secret });
   }
 
-  async signUp(body: RegistrationDTO) {
+  async signUp(body: RegistrationDTO): Promise<ILogin> {
     const user = await this.authRepository.findOne({
       where: { email: body.email.toLowerCase() },
     });
@@ -70,12 +71,14 @@ export class AuthService {
 
     return {
       user: await this.userSerializer(newUser),
+      socialAccount: null,
+      company: null,
       token: await this.createToken(newUser),
       currencies: await this.currencyRepository.find(),
     };
   }
 
-  async signIn(data: LoginDTO) {
+  async signIn(data: LoginDTO): Promise<ILogin> {
     const { email, password } = data;
     const user = await this.authRepository.findOne({
       where: { email: email.toLowerCase() },
@@ -92,7 +95,7 @@ export class AuthService {
       return {
         user: await this.userSerializer(user),
         token: await this.createToken(user),
-        socialAuth: null,
+        socialAccount: null,
         company: null,
         currencies: await this.currencyRepository.find(),
       };
@@ -117,7 +120,7 @@ export class AuthService {
         user: await this.userSerializer(user),
         token: await this.createToken(user),
         company: await deserialize(CompanyEntity, serializedCompany),
-        socialAuth: null,
+        socialAccount: null,
         showSetPassword: !!user.email && !user.password,
         currencies: await this.currencyRepository.find(),
       };
@@ -127,13 +130,13 @@ export class AuthService {
       user: await this.userSerializer(user),
       token: await this.createToken(user),
       company: await deserialize(CompanyEntity, serializedCompany),
-      socialAuth: await deserialize(SocialAuthEntity, serializedSocialAuth),
+      socialAccount: await deserialize(SocialAuthEntity, serializedSocialAuth),
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),
     };
   }
 
-  async socialSignIn(data: SocialLoginDTO) {
+  async socialSignIn(data: SocialLoginDTO): Promise<ILogin> {
     const { socialAccountId, type } = data;
 
     if (type === EOAuthTypes.capium) {
@@ -165,11 +168,13 @@ export class AuthService {
       });
 
       const token = await this.createToken(newUser);
+  
       return {
         user: await this.userSerializer(newUser),
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
+        company: null,
         token,
         currencies: await this.currencyRepository.find(),
       };
@@ -220,7 +225,7 @@ export class AuthService {
     };
   }
 
-  async signInWithCapium(data: SocialLoginDTO) {
+  async signInWithCapium(data: SocialLoginDTO): Promise<ILogin> {
     const { email, type } = data;
 
     if (!data.email) {
@@ -252,6 +257,7 @@ export class AuthService {
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Email`]: email },
         }),
+        company: null,
         token,
         currencies: await this.currencyRepository.find(),
       };

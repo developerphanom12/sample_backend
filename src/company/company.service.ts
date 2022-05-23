@@ -68,9 +68,6 @@ export class CompanyService {
       });
     }
     return {
-      account: await this.memberRepository.findOne({
-        where: { id: user_company_account.id },
-      }),
       company: await this.companyRepository.findOne({
         where: { id: company.id },
         relations: ['currency'],
