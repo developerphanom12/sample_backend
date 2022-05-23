@@ -5,7 +5,6 @@ import { Repository } from 'typeorm';
 import { AuthEntity } from './entities/auth.entity';
 import { JwtService } from '@nestjs/jwt';
 import { EXPIRE_JWT_TIME, EXPIRE_LINK_TIME } from '../constants/jwt';
-import * as ses from 'node-ses';
 import * as bcrypt from 'bcrypt';
 import { deserialize, serialize } from 'class-transformer';
 import { RegistrationDTO } from './dto/registration.dto';
@@ -19,9 +18,9 @@ import { v4 as uuid } from 'uuid';
 import { PasswordRequestDTO } from './dto/password-request.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
-import { createPasswordMailSes } from '../shared/emails/create-password-email';
 import { CompanyEntity } from '../company/entities/company.entity';
 import { EmailsService } from 'src/emails/emails.service';
+import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +30,8 @@ export class AuthService {
     private authRepository: Repository<AuthEntity>,
     @InjectRepository(SocialAuthEntity)
     private socialAuthRepository: Repository<SocialAuthEntity>,
+    @InjectRepository(MemberEntity)
+    private memberRepository: Repository<MemberEntity>,
     @InjectRepository(CompanyEntity)
     private companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CurrencyEntity)
@@ -92,13 +93,30 @@ export class AuthService {
         user: await this.userSerializer(user),
         token: await this.createToken(user),
         socialAuth: null,
+        company: null,
         currencies: await this.currencyRepository.find(),
       };
     }
+
+    const activeAccount = await this.memberRepository.findOne({
+      relations: ['company'],
+      where: {
+        id: user.active_account,
+      },
+    });
+    const company = await this.companyRepository.findOne({
+      where: {
+        id: activeAccount.company.id,
+      },
+      relations: ['currency'],
+    });
+    const serializedCompany = serialize(company);
+
     if (!user.socialAuth) {
       return {
         user: await this.userSerializer(user),
         token: await this.createToken(user),
+        company: await deserialize(CompanyEntity, serializedCompany),
         socialAuth: null,
         showSetPassword: !!user.email && !user.password,
         currencies: await this.currencyRepository.find(),
@@ -108,6 +126,7 @@ export class AuthService {
     return {
       user: await this.userSerializer(user),
       token: await this.createToken(user),
+      company: await deserialize(CompanyEntity, serializedCompany),
       socialAuth: await deserialize(SocialAuthEntity, serializedSocialAuth),
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),
@@ -160,7 +179,34 @@ export class AuthService {
       where: { id: socialAccount.auth.id },
       relations: ['accounts'],
     });
-    const account = user.active_account;
+
+    if (!!user.active_account) {
+      const activeAccount = await this.memberRepository.findOne({
+        relations: ['company'],
+        where: {
+          id: user.active_account,
+        },
+      });
+
+      const company = await this.companyRepository.findOne({
+        where: {
+          id: activeAccount.company.id,
+        },
+        relations: ['currency'],
+      });
+      const serializedCompany = serialize(company);
+
+      return {
+        user: await this.userSerializer(user),
+        token: await this.createToken(user),
+        socialAccount: await this.socialAuthRepository.findOne({
+          where: { [`${type.toLowerCase()}Id`]: socialAccountId },
+        }),
+        company: await deserialize(CompanyEntity, serializedCompany),
+        showSetPassword: !!user.email && !user.password,
+        currencies: await this.currencyRepository.find(),
+      };
+    }
 
     return {
       user: await this.userSerializer(user),
@@ -168,6 +214,7 @@ export class AuthService {
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Id`]: socialAccountId },
       }),
+      company: null,
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),
     };
@@ -214,12 +261,41 @@ export class AuthService {
       where: { id: socialAccount.auth.id },
     });
 
+    if (!!user.active_account) {
+      const activeAccount = await this.memberRepository.findOne({
+        relations: ['company'],
+        where: {
+          id: user.active_account,
+        },
+      });
+
+      const company = await this.companyRepository.findOne({
+        where: {
+          id: activeAccount.company.id,
+        },
+        relations: ['currency'],
+      });
+      const serializedCompany = serialize(company);
+
+      return {
+        user: await this.userSerializer(user),
+        token: await this.createToken(user),
+        socialAccount: await this.socialAuthRepository.findOne({
+          where: { [`${type.toLowerCase()}Email`]: email },
+        }),
+        company: await deserialize(CompanyEntity, serializedCompany),
+        showSetPassword: !!user.email && !user.password,
+        currencies: await this.currencyRepository.find(),
+      };
+    }
+
     return {
       user: await this.userSerializer(user),
       token: await this.createToken(user),
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Email`]: email },
       }),
+      company: null,
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),
     };
