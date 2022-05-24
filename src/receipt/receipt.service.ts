@@ -406,7 +406,60 @@ export class ReceiptService {
       'Status',
     ];
 
-    return await this.downloadService.downloadCSV(exportedData, fields);
+    return await this.downloadService.createCSV(exportedData, fields);
+  }
+  async downloadXLSX(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      where: {
+        company: company,
+        id: In(receiptsId),
+      },
+      order: { custom_id: 'ASC' },
+    });
+
+    const exportedData = receipts.map((receipt) => {
+      return {
+        id: receipt.custom_id.toUpperCase(),
+        date: receipt.receipt_date || null,
+        supplier: receipt.supplier ? receipt.supplier.name : null,
+        supplierAccount: receipt.supplier_account || null,
+        category: receipt.category ? receipt.category.name : null,
+        vatCode: receipt.vat_code || null,
+        currency: receipt.currency ? receipt.currency.value : null,
+        net: receipt.net || null,
+        tax: receipt.tax || null,
+        total: receipt.total || null,
+        publish: receipt.publish_status,
+        paid: receipt.payment_status,
+        status: receipt.status,
+      };
+    });
+
+    const fields = [
+      'ID',
+      'Date',
+      'Supplier',
+      'Supplier Account',
+      'Category',
+      'VAT code',
+      'Currency',
+      'Net',
+      'Tax',
+      'Total',
+      'Publish',
+      'Paid',
+      'Status',
+    ];
+
+    return await this.downloadService.createXLSX(exportedData, fields);
   }
 
   async sendEmail(id: string, body: SendReceiptEmailDTO) {

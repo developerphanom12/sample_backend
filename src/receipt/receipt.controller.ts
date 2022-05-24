@@ -81,6 +81,24 @@ export class ReceiptController {
     res.download(`${result}`)
   }
 
+  @Post(RECEIPT_ROUTES.download_xlsx)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.download_xlsx })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  @Header('Content-Type', 'text/xlsx')
+  public async downloadXLSX(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+    @Res() res,
+  ) {
+    const result = await this.ReceiptService.downloadXLSX(id, body);
+    res.download(`${result}`)
+  }
+
   @Post(RECEIPT_ROUTES.send_email)
   @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: RECEIPT_SWAGGER.send_email })

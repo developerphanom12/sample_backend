@@ -1,13 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Workbook } from 'exceljs';
+import { Workbook, Worksheet } from 'exceljs';
 import * as tmp from 'tmp';
 
 @Injectable()
 export class DownloadService {
   constructor(private configService: ConfigService) {}
 
-  public async downloadCSV(data, fields) {
+  private styleSheet(sheet: Worksheet) {
+    sheet.getRow(1).height = 20;
+    sheet.getRow(1).font = {
+      size: 12,
+      bold: true,
+      color: { argb: '000000' },
+    };
+    sheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      bgColor: { argb: 'ea9fa7' },
+      fgColor: { argb: 'ea9fa7' },
+    };
+    sheet.getRow(1).border = {
+      top: { style: 'thin', color: { argb: '000000' } },
+      left: { style: 'thin', color: { argb: '000000' } },
+      right: { style: 'thin', color: { argb: '000000' } },
+      bottom: { style: 'thin', color: { argb: '000000' } },
+    };
+
+    for (let i = 1; i < 14; i++) {
+      sheet.getColumn(i).width = 16;
+      sheet.getColumn(i).alignment = {
+        vertical: 'middle',
+        horizontal: 'center',
+        wrapText: true,
+      };
+    }
+  }
+
+  public async createCSV(data, fields) {
     const rows = [];
 
     data.forEach((el) => {
@@ -60,6 +90,7 @@ export class DownloadService {
 
     rows.unshift(fields);
     sheet.addRows(rows);
+    this.styleSheet(sheet);
 
     const File = await new Promise((resolve, reject) => {
       tmp.file(
