@@ -64,10 +64,6 @@ export class ReceiptEntity {
 
   @ApiProperty({nullable: true})
   @Column({ nullable: true })
-  type: string;
-
-  @ApiProperty({nullable: true})
-  @Column({ nullable: true })
   description: string;
 
   @ApiProperty({nullable: true})
