@@ -6,4 +6,9 @@ export class DashboardStatisticDTO {
   @IsOptional()
   @IsString()
   date_start?: Date;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  date_end?: Date;
 }

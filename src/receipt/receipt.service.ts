@@ -328,28 +328,35 @@ export class ReceiptService {
     }
   }
 
-  async receiptDelete(id: string, receiptId: string) {
+  async receiptsDelete(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
     const company = await this.extractCompanyFromUser(id);
 
-    if (!company.receipts) {
-      throw new HttpException('NO RECEIPTS IN COMPANY', HttpStatus.BAD_REQUEST);
-    }
-
-    const receipt = await this.receiptRepository.findOne({
-      where: { id: receiptId, company: company.id },
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      where: {
+        company: company,
+        id: In(receiptsId),
+      },
     });
 
-    if (!receipt) {
-      throw new HttpException('RECEIPT NOT FOUND', HttpStatus.BAD_REQUEST);
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
     }
 
-    receipt.photos.forEach((el) => {
-      this.s3Service.deleteFile(`${company.id}/receipts/${el}`);
-    });
+    receipts.forEach((receipt) =>
+      receipt.photos.forEach((el) => {
+        this.s3Service.deleteFile(`${company.id}/receipts/${el}`);
+      }),
+    );
 
     try {
-      await this.receiptRepository.remove(receipt);
-      return 'RECEIPT DELETED';
+      await this.receiptRepository.remove(receipts);
+      return 'RECEIPTS WERE DELETED';
     } catch (e) {
       throw new HttpException('DELETE ERROR', HttpStatus.FORBIDDEN);
     }
@@ -408,6 +415,7 @@ export class ReceiptService {
 
     return await this.downloadService.createCSV(exportedData, fields);
   }
+
   async downloadXLSX(id: string, body: DownloadCSVDTO) {
     const receiptsId: string[] = body.receipts;
     if (!receiptsId) {

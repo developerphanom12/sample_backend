@@ -185,7 +185,7 @@ export class ReceiptController {
     description: RECEIPT_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async deleteReceipt(@User('id') id: string, @Param('id') receiptId) {
-    return await this.ReceiptService.receiptDelete(id, receiptId);
+  public async deleteReceipts(@User('id') id: string, @Body() body: DownloadCSVDTO) {
+    return await this.ReceiptService.receiptsDelete(id, body);
   }
 }

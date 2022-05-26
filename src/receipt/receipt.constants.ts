@@ -38,7 +38,7 @@ export const RECEIPT_ROUTES = {
   download_csv: 'download-csv',
   download_xlsx: 'download-xlsx',
   send_email: 'send-email',
-  delete: 'delete/:id',
+  delete: 'delete',
   get_image: 'images/:imagename',
   delete_image: 'delete-image/:imagename',
 };

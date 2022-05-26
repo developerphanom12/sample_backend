@@ -43,11 +43,11 @@ export const extractNumbers = (text: string, regex) => {
   }
   const firstWord = splittedText[splittedText.length - 1]
     .split(' ')[0] // Get next word after keyword
-    .replace(',', '') // Replace all comas to dots
+    .replace(',', '.') // Replace all comas to dots
     .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
   const secondWord = splittedText[splittedText.length - 1]
     .split(' ')[1] // Get second next word after keyword
-    .replace(',', '') // Replace all comas to dots
+    .replace(',', '.') // Replace all comas to dots
     .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
 
   // Get numbers from first or second words

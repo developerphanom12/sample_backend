@@ -8,7 +8,7 @@ import { CompanyEntity } from '../company/entities/company.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { ReceiptEntity } from '../receipt/entities/receipt.entity';
 import { EReceiptStatus } from '../receipt/receipt.constants';
-import { MoreThan, Repository } from 'typeorm';
+import { Between, MoreThan, Repository } from 'typeorm';
 import { DASHBOARD_ERRORS } from './dashboard.errors';
 import {
   ICompanyDetails,
@@ -131,12 +131,21 @@ export class DashboardService {
     body?: DashboardStatisticDTO,
   ): Promise<IDashboardRecent | null> {
     const today = new Date(new Date().setHours(0, 0, 0, 0));
-    const sort_date = body.date_start || today;
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    const sort_date_start = body.date_start || today;
+    const sort_date_end = body.date_end || tomorrow;
+
+    const sort_date =
+      body.date_start && body.date_end
+        ? Between(sort_date_start, sort_date_end)
+        : MoreThan(sort_date_start);
 
     const company = await this.extractCompanyFromUser(id);
     const [receipts, total] = await this.receiptRepository.findAndCount({
       relations: ['currency'],
-      where: { company: company, created: MoreThan(sort_date) },
+      where: { company: company, created: sort_date },
       order: { created: 'DESC' },
     });
 
