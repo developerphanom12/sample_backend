@@ -1,6 +1,11 @@
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import path = require('path');
+import { CompanyEntity } from 'src/company/entities/company.entity';
+import { FindOperator } from 'typeorm';
+import { CategoryEntity } from 'src/category/entities/category.entity';
+import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
+import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 
 export const receiptPhotoPath = 'uploads/receipts/';
 
@@ -56,4 +61,13 @@ export enum EReceiptStatus {
   review = 'review',
   rejected = 'rejected',
   accepted = 'accepted',
+}
+
+export interface IFilters {
+  company: CompanyEntity;
+  created: FindOperator<Date>;
+  status: FindOperator<string>;
+  category?: CategoryEntity | null;
+  supplier?: SupplierEntity | null;
+  payment_type?: PaymentTypeEntity | null;
 }

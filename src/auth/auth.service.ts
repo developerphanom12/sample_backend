@@ -137,6 +137,7 @@ export class AuthService {
   }
 
   async socialSignIn(data: SocialLoginDTO): Promise<ILogin> {
+    console.log(data);
     const { socialAccountId, type } = data;
 
     if (type === EOAuthTypes.capium) {
@@ -168,7 +169,7 @@ export class AuthService {
       });
 
       const token = await this.createToken(newUser);
-  
+
       return {
         user: await this.userSerializer(newUser),
         socialAccount: await this.socialAuthRepository.findOne({
@@ -185,33 +186,37 @@ export class AuthService {
       relations: ['accounts'],
     });
 
-    if (!!user.active_account) {
-      const activeAccount = await this.memberRepository.findOne({
-        relations: ['company'],
-        where: {
-          id: user.active_account,
-        },
-      });
-
-      const company = await this.companyRepository.findOne({
-        where: {
-          id: activeAccount.company.id,
-        },
-        relations: ['currency'],
-      });
-      const serializedCompany = serialize(company);
-
+    if (user.accounts.length < 1 || !user.active_account) {
       return {
         user: await this.userSerializer(user),
         token: await this.createToken(user),
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
-        company: await deserialize(CompanyEntity, serializedCompany),
+        company: null,
         showSetPassword: !!user.email && !user.password,
         currencies: await this.currencyRepository.find(),
       };
     }
+    console.log(user);
+    console.log(user.active_account);
+    const activeAccount = await this.memberRepository.findOne({
+      relations: ['company'],
+      where: {
+        id: user.active_account,
+      },
+    });
+    if (!activeAccount) {
+      throw new HttpException('ACCOUNT DOES NOT EXIST', HttpStatus.NOT_FOUND);
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: {
+        id: activeAccount.company.id,
+      },
+      relations: ['currency'],
+    });
+    const serializedCompany = serialize(company);
 
     return {
       user: await this.userSerializer(user),
@@ -219,7 +224,7 @@ export class AuthService {
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Id`]: socialAccountId },
       }),
-      company: null,
+      company: await deserialize(CompanyEntity, serializedCompany),
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),
     };

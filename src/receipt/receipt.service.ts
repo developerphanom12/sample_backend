@@ -8,7 +8,7 @@ import {
   extractTax,
   extractTotal,
 } from '../heplers/receipt.helper';
-import { EReceiptStatus } from './receipt.constants';
+import { EReceiptStatus, IFilters } from './receipt.constants';
 import { AuthEntity } from '../auth/entities/auth.entity';
 import { PaginationDTO } from './dto/receipt-pagination.dto';
 import { CreateReceiptDTO } from './dto/create-receipt.dto';
@@ -21,10 +21,10 @@ import { S3Service } from 'src/s3/s3.service';
 import { DownloadCSVDTO } from './dto/download-csv.dto';
 import { DownloadService } from 'src/download/download.service';
 import { SendReceiptEmailDTO } from './dto/send-receipt-email.dto';
-import * as ses from 'node-ses';
-import { EMAIL_CONFIG } from 'src/constants/email';
 import * as fs from 'fs';
 import { EmailsService } from 'src/emails/emails.service';
+import { CategoryEntity } from 'src/category/entities/category.entity';
+import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 
 @Injectable()
 export class ReceiptService {
@@ -39,8 +39,12 @@ export class ReceiptService {
     private companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
+    @InjectRepository(CategoryEntity)
+    private categoryRepository: Repository<CategoryEntity>,
     @InjectRepository(SupplierEntity)
     private supplierRepository: Repository<SupplierEntity>,
+    @InjectRepository(PaymentTypeEntity)
+    private paymentTypeRepository: Repository<PaymentTypeEntity>,
     private configService: ConfigService,
     private s3Service: S3Service,
     private downloadService: DownloadService,
@@ -211,35 +215,133 @@ export class ReceiptService {
         ? Between(body.date_start, body.date_end)
         : LessThan(nextDay);
 
+    if (!body.isMobile) {
+      const [result, total] = await this.receiptRepository.findAndCount({
+        relations: ['currency', 'supplier', 'category', 'payment_type'],
+        where: [
+          {
+            company: company,
+            status: Like(`%${body.status || ''}%`),
+            created: dateFilter,
+            custom_id: Like(`%${body.search || ''}%`),
+          },
+          {
+            company: company,
+            status: Like(`%${body.status || ''}%`),
+            created: dateFilter,
+            supplier: {
+              name: Like(`%${body.search || ''}%`),
+            },
+          },
+          {
+            company: company,
+            status: Like(`%${body.status || ''}%`),
+            created: dateFilter,
+            category: {
+              name: Like(`%${body.search || ''}%`),
+            },
+          },
+          {
+            company: company,
+            status: Like(`%${body.status || ''}%`),
+            created: dateFilter,
+            payment_type: {
+              name: Like(`%${body.search || ''}%`),
+            },
+          },
+        ],
+        order: { created: 'DESC' },
+        take: body.take ?? 10,
+        skip: body.skip ?? 0,
+      });
+      return {
+        data: result,
+        count: total,
+      };
+    }
+
+    const filerParams: IFilters = {
+      company: company,
+      created: dateFilter,
+      status: Like(`%${body.status || ''}%`),
+    };
+
+    const isCategoryFilter = body.hasOwnProperty('category');
+    if (isCategoryFilter) {
+      if (!body.category) {
+        filerParams.category = null;
+      } else {
+        const category = await this.categoryRepository.findOne({
+          where: {
+            company: company,
+            id: body.category,
+          },
+        });
+        if (!category) {
+          throw new HttpException('CATEGORY NOT FOUND', HttpStatus.NOT_FOUND);
+        }
+        filerParams.category = category;
+      }
+    }
+    const isSupplierFilter = body.hasOwnProperty('supplier');
+    if (isSupplierFilter) {
+      if (!body.supplier) {
+        filerParams.supplier = null;
+      } else {
+        const supplier = await this.supplierRepository.findOne({
+          where: {
+            company: company,
+            id: body.supplier,
+          },
+        });
+        if (!supplier) {
+          throw new HttpException('SUPPLIER NOT FOUND', HttpStatus.NOT_FOUND);
+        }
+        filerParams.supplier = supplier;
+      }
+    }
+    const isPaymentTypeFilter = body.hasOwnProperty('payment_type');
+    if (isPaymentTypeFilter) {
+      if (!body.payment_type) {
+        filerParams.payment_type = null;
+      } else {
+        const payment_type = await this.paymentTypeRepository.findOne({
+          where: {
+            company: company,
+            id: body.payment_type,
+          },
+        });
+        if (!payment_type) {
+          throw new HttpException(
+            'PAYMENT TYPE NOT FOUND',
+            HttpStatus.NOT_FOUND,
+          );
+        }
+        filerParams.payment_type = payment_type;
+      }
+    }
+
     const [result, total] = await this.receiptRepository.findAndCount({
       relations: ['currency', 'supplier', 'category', 'payment_type'],
       where: [
         {
-          company: company,
-          status: Like(`%${body.status || ''}%`),
-          created: dateFilter,
+          ...filerParams,
           custom_id: Like(`%${body.search || ''}%`),
         },
         {
-          company: company,
-          status: Like(`%${body.status || ''}%`),
-          created: dateFilter,
+          ...filerParams,
           supplier: {
             name: Like(`%${body.search || ''}%`),
           },
         },
         {
-          company: company,
-          status: Like(`%${body.status || ''}%`),
-          created: dateFilter,
+          ...filerParams,
           category: {
             name: Like(`%${body.search || ''}%`),
           },
         },
         {
-          company: company,
-          status: Like(`%${body.status || ''}%`),
-          created: dateFilter,
+          ...filerParams,
           payment_type: {
             name: Like(`%${body.search || ''}%`),
           },
