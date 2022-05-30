@@ -23,7 +23,6 @@ export class ReceiptEntity {
   id: string;
 
   @CreateDateColumn()
-  @Exclude()
   created: Date;
 
   @UpdateDateColumn()
@@ -34,47 +33,47 @@ export class ReceiptEntity {
   @Column({ default: EReceiptStatus.processing })
   status: EReceiptStatus;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   custom_id: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   receipt_date: Date;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   supplier_account: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   vat_code: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
   net: number;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
   tax: number;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
   total: number;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   description: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true, default: false })
   publish_status: boolean;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true, default: false })
   payment_status: boolean;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column('simple-array', { nullable: true })
   photos: string[];
 
