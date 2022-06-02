@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Like, Repository, LessThan, In } from 'typeorm';
+import { Between, Not, IsNull, Like, Repository, LessThan, In } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
   extractDate,
@@ -90,13 +90,13 @@ export class ReceiptService {
 
       return {
         ...data,
-        custom_id: `rc${customId + 1}`,
+        custom_id: `rc${customId}`,
       };
     } catch (err) {
       console.log('Error', err);
       return {
         status: EReceiptStatus.rejected,
-        custom_id: `rc${customId + 1}`,
+        custom_id: `rc${customId}`,
         photos: [photo.filename],
       };
     }
@@ -113,7 +113,7 @@ export class ReceiptService {
         ...receiptData,
         description: description,
         currency: currency,
-        company: {id: company.id},
+        company: { id: company.id },
       });
       return await this.receiptRepository.findOne({
         where: { id: receipt.id },
@@ -172,7 +172,11 @@ export class ReceiptService {
     const promises = photos.map((photo, i) =>
       this.getImageData(
         photo,
-        (receipts ? receipts.length : 0) + i,
+        (receipts.length > 0
+          ? +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')
+          : 0) +
+          i +
+          1,
         company.id,
       ),
     );
@@ -215,45 +219,26 @@ export class ReceiptService {
         ? Between(body.date_start, body.date_end)
         : LessThan(nextDay);
 
+    const filters = {
+      company: { id: company.id },
+      status: Like(`%${body.status || ''}%`),
+      created: dateFilter,
+    };
+    console.log(body);
     if (!body.isMobile) {
       const [result, total] = await this.receiptRepository.findAndCount({
         relations: ['currency', 'supplier', 'category', 'payment_type'],
         where: [
           {
-            company: { id: company.id },
-            status: Like(`%${body.status || ''}%`),
-            created: dateFilter,
+            ...filters,
             custom_id: Like(`%${body.search || ''}%`),
-          },
-          {
-            company: { id: company.id },
-            status: Like(`%${body.status || ''}%`),
-            created: dateFilter,
-            supplier: {
-              name: Like(`%${body.search || ''}%`),
-            },
-          },
-          {
-            company: { id: company.id },
-            status: Like(`%${body.status || ''}%`),
-            created: dateFilter,
-            category: {
-              name: Like(`%${body.search || ''}%`),
-            },
-          },
-          {
-            company: { id: company.id },
-            status: Like(`%${body.status || ''}%`),
-            created: dateFilter,
-            payment_type: {
-              name: Like(`%${body.search || ''}%`),
-            },
           },
         ],
         order: { created: 'DESC' },
         take: body.take ?? 10,
         skip: body.skip ?? 0,
       });
+      console.log(result);
       return {
         data: result,
         count: total,
@@ -314,30 +299,10 @@ export class ReceiptService {
 
     const [result, total] = await this.receiptRepository.findAndCount({
       relations: ['currency', 'supplier', 'category', 'payment_type'],
-      where: [
-        {
-          ...filerParams,
-          custom_id: Like(`%${body.search || ''}%`),
-        },
-        {
-          ...filerParams,
-          supplier: {
-            name: Like(`%${body.search || ''}%`),
-          },
-        },
-        {
-          ...filerParams,
-          category: {
-            name: Like(`%${body.search || ''}%`),
-          },
-        },
-        {
-          ...filerParams,
-          payment_type: {
-            name: Like(`%${body.search || ''}%`),
-          },
-        },
-      ],
+      where: {
+        ...filerParams,
+        custom_id: Like(`%${body.search || ''}%`),
+      },
       order: { created: 'DESC' },
       take: body.take ?? 10,
       skip: body.skip ?? 0,
