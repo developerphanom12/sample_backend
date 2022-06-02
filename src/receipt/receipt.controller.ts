@@ -78,7 +78,7 @@ export class ReceiptController {
     @Res() res,
   ) {
     const result = await this.ReceiptService.downloadCSV(id, body);
-    res.download(`${result}`)
+    res.download(`${result}`);
   }
 
   @Post(RECEIPT_ROUTES.download_xlsx)
@@ -96,7 +96,7 @@ export class ReceiptController {
     @Res() res,
   ) {
     const result = await this.ReceiptService.downloadXLSX(id, body);
-    res.download(`${result}`)
+    res.download(`${result}`);
   }
 
   @Post(RECEIPT_ROUTES.send_email)
@@ -185,7 +185,25 @@ export class ReceiptController {
     description: RECEIPT_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async deleteReceipts(@User('id') id: string, @Body() body: DownloadCSVDTO) {
+  public async deleteReceipts(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
     return await this.ReceiptService.receiptsDelete(id, body);
+  }
+
+  @Post(RECEIPT_ROUTES.mark_paid)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.mark_paid })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsPaid(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsPaid(id, body);
   }
 }

@@ -32,6 +32,7 @@ export const RECEIPT_SWAGGER = {
   download_xlsx: 'Download XLSX File',
   send_email: 'Send Email with Receipts',
   delete: 'Delete receipt',
+  mark_paid: 'Mark as paid',
   delete_image: 'Delete receipt image',
 };
 
@@ -44,6 +45,7 @@ export const RECEIPT_ROUTES = {
   download_xlsx: 'download-xlsx',
   send_email: 'send-email',
   delete: 'delete',
+  mark_paid: 'mark-paid',
   get_image: 'images/:imagename',
   delete_image: 'delete-image/:imagename',
 };

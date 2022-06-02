@@ -406,6 +406,37 @@ export class ReceiptService {
     });
   }
 
+  async markReceiptsAsPaid(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+    const company = await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      where: {
+        company: company,
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { payment_status: true },
+      );
+      return 'RECEIPTS WERE MARKED AS PAID';
+    } catch (e) {
+      throw new HttpException('MARK AS PAID ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
+
   async getReceiptImage(id: string, image_name: string, res) {
     const company = await this.extractCompanyFromUser(id);
     try {
