@@ -56,7 +56,7 @@ export class CompanyService {
       name: user.fullName,
       role: ECompanyRoles.owner,
       user: user,
-      company: company,
+      company: {id: company.id},
     });
     if (!user.accounts || user.accounts.length === 0) {
       await this.authRepository.update(id, {

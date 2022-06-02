@@ -113,7 +113,7 @@ export class ReceiptService {
         ...receiptData,
         description: description,
         currency: currency,
-        company: company,
+        company: {id: company.id},
       });
       return await this.receiptRepository.findOne({
         where: { id: receipt.id },
@@ -166,7 +166,7 @@ export class ReceiptService {
     });
 
     const receipts = await this.receiptRepository.find({
-      where: { company: company },
+      where: { company: { id: company.id } },
     });
 
     const promises = photos.map((photo, i) =>
@@ -220,13 +220,13 @@ export class ReceiptService {
         relations: ['currency', 'supplier', 'category', 'payment_type'],
         where: [
           {
-            company: company,
+            company: { id: company.id },
             status: Like(`%${body.status || ''}%`),
             created: dateFilter,
             custom_id: Like(`%${body.search || ''}%`),
           },
           {
-            company: company,
+            company: { id: company.id },
             status: Like(`%${body.status || ''}%`),
             created: dateFilter,
             supplier: {
@@ -234,7 +234,7 @@ export class ReceiptService {
             },
           },
           {
-            company: company,
+            company: { id: company.id },
             status: Like(`%${body.status || ''}%`),
             created: dateFilter,
             category: {
@@ -242,7 +242,7 @@ export class ReceiptService {
             },
           },
           {
-            company: company,
+            company: { id: company.id },
             status: Like(`%${body.status || ''}%`),
             created: dateFilter,
             payment_type: {
@@ -261,7 +261,7 @@ export class ReceiptService {
     }
 
     const filerParams: IFilters = {
-      company: company,
+      company: { id: company.id },
       created: dateFilter,
       status: Like(`%${body.status || ''}%`),
     };
@@ -272,15 +272,12 @@ export class ReceiptService {
         filerParams.category = null;
       } else {
         const category = await this.categoryRepository.findOne({
-          where: {
-            company: company,
-            id: body.category,
-          },
+          where: { company: { id: company.id }, id: body.category },
         });
         if (!category) {
           throw new HttpException('CATEGORY NOT FOUND', HttpStatus.NOT_FOUND);
         }
-        filerParams.category = category;
+        filerParams.category = { id: category.id };
       }
     }
     const isSupplierFilter = body.hasOwnProperty('supplier');
@@ -289,15 +286,12 @@ export class ReceiptService {
         filerParams.supplier = null;
       } else {
         const supplier = await this.supplierRepository.findOne({
-          where: {
-            company: company,
-            id: body.supplier,
-          },
+          where: { company: { id: company.id }, id: body.supplier },
         });
         if (!supplier) {
           throw new HttpException('SUPPLIER NOT FOUND', HttpStatus.NOT_FOUND);
         }
-        filerParams.supplier = supplier;
+        filerParams.supplier = { id: supplier.id };
       }
     }
     const isPaymentTypeFilter = body.hasOwnProperty('payment_type');
@@ -306,10 +300,7 @@ export class ReceiptService {
         filerParams.payment_type = null;
       } else {
         const payment_type = await this.paymentTypeRepository.findOne({
-          where: {
-            company: company,
-            id: body.payment_type,
-          },
+          where: { company: { id: company.id }, id: body.payment_type },
         });
         if (!payment_type) {
           throw new HttpException(
@@ -317,7 +308,7 @@ export class ReceiptService {
             HttpStatus.NOT_FOUND,
           );
         }
-        filerParams.payment_type = payment_type;
+        filerParams.payment_type = { id: payment_type.id };
       }
     }
 
@@ -367,7 +358,7 @@ export class ReceiptService {
 
     const receipt = await this.receiptRepository.findOne({
       relations: ['currency'],
-      where: { id: receiptId, company: company.id },
+      where: { id: receiptId, company: { id: company.id } },
     });
 
     if (!receipt) {
@@ -417,7 +408,7 @@ export class ReceiptService {
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier', 'category', 'payment_type'],
       where: {
-        company: company,
+        company: { id: company.id },
         id: In(receiptsId),
       },
     });
@@ -472,7 +463,7 @@ export class ReceiptService {
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier', 'category', 'payment_type'],
       where: {
-        company: company,
+        company: { id: company.id },
         id: In(receiptsId),
       },
     });
@@ -505,10 +496,7 @@ export class ReceiptService {
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier', 'category', 'payment_type'],
-      where: {
-        company: company,
-        id: In(receiptsId),
-      },
+      where: { company: { id: company.id }, id: In(receiptsId) },
       order: { custom_id: 'ASC' },
     });
 
@@ -559,10 +547,7 @@ export class ReceiptService {
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier', 'category', 'payment_type'],
-      where: {
-        company: company,
-        id: In(receiptsId),
-      },
+      where: { company: { id: company.id }, id: In(receiptsId) },
       order: { custom_id: 'ASC' },
     });
 
@@ -613,10 +598,7 @@ export class ReceiptService {
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier', 'category', 'payment_type'],
-      where: {
-        company: company,
-        id: In(receiptsId),
-      },
+      where: { company: { id: company.id }, id: In(receiptsId) },
       order: { custom_id: 'ASC' },
     });
 

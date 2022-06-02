@@ -31,7 +31,7 @@ export class ReceiptEntity {
 
   @ApiProperty()
   @Column({ default: EReceiptStatus.processing })
-  status: EReceiptStatus;
+  status: string;
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })

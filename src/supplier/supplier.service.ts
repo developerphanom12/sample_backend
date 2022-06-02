@@ -86,7 +86,7 @@ export class SupplierService {
 
     const supplier = await this.supplierRepository.save({
       name: body.name,
-      company: company,
+      company: {id: company.id},
       creator: creator,
     });
     return await this.supplierRepository.findOne({
@@ -107,7 +107,7 @@ export class SupplierService {
     const supplier = await this.supplierRepository.findOne({
       where: {
         id: supplierId,
-        company: company,
+        company: { id: company.id },
       },
     });
     if (!supplier) {
@@ -120,7 +120,7 @@ export class SupplierService {
     return await this.supplierRepository.findOne({
       where: {
         id: supplierId,
-        company: company,
+        company: { id: company.id },
       },
     });
   }
@@ -129,7 +129,9 @@ export class SupplierService {
     const company = await this.extractCompanyFromUser(id);
 
     return await this.supplierRepository.find({
-      where: { company: company },
+      where: {
+        company: { id: company.id },
+      },
       relations: ['creator'],
     });
   }
@@ -139,7 +141,7 @@ export class SupplierService {
     const [result, total] = await this.supplierRepository.findAndCount({
       relations: ['creator'],
       where: {
-        company: company,
+        company: { id: company.id },
         name: Like(`%${body.search || ''}%`),
       },
       order: { created: 'DESC' },
@@ -155,7 +157,7 @@ export class SupplierService {
   async getSupplierDetails(id: string, supplierId: string) {
     const company = await this.extractCompanyFromUser(id);
     return await this.supplierRepository.findOne({
-      where: { id: supplierId, company: company },
+      where: { id: supplierId, company: { id: company.id } },
       relations: ['receipts', 'company', 'creator'],
     });
   }
@@ -171,7 +173,7 @@ export class SupplierService {
     }
 
     const supplier = await this.supplierRepository.findOne({
-      where: { id: supplierId, company: company.id },
+      where: { id: supplierId, company: { id: company.id } },
     });
 
     if (!supplier) {

@@ -86,7 +86,7 @@ export class PaymentTypeService {
 
     const paymentType = await this.paymentTypeRepository.save({
       name: body.name,
-      company: company,
+      company: {id: company.id},
       creator: creator,
     });
     return await this.paymentTypeRepository.findOne({
@@ -107,7 +107,7 @@ export class PaymentTypeService {
     const paymentType = await this.paymentTypeRepository.findOne({
       where: {
         id: paymentTypeId,
-        company: company,
+        company: {id: company.id},
       },
     });
     if (!paymentType) {
@@ -120,7 +120,7 @@ export class PaymentTypeService {
     return await this.paymentTypeRepository.findOne({
       where: {
         id: paymentTypeId,
-        company: company,
+        company: {id: company.id},
       },
     });
   }
@@ -129,7 +129,7 @@ export class PaymentTypeService {
     const company = await this.extractCompanyFromUser(id);
 
     return await this.paymentTypeRepository.find({
-      where: { company: company },
+      where: { company: {id: company.id}, },
       relations: ['creator'],
     });
   }
@@ -139,7 +139,7 @@ export class PaymentTypeService {
     const [result, total] = await this.paymentTypeRepository.findAndCount({
       relations: ['creator'],
       where: {
-        company: company,
+        company: {id: company.id},
         name: Like(`%${body.search || ''}%`),
       },
       order: { created: 'DESC' },
@@ -155,7 +155,7 @@ export class PaymentTypeService {
   async getPaymentTypeDetails(id: string, paymentTypeId: string) {
     const company = await this.extractCompanyFromUser(id);
     return await this.paymentTypeRepository.findOne({
-      where: { id: paymentTypeId, company: company },
+      where: { id: paymentTypeId, company: {id: company.id}, },
       relations: ['receipts', 'company', 'creator'],
     });
   }
@@ -171,7 +171,7 @@ export class PaymentTypeService {
     }
 
     const paymentType = await this.paymentTypeRepository.findOne({
-      where: { id: paymentTypeId, company: company.id },
+      where: { id: paymentTypeId, company: {id: company.id}, },
     });
 
     if (!paymentType) {

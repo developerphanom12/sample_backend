@@ -2,7 +2,7 @@ import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import path = require('path');
 import { CompanyEntity } from 'src/company/entities/company.entity';
-import { FindOperator } from 'typeorm';
+import { FindOperator, FindOptionsWhere } from 'typeorm';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
@@ -66,10 +66,10 @@ export enum EReceiptStatus {
 }
 
 export interface IFilters {
-  company: CompanyEntity;
+  company: FindOptionsWhere<CompanyEntity>;
   created: FindOperator<Date>;
   status: FindOperator<string>;
-  category?: CategoryEntity | null;
-  supplier?: SupplierEntity | null;
-  payment_type?: PaymentTypeEntity | null;
+  category?: FindOptionsWhere<CategoryEntity> | null;
+  supplier?: FindOptionsWhere<SupplierEntity> | null;
+  payment_type?: FindOptionsWhere<PaymentTypeEntity> | null;
 }
