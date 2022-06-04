@@ -139,9 +139,7 @@ export class ReceiptService {
       receiptData.vat_code =
         Math.floor(
           (receiptData.tax / (receiptData.total - receiptData.tax)) * 10000,
-        ) /
-          100 +
-        '%';
+        ) / 100;
     }
 
     if (!(receiptData.receipt_date || receiptData.total || receiptData.tax)) {
@@ -169,17 +167,14 @@ export class ReceiptService {
       where: { company: { id: company.id } },
     });
 
-    const promises = photos.map((photo, i) =>
-      this.getImageData(
-        photo,
-        (receipts.length > 0
-          ? +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')
-          : 0) +
-          i +
-          1,
-        company.id,
-      ),
-    );
+    const promises = photos.map((photo, i) => {
+      const custom_id =
+        (receipts.length > 0 &&
+          +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')) +
+          (i + 1) || i + 1;
+
+      return this.getImageData(photo, custom_id, company.id);
+    });
 
     const textractData = await Promise.all(promises);
 
@@ -224,7 +219,6 @@ export class ReceiptService {
       status: Like(`%${body.status || ''}%`),
       created: dateFilter,
     };
-    console.log(body);
     if (!body.isMobile) {
       const [result, total] = await this.receiptRepository.findAndCount({
         relations: ['currency', 'supplier', 'category', 'payment_type'],
@@ -238,7 +232,6 @@ export class ReceiptService {
         take: body.take ?? 10,
         skip: body.skip ?? 0,
       });
-      console.log(result);
       return {
         data: result,
         count: total,
