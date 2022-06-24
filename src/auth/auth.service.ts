@@ -137,7 +137,6 @@ export class AuthService {
   }
 
   async socialSignIn(data: SocialLoginDTO): Promise<ILogin> {
-    console.log(data);
     const { socialAccountId, type } = data;
 
     if (type === EOAuthTypes.capium) {
@@ -198,8 +197,6 @@ export class AuthService {
         currencies: await this.currencyRepository.find(),
       };
     }
-    console.log(user);
-    console.log(user.active_account);
     const activeAccount = await this.memberRepository.findOne({
       relations: ['company'],
       where: {

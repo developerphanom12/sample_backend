@@ -25,6 +25,7 @@ import * as fs from 'fs';
 import { EmailsService } from 'src/emails/emails.service';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
+import { ECompanyRoles } from 'src/company-member/company-member.constants';
 
 @Injectable()
 export class ReceiptService {
@@ -80,13 +81,17 @@ export class ReceiptService {
     return company;
   }
 
-  async getImageData(photo, customId: number, companyId: string) {
+  async getImageData(
+    photo,
+    customId: number,
+    companyId: string,
+    userRole: ECompanyRoles,
+  ) {
     const photoPath = await this.uploadPhotoToBucket(photo, companyId);
     try {
       const textractImage = await this.s3Service.textractFile(photoPath);
-
       const imageName = photoPath.key.split('/')[2];
-      const data = await this.extractData(textractImage, imageName);
+      const data = await this.extractData(textractImage, imageName, userRole);
 
       return {
         ...data,
@@ -124,7 +129,11 @@ export class ReceiptService {
     }
   }
 
-  async extractData(textData: string[], photo: string) {
+  async extractData(
+    textData: string[],
+    photo: string,
+    userRole: ECompanyRoles,
+  ) {
     const text = textData.join(' ').toLocaleLowerCase();
 
     const receiptData = {
@@ -151,13 +160,24 @@ export class ReceiptService {
     }
     return {
       ...receiptData,
-      status: EReceiptStatus.review,
+      status:
+        userRole === ECompanyRoles.user
+          ? EReceiptStatus.processing
+          : EReceiptStatus.review,
       photos: [photo],
     };
   }
 
   async createReceipt(id: string, body: CreateReceiptDTO, photos) {
     const company = await this.extractCompanyFromUser(id);
+
+    const activeAccount = await this.memberRepository.findOne({
+      where: {
+        id: (
+          await this.authRepository.findOne({ where: { id: id } })
+        ).active_account,
+      },
+    });
 
     const currency = await this.currencyRepository.findOne({
       where: { id: company.currency.id },
@@ -173,7 +193,12 @@ export class ReceiptService {
           +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')) +
           (i + 1) || i + 1;
 
-      return this.getImageData(photo, custom_id, company.id);
+      return this.getImageData(
+        photo,
+        custom_id,
+        company.id,
+        activeAccount.role,
+      );
     });
 
     const textractData = await Promise.all(promises);
@@ -312,6 +337,24 @@ export class ReceiptService {
 
     if (!company.receipts) {
       throw new HttpException('NO RECEIPTS IN COMPANY', HttpStatus.BAD_REQUEST);
+    }
+
+    const activeAccount = await this.memberRepository.findOne({
+      where: {
+        id: (
+          await this.authRepository.findOne({ where: { id: id } })
+        ).active_account,
+      },
+    });
+
+    if (
+      activeAccount.role === ECompanyRoles.user &&
+      body.status === EReceiptStatus.accepted
+    ) {
+      throw new HttpException(
+        'NO PERMISSON TO SET RECEIPT AS ACCEPTED',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const receipt = await this.receiptRepository.findOne({

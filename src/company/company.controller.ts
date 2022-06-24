@@ -1,10 +1,26 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { User } from '../shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { COMPANY_ROUTES, COMPANY_SWAGGER } from './company.constants';
 import { CompanyService } from './company.service';
 import { CreateCompanyDTO } from './dto/create-company.dto';
+import { PaginationDTO } from './dto/pagination.dto';
 import { CompanyEntity } from './entities/company.entity';
 
 @ApiTags(COMPANY_ROUTES.main)
@@ -14,6 +30,7 @@ export class CompanyController {
 
   @Post(COMPANY_ROUTES.create)
   @UseGuards(new JwtAuthenticationGuard())
+  @UseInterceptors(FileInterceptor('logo'))
   @ApiOperation({ summary: COMPANY_SWAGGER.create })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -24,8 +41,9 @@ export class CompanyController {
   public async createCompany(
     @User('id') id: string,
     @Body() body: CreateCompanyDTO,
+    @UploadedFiles() file,
   ) {
-    return await this.companyService.createCompany(id, body);
+    return await this.companyService.createCompany(id, body, file);
   }
 
   @Get(COMPANY_ROUTES.get)
@@ -67,5 +85,20 @@ export class CompanyController {
   @HttpCode(HttpStatus.OK)
   public async deleteReceipt(@User('id') id: string, @Param('id') companyId) {
     return await this.companyService.companyDelete(id, companyId);
+  }
+  @Get(COMPANY_ROUTES.get_members)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_SWAGGER.get_members })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_SWAGGER.success,
+    type: MemberEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getCategories(
+    @User('id') id: string,
+    @Query() body: PaginationDTO,
+  ) {
+    return await this.companyService.getCompanyMembers(id, body);
   }
 }
