@@ -144,7 +144,7 @@ export class DashboardService {
 
     const company = await this.extractCompanyFromUser(id);
     const [receipts, total] = await this.receiptRepository.findAndCount({
-      relations: ['currency', 'suppiler'],
+      relations: ['currency', 'supplier'],
       where: { company: {id: company.id}, created: sort_date },
       order: { created: 'DESC' },
     });
