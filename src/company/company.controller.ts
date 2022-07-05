@@ -8,6 +8,8 @@ import {
   Param,
   Post,
   Query,
+  Res,
+  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -41,7 +43,7 @@ export class CompanyController {
   public async createCompany(
     @User('id') id: string,
     @Body() body: CreateCompanyDTO,
-    @UploadedFiles() file,
+    @UploadedFile() file,
   ) {
     return await this.companyService.createCompany(id, body, file);
   }
@@ -60,6 +62,36 @@ export class CompanyController {
     @Param('company') company: string,
   ) {
     return await this.companyService.getCompany(id, company);
+  }
+
+  @Get(COMPANY_ROUTES.get_logo)
+  @ApiOperation({ summary: COMPANY_SWAGGER.get_logo })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getCompanyLogo(
+    @Param('company') company: string,
+    @Res() res,
+  ) {
+    return await this.companyService.getCompanyLogo(company, res);
+  }
+
+  @Post(COMPANY_ROUTES.change_logo)
+  @UseGuards(new JwtAuthenticationGuard())
+  @UseInterceptors(FileInterceptor('logo'))
+  @ApiOperation({ summary: COMPANY_SWAGGER.change_logo })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async changeCompanyLogo(
+    @User('id') id: string,
+    @UploadedFile() file,
+  ) {
+    return await this.companyService.changeCompanyLogo(id, file);
   }
 
   @Get(COMPANY_ROUTES.get_all)

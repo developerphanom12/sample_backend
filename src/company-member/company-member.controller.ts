@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -10,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { User } from 'src/shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
 import {
@@ -60,6 +62,35 @@ export class CompanyMemberController {
       accountId,
       body,
     );
+  }
+
+  @Get(COMPANY_MEMBER_ROUTES.get_accounts)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_MEMBER_SWAGGER.get_accounts })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_MEMBER_SWAGGER.success,
+    type: MemberEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getUserAccounts(@User('id') id: string) {
+    return await this.companyMemberService.getUserAccounts(id);
+  }
+
+  @Put(COMPANY_MEMBER_ROUTES.select_active_account)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_MEMBER_SWAGGER.select_active_account })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_MEMBER_SWAGGER.success,
+    type: AuthEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async selectActiveAccount(
+    @User('id') id: string,
+    @Param('accountId') accountId: string,
+  ) {
+    return await this.companyMemberService.selectActiveAccount(id, accountId);
   }
 
   @Delete(COMPANY_MEMBER_ROUTES.delete)

@@ -57,6 +57,7 @@ export class CompanyService {
     }
     return company;
   }
+
   private async getAccountCompany(
     account: MemberEntity,
   ): Promise<CompanyEntity> {
@@ -66,17 +67,40 @@ export class CompanyService {
     });
     return acc.company;
   }
-  private async uploadLogoToBucket(file, companyId: string) {
+
+  private async setCompanyLogo(
+    file,
+    companyId: string,
+  ): Promise<CompanyEntity> {
+    const company = await this.companyRepository.findOne({
+      where: { id: companyId },
+    });
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.NOT_FOUND);
+    }
     if (!file) {
       throw new HttpException('NO LOGO IMAGE', HttpStatus.BAD_REQUEST);
     }
-    const folderName = `${companyId}/logo`;
-    const response = await this.s3Service.loadFile(file, folderName);
+    if (!!company.logo) {
+      try {
+        await this.s3Service.deleteFile(`${companyId}/logo/${company.logo}`);
+      } catch (e) {
+        console.log(e);
+        throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+      }
+    }
 
-    return {
-      link: response.location,
-      key: response.key,
-    };
+    const folderName = `${companyId}/logo`;
+    const { key } = await this.s3Service.loadFile(file, folderName);
+
+    await this.companyRepository.update(company.id, {
+      logo: key.split('/')[2],
+    });
+
+    return await this.companyRepository.findOne({
+      where: { id: company.id },
+      relations: ['currency'],
+    });
   }
 
   async createCompany(
@@ -86,7 +110,7 @@ export class CompanyService {
   ): Promise<ICreateCompany> {
     const user = await this.authRepository.findOne({
       where: { id: id },
-      relations: ['accounts']
+      relations: ['accounts'],
     });
     if (!user) {
       throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
@@ -124,13 +148,13 @@ export class CompanyService {
     }
 
     if (!!logo) {
-      //  const photoPath = await this.uploadLogoToBucket(logo, company.id);
-      try {
-        // const textractImage = await this.s3Service.textractFile(photoPath);
-        // const imageName = photoPath.key.split('/')[2];
-      } catch (err) {
-        console.log('Error', err);
-      }
+      return {
+        company: await this.setCompanyLogo(logo, company.id),
+        user: await this.authRepository.findOne({
+          where: { id: user.id },
+          relations: ['accounts'],
+        }),
+      };
     }
 
     return {
@@ -145,6 +169,14 @@ export class CompanyService {
     };
   }
 
+  async changeCompanyLogo(id: string, file) {
+    const company = await this.extractCompanyFromUser(id);
+    if (!file) {
+      throw new HttpException('NO LOGO FILE', HttpStatus.FORBIDDEN);
+    }
+    return await this.setCompanyLogo(file, company.id);
+  }
+
   async getCompany(id: string, companyId: string): Promise<CompanyEntity> {
     const company = await this.companyRepository.findOne({
       where: { id: companyId },
@@ -153,6 +185,27 @@ export class CompanyService {
       throw new HttpException(COMPANY_ERRORS.company, HttpStatus.NOT_FOUND);
     }
     return company;
+  }
+
+  async getCompanyLogo(companyId: string, res) {
+    const company = await this.companyRepository.findOne({
+      where: { id: companyId },
+    });
+    if (!company) {
+      throw new HttpException('COMPANY DOES NOT EXIST', HttpStatus.NOT_FOUND);
+    }
+    if (!company.logo) {
+      throw new HttpException('COMPANY HAS NO LOGO', HttpStatus.NOT_FOUND);
+    }
+    try {
+      const readStream = await this.s3Service.getFilesStream(
+        `${company.id}/logo/${company.logo}`,
+      );
+      readStream.pipe(res);
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('LOGO NOT FOUND', HttpStatus.NOT_FOUND);
+    }
   }
 
   async getAllCompanies(id: string): Promise<CompanyEntity[]> {
@@ -176,6 +229,7 @@ export class CompanyService {
   ): Promise<{ data: MemberEntity[]; count: number }> {
     const company = await this.extractCompanyFromUser(id);
     const [result, total] = await this.memberRepository.findAndCount({
+      relations: ['user'],
       where: {
         company: { id: company.id },
         name: Like(`%${body.search || ''}%`),

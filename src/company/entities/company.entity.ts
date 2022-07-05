@@ -35,6 +35,10 @@ export class CompanyEntity {
   @Column({ default: '' })
   name: string;
 
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
+  logo: string;
+
   @ApiProperty()
   @Column({
     default: '',

@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { ChangePasswordDTO } from './dto/change-password.dto';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
 import * as bcrypt from 'bcrypt';
+import { S3Service } from 'src/s3/s3.service';
 
 @Injectable()
 export class ProfileService {
@@ -22,6 +23,7 @@ export class ProfileService {
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
     private configService: ConfigService,
+    private s3Service: S3Service,
   ) {}
 
   private async extractCompanyFromUser(id: string) {
@@ -69,6 +71,51 @@ export class ProfileService {
         date_format: company.date_format,
       },
     };
+  }
+
+  async getProfileImage(imagename: string, res) {
+    try {
+      const readStream = await this.s3Service.getFilesStream(
+        `profiles/${imagename}`,
+      );
+      readStream.pipe(res);
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  async uploadProfileImage(id: string, file) {
+    const user = await this.authRepository.findOne({ where: { id: id } });
+    if (!user) {
+      throw new HttpException('USER IS NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+    if (!file) {
+      throw new HttpException('NO PROFILE IMAGE', HttpStatus.BAD_REQUEST);
+    }
+    if (!!user.profile_image) {
+      await this.deleteProfileImage(id, user.profile_image);
+    }
+    const folderName = `profiles`;
+    const { key, location } = await this.s3Service.loadFile(file, folderName);
+    const imageName = key.split('/')[1];
+
+    await this.authRepository.update(user.id, {
+      profile_image: imageName,
+    });
+    return await this.authRepository.findOne({ where: { id: id } });
+  }
+
+  async deleteProfileImage(id: string, image_name: string) {
+    const user = await this.authRepository.findOne({ where: { id: id } });
+    if (user.profile_image !== image_name)
+      try {
+        await this.s3Service.deleteFile(`profiles/${image_name}`);
+        return 'Profile image Delete Success';
+      } catch (e) {
+        console.log(e);
+        throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+      }
   }
 
   async updateProfile(id: string, body: UpdateProfileDTO) {
@@ -130,7 +177,7 @@ export class ProfileService {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
     if (!!user.password && !body.old_password) {
-        throw new HttpException('Password is required', HttpStatus.FORBIDDEN);
+      throw new HttpException('Password is required', HttpStatus.FORBIDDEN);
     }
 
     if (

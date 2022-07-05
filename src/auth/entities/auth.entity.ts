@@ -48,6 +48,10 @@ export class AuthEntity {
   @Exclude()
   password: string;
 
+  @ApiProperty({nullable: true})
+  @Column({ nullable: true })
+  profile_image: string;
+
   @Column({
     default: '',
   })

@@ -4,10 +4,17 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Post,
   Put,
+  Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import e = require('express');
 import { User } from 'src/shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
 import { ChangePasswordDTO } from './dto/change-password.dto';
@@ -60,5 +67,35 @@ export class ProfileController {
     @Body() body: ChangePasswordDTO,
   ) {
     return await this.profileService.changePassword(id, body);
+  }
+
+  @Post(PROFILE_ROUTES.upload_photo)
+  @UseGuards(new JwtAuthenticationGuard())
+  @UseInterceptors(FileInterceptor('profile_image'))
+  @ApiOperation({ summary: PROFILE_SWAGGER.upload_photo })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PROFILE_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async uploadAvatar(
+    @User('id') id: string,
+    @UploadedFile() file,
+  ) {
+    return await this.profileService.uploadProfileImage(id, file);
+  }
+
+  @Get(PROFILE_ROUTES.get_photo)
+  @ApiOperation({ summary: PROFILE_SWAGGER.get_photo })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PROFILE_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getAvatar(
+    @Param('imagename') imagename: string,
+    @Res() res,
+  ) {
+    return await this.profileService.getProfileImage(imagename, res);
   }
 }

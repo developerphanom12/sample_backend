@@ -35,7 +35,7 @@ export class S3Service {
 
     const params = {
       Bucket: this.bucketName,
-      Key: `${folderName}/${Date.now()}-${name}.${mimetype.split('/')[1]}`,
+      Key: `${folderName}/${Date.now()}-${name.replace(/\s/g, '-')}.${mimetype.split('/')[1]}`,
       Body: buffer,
     };
     let location = '';

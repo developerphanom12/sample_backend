@@ -69,6 +69,67 @@ export class CompanyMemberService {
     return company;
   }
 
+  async selectActiveAccount(id: string, accountId: string) {
+    const user = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
+    });
+    if (!user) {
+      throw new HttpException('USER DOES NOT EXIST', HttpStatus.NOT_FOUND);
+    }
+    const account = await this.memberRepository.findOne({
+      where: { id: accountId },
+      relations: ['user', 'company'],
+    });
+    if (!account) {
+      throw new HttpException('ACCOUNT DOES NOT EXIST', HttpStatus.NOT_FOUND);
+    }
+
+    if (account.user.id !== user.id) {
+      throw new HttpException(
+        'USER HASN`T ACCESS TO THIS ACCOUNT',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    await this.authRepository.update(user.id, {
+      active_account: account.id,
+    });
+
+    return {
+      user: await this.authRepository.findOne({
+        where: { id: user.id },
+        relations: ['accounts'],
+      }),
+      company: await this.companyRepository.findOne({
+        where: { id: account.company.id },
+      }),
+    };
+  }
+
+  async getUserAccounts(id: string) {
+    const user = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
+    });
+    if (!user) {
+      throw new HttpException('USER DOES NOT EXIST', HttpStatus.BAD_REQUEST);
+    }
+
+    if (!user.accounts || user.accounts.length < 1) {
+      return null;
+    }
+
+    const promises = user.accounts.map(
+      async (account) =>
+        await this.memberRepository.findOne({
+          where: { id: account.id },
+          relations: ['company'],
+        }),
+    );
+    const result = await Promise.all(promises);
+    return await result;
+  }
+
   async createCompanyMember(id: string, body: CreateCompanyAccountDTO) {
     const company = await this.extractCompanyFromUser(id);
     const account = await this.extractUserAccount(id);
