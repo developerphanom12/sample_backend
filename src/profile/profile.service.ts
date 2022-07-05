@@ -108,14 +108,19 @@ export class ProfileService {
 
   async deleteProfileImage(id: string, image_name: string) {
     const user = await this.authRepository.findOne({ where: { id: id } });
-    if (user.profile_image !== image_name)
-      try {
-        await this.s3Service.deleteFile(`profiles/${image_name}`);
-        return 'Profile image Delete Success';
-      } catch (e) {
-        console.log(e);
-        throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
-      }
+    if (user.profile_image !== image_name) {
+      throw new HttpException(
+        'YOU HAVE NO ACCESS TO DELETE THIS PHOTO',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    try {
+      await this.s3Service.deleteFile(`profiles/${image_name}`);
+      return 'Profile image Delete Success';
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+    }
   }
 
   async updateProfile(id: string, body: UpdateProfileDTO) {
