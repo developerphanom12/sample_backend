@@ -71,10 +71,7 @@ export class CompanyController {
     description: COMPANY_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async getCompanyLogo(
-    @Param('company') company: string,
-    @Res() res,
-  ) {
+  public async getCompanyLogo(@Param('company') company: string, @Res() res) {
     return await this.companyService.getCompanyLogo(company, res);
   }
 
@@ -87,11 +84,20 @@ export class CompanyController {
     description: COMPANY_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async changeCompanyLogo(
-    @User('id') id: string,
-    @UploadedFile() file,
-  ) {
+  public async changeCompanyLogo(@User('id') id: string, @UploadedFile() file) {
     return await this.companyService.changeCompanyLogo(id, file);
+  }
+
+  @Delete(COMPANY_ROUTES.delete_logo)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_SWAGGER.delete_logo })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async deleteLogo(@User('id') id: string, @Param('company') companyId) {
+    return await this.companyService.deleteCompanyLogo(companyId);
   }
 
   @Get(COMPANY_ROUTES.get_all)
@@ -107,6 +113,22 @@ export class CompanyController {
     return await this.companyService.getAllCompanies(id);
   }
 
+  @Get(COMPANY_ROUTES.get_many)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_SWAGGER.get_many })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_SWAGGER.success,
+    type: CompanyEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getSuppliers(
+    @User('id') id: string,
+    @Query() body: PaginationDTO,
+  ) {
+    return await this.companyService.getManyCompanies(id, body);
+  }
+
   @Delete(COMPANY_ROUTES.delete)
   @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: COMPANY_SWAGGER.delete })
@@ -118,6 +140,7 @@ export class CompanyController {
   public async deleteReceipt(@User('id') id: string, @Param('id') companyId) {
     return await this.companyService.companyDelete(id, companyId);
   }
+
   @Get(COMPANY_ROUTES.get_members)
   @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: COMPANY_SWAGGER.get_members })

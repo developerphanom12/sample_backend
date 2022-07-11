@@ -5,7 +5,7 @@ import { AuthEntity } from '../auth/entities/auth.entity';
 import { ECompanyRoles } from '../company-member/company-member.constants';
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
-import { Like, Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import { COMPANY_ERRORS } from './company.errors';
 import { ICreateCompany } from './company.types';
 import { CreateCompanyDTO } from './dto/create-company.dto';
@@ -208,6 +208,22 @@ export class CompanyService {
     }
   }
 
+  async deleteCompanyLogo(companyId) {
+    const company = await this.companyRepository.findOne({
+      where: { id: companyId },
+    });
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+    try {
+      await this.s3Service.deleteFile(`${companyId}/logo/${company.logo}`);
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+    return 'Company Logo was deleted';
+  }
+
   async getAllCompanies(id: string): Promise<CompanyEntity[]> {
     const user = await this.authRepository.findOne({
       where: { id: id },
@@ -221,6 +237,31 @@ export class CompanyService {
     const promises = accounts.map((account) => this.getAccountCompany(account));
     const result = await Promise.all(promises);
     return await result;
+  }
+
+  async getManyCompanies(id: string, body: PaginationDTO) {
+    const user = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
+    });
+    if (!user) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+    const accounts = user.accounts.map((acc) => acc.id);
+    const [result, total] = await this.companyRepository.findAndCount({
+      relations: ['creator'],
+      where: {
+        name: Like(`%${body.search || ''}%`),
+        members: { id: In(accounts) },
+      },
+      order: { created: 'DESC' },
+      take: body.take ?? 10,
+      skip: body.skip ?? 0,
+    });
+    return {
+      data: result,
+      count: total,
+    };
   }
 
   async getCompanyMembers(

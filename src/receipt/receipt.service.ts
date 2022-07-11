@@ -26,6 +26,7 @@ import { EmailsService } from 'src/emails/emails.service';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
+import { isNull } from 'util';
 
 @Injectable()
 export class ReceiptService {
@@ -244,6 +245,7 @@ export class ReceiptService {
       status: Like(`%${body.status || ''}%`),
       created: dateFilter,
     };
+
     if (!body.isMobile) {
       const [result, total] = await this.receiptRepository.findAndCount({
         relations: ['currency', 'supplier', 'category', 'payment_type'],

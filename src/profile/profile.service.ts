@@ -128,6 +128,7 @@ export class ProfileService {
     const company = await this.extractCompanyFromUser(id);
     const user = await this.authRepository.findOne({
       where: { id: id },
+      relations: ['accounts'],
     });
 
     if (email && user.email !== email.toLowerCase()) {
@@ -162,6 +163,17 @@ export class ProfileService {
     await this.companyRepository.update(company.id, {
       date_format: date_format,
     });
+
+    if (
+      fullName !== user.fullName &&
+      user.accounts &&
+      user.accounts.length > 0
+    ) {
+      const promises = await user.accounts.map((acc) =>
+        this.memberRepository.update(acc.id, { name: fullName }),
+      );
+      await Promise.all(promises);
+    }
 
     await this.authRepository.update(user.id, {
       fullName: fullName,
