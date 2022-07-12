@@ -249,7 +249,6 @@ export class CompanyService {
     }
     const accounts = user.accounts.map((acc) => acc.id);
     const [result, total] = await this.companyRepository.findAndCount({
-      relations: ['creator'],
       where: {
         name: Like(`%${body.search || ''}%`),
         members: { id: In(accounts) },
