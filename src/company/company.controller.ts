@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   Res,
   UploadedFile,
@@ -23,6 +24,7 @@ import { COMPANY_ROUTES, COMPANY_SWAGGER } from './company.constants';
 import { CompanyService } from './company.service';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { PaginationDTO } from './dto/pagination.dto';
+import { UpdateCompanyDTO } from './dto/update-company.dto';
 import { CompanyEntity } from './entities/company.entity';
 
 @ApiTags(COMPANY_ROUTES.main)
@@ -86,6 +88,19 @@ export class CompanyController {
   @HttpCode(HttpStatus.OK)
   public async changeCompanyLogo(@User('id') id: string, @UploadedFile() file) {
     return await this.companyService.changeCompanyLogo(id, file);
+  }
+
+  @Put(COMPANY_ROUTES.update)
+  @UseGuards(new JwtAuthenticationGuard())
+  @UseInterceptors(FileInterceptor('logo'))
+  @ApiOperation({ summary: COMPANY_SWAGGER.update })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async updateCompany(@User('id') id: string, @Param('company') company: string, @Body() body: UpdateCompanyDTO, @UploadedFile() file) {
+    return await this.companyService.updateCompany(company, body, file);
   }
 
   @Delete(COMPANY_ROUTES.delete_logo)

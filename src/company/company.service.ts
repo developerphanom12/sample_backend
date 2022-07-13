@@ -13,6 +13,7 @@ import { CompanyEntity } from './entities/company.entity';
 import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 import { S3Service } from 'src/s3/s3.service';
 import { PaginationDTO } from './dto/pagination.dto';
+import { UpdateCompanyDTO } from './dto/update-company.dto';
 
 @Injectable()
 export class CompanyService {
@@ -185,6 +186,39 @@ export class CompanyService {
       throw new HttpException(COMPANY_ERRORS.company, HttpStatus.NOT_FOUND);
     }
     return company;
+  }
+
+  async updateCompany(
+    companyId: string,
+    body: UpdateCompanyDTO,
+    logo,
+  ): Promise<CompanyEntity> {
+    const { name, isDeleteLogo } = body;
+    const company = await this.companyRepository.findOne({
+      where: { id: companyId },
+    });
+    if (!company) {
+      throw new HttpException(COMPANY_ERRORS.company, HttpStatus.NOT_FOUND);
+    }
+    await this.companyRepository.update(company.id, {
+      name: name,
+    });
+
+    if (!!isDeleteLogo) {
+      try {
+        await this.s3Service.deleteFile(`${company.id}/logo/${company.logo}`);
+      } catch (e) {
+        console.log(e);
+        throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+      }
+      await this.companyRepository.update(company.id, {
+        logo: null,
+      });
+    }
+    if (!!logo) {
+      return await this.setCompanyLogo(logo, company.id);
+    }
+    return await this.companyRepository.findOne({ where: { id: company.id } });
   }
 
   async getCompanyLogo(companyId: string, res) {

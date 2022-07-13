@@ -1,6 +1,7 @@
 export const COMPANY_ROUTES = {
   main: 'company',
   create: 'create',
+  update: 'update/:company',
   get: 'get/:company',
   get_logo: 'get-logo/:company',
   change_logo: 'change-logo',
@@ -13,6 +14,7 @@ export const COMPANY_ROUTES = {
 
 export const COMPANY_SWAGGER = {
   create: 'Create company',
+  update: 'Update Company',
   get: 'Get one company',
   get_logo: 'Get Company Logo',
   change_logo: 'Change Company Logo',
