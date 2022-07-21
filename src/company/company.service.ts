@@ -304,7 +304,8 @@ export class CompanyService {
   ): Promise<{ data: MemberEntity[]; count: number }> {
     const company = await this.extractCompanyFromUser(id);
     const [result, total] = await this.memberRepository.findAndCount({
-      relations: ['user'],
+      relations: ['user', 'company'],
+      select: { company: { id: true, date_format: true } },
       where: {
         company: { id: company.id },
         name: Like(`%${body.search || ''}%`),
