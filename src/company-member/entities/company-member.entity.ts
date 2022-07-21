@@ -24,7 +24,6 @@ export class MemberEntity {
   id: string;
 
   @CreateDateColumn()
-  @Exclude()
   created: Date;
 
   @UpdateDateColumn()

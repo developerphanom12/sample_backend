@@ -24,7 +24,6 @@ export class CompanyEntity {
   id: string;
 
   @CreateDateColumn()
-  @Exclude()
   created: Date;
 
   @UpdateDateColumn()

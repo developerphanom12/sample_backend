@@ -87,7 +87,7 @@ export class CategoryService {
 
     const category = await this.categoryRepository.save({
       name: body.name,
-      company: {id: company.id},
+      company: { id: company.id },
       creator: creator,
     });
     return await this.categoryRepository.findOne({
@@ -108,7 +108,7 @@ export class CategoryService {
     const category = await this.categoryRepository.findOne({
       where: {
         id: categoryId,
-        company: {id: company.id},
+        company: { id: company.id },
       },
     });
     if (!category) {
@@ -121,7 +121,7 @@ export class CategoryService {
     return await this.categoryRepository.findOne({
       where: {
         id: categoryId,
-        company: {id: company.id},
+        company: { id: company.id },
       },
     });
   }
@@ -130,7 +130,7 @@ export class CategoryService {
     const company = await this.extractCompanyFromUser(id);
 
     return await this.categoryRepository.find({
-      where: { company: {id: company.id}, },
+      where: { company: { id: company.id } },
       relations: ['creator'],
     });
   }
@@ -140,7 +140,7 @@ export class CategoryService {
     const [result, total] = await this.categoryRepository.findAndCount({
       relations: ['creator'],
       where: {
-        company: {id: company.id},
+        company: { id: company.id },
         name: Like(`%${body.search || ''}%`),
       },
       order: { created: 'DESC' },
@@ -156,7 +156,7 @@ export class CategoryService {
   async getCategoryDetails(id: string, categoryId: string) {
     const company = await this.extractCompanyFromUser(id);
     return await this.categoryRepository.findOne({
-      where: { id: categoryId, company: {id: company.id}, },
+      where: { id: categoryId, company: { id: company.id } },
       relations: ['receipts', 'company', 'creator'],
     });
   }
@@ -172,7 +172,7 @@ export class CategoryService {
     }
 
     const category = await this.categoryRepository.findOne({
-      where: { id: categoryId, company: {id: company.id}, },
+      where: { id: categoryId, company: { id: company.id } },
     });
 
     if (!category) {
