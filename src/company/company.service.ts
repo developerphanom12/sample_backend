@@ -287,6 +287,7 @@ export class CompanyService {
         name: Like(`%${body.search || ''}%`),
         members: { id: In(accounts) },
       },
+      relations: ['members'],
       order: { created: 'DESC' },
       take: body.take ?? 10,
       skip: body.skip ?? 0,
