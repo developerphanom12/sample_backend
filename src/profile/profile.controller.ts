@@ -78,10 +78,7 @@ export class ProfileController {
     description: PROFILE_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async uploadAvatar(
-    @User('id') id: string,
-    @UploadedFile() file,
-  ) {
+  public async uploadAvatar(@User('id') id: string, @UploadedFile() file) {
     return await this.profileService.uploadProfileImage(id, file);
   }
 
@@ -92,10 +89,7 @@ export class ProfileController {
     description: PROFILE_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async getAvatar(
-    @Param('imagename') imagename: string,
-    @Res() res,
-  ) {
+  public async getAvatar(@Param('imagename') imagename: string, @Res() res) {
     return await this.profileService.getProfileImage(imagename, res);
   }
 }

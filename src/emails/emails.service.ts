@@ -4,6 +4,9 @@ import * as ses from 'node-ses';
 import { EMAIL_CONFIG } from 'src/constants/email';
 import { createPasswordMailSes } from 'src/shared/emails/create-password-email';
 import { createReceiptFileEmail } from 'src/shared/emails/receipt-file-email';
+import { inviteExistMemberMailSes } from '../shared/emails/invite-exist-member-email';
+import { inviteNewMemberMailSes } from '../shared/emails/invite-new-member-email';
+import { IInviteMember } from '../shared/emails/types/emails.types';
 
 export interface IRawMessageBody {
   name: string;
@@ -14,6 +17,12 @@ export interface IRawMessageBody {
 }
 
 export interface IResetPasswordMessage {
+  email: string;
+  token: string;
+  name: string;
+  host_url: string;
+}
+export interface ICompanyInvitationMessage {
   email: string;
   token: string;
   name: string;
@@ -54,7 +63,31 @@ export class EmailsService {
     this.sesClient.sendEmail(payload, (error) => {
       console.error(error);
     });
-    
+
+    return {
+      message: 'Email sent',
+    };
+  }
+
+  public async sendInvitationExistMemberEmail(body: IInviteMember) {
+    const payload = inviteExistMemberMailSes(body);
+
+    this.sesClient.sendEmail(payload, (error) => {
+      console.error(error);
+    });
+
+    return {
+      message: 'Email sent',
+    };
+  }
+
+  public async sendInvitationNewMemberEmail(body: IInviteMember) {
+    const payload = inviteNewMemberMailSes(body);
+
+    this.sesClient.sendEmail(payload, (error) => {
+      console.error(error);
+    });
+
     return {
       message: 'Email sent',
     };

@@ -16,6 +16,7 @@ import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { MemberInvitesEntity } from '../../invite-new-member/entities/company-member-invites.entity';
 
 @Entity('company-member')
 export class MemberEntity {
@@ -64,4 +65,10 @@ export class MemberEntity {
   @ApiProperty()
   @ManyToOne((type) => AuthEntity, (data) => data.accounts)
   user: AuthEntity;
+
+  @ApiProperty()
+  @ManyToOne((type) => MemberInvitesEntity, (data) => data.members, {
+    onDelete: 'SET NULL',
+  })
+  memberInvite: MemberInvitesEntity;
 }

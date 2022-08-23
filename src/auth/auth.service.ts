@@ -22,6 +22,7 @@ import { CompanyEntity } from '../company/entities/company.entity';
 import { EmailsService } from 'src/emails/emails.service';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { ILogin } from './auth.types';
+import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
 
 @Injectable()
 export class AuthService {
@@ -39,6 +40,7 @@ export class AuthService {
     private currencyRepository: Repository<CurrencyEntity>,
     @InjectRepository(ResetPasswordEntity)
     private resetPasswordRepository: Repository<ResetPasswordEntity>,
+    private inviteNewMemberService: InviteNewMemberService,
     private configService: ConfigService,
     private emailsService: EmailsService,
   ) {}
@@ -50,16 +52,27 @@ export class AuthService {
     return this.jwtService.sign(data, { secret });
   }
 
+  private async generatePassword(password: string) {
+    const publicKey = await bcrypt.genSalt(6);
+    const newPassword = await bcrypt.hash(password, 10);
+    return { publicKey, newPassword };
+  }
   async signUp(body: RegistrationDTO): Promise<ILogin> {
+    if (body.token) {
+      return await this.signUpNewMember(body);
+    }
+
     const user = await this.authRepository.findOne({
       where: { email: body.email.toLowerCase() },
     });
+
     if (user) {
       throw new HttpException('USER ALREADY EXIST', HttpStatus.CONFLICT);
     }
-    const publicKey = await bcrypt.genSalt(6);
-    const newPassword = await bcrypt.hash(body.password, 10);
 
+    const { newPassword, publicKey } = await this.generatePassword(
+      body.password,
+    );
     const newUser = await this.authRepository.save({
       ...body,
       email: body.email.toLowerCase(),
@@ -68,6 +81,59 @@ export class AuthService {
       password: newPassword,
       publicKey,
     });
+
+    return {
+      user: await this.userSerializer(newUser),
+      socialAccount: null,
+      company: null,
+      token: await this.createToken(newUser),
+      currencies: await this.currencyRepository.find(),
+    };
+  }
+
+  private async signUpNewMember(body: RegistrationDTO) {
+    const { password, token, country, fullName, email } = body;
+
+    const memberInviteModel = await this.inviteNewMemberService.getInvitation({
+      token,
+    });
+
+    if (!memberInviteModel) {
+      throw new HttpException('Request not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (email !== memberInviteModel.email) {
+      throw new HttpException('WRONG EMAIL', HttpStatus.BAD_REQUEST);
+    }
+
+    const decodedToken = this.jwtService.decode(token) as {
+      email: string;
+      id: string;
+      iat: number;
+      exp: number;
+    };
+
+    if (
+      memberInviteModel &&
+      new Date().getTime() - new Date(memberInviteModel.created).getTime() >
+        decodedToken.exp
+    ) {
+      throw new HttpException(
+        'Invite member link is expired',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const { newPassword, publicKey } = await this.generatePassword(password);
+
+    const newUser = await this.authRepository.save({
+      email: email,
+      fullName: fullName.trim(),
+      country: country.trim(),
+      password: newPassword,
+      accounts: memberInviteModel.members,
+      publicKey,
+    });
+    await this.inviteNewMemberService.deleteInvitation(memberInviteModel.id);
 
     return {
       user: await this.userSerializer(newUser),

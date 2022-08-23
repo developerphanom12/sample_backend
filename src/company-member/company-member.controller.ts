@@ -8,12 +8,15 @@ import {
   Param,
   Post,
   Put,
+  Redirect,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { User } from 'src/shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { PROFILE_ROUTES, PROFILE_SWAGGER } from '../profile/profile.constants';
 import {
   COMPANY_MEMBER_ROUTES,
   COMPANY_MEMBER_SWAGGER,
@@ -106,5 +109,16 @@ export class CompanyMemberController {
     @Param('accountId') accountId: string,
   ) {
     return await this.companyMemberService.deleteCompanyMember(id, accountId);
+  }
+
+  @Get(PROFILE_ROUTES.get_photo)
+  @ApiOperation({ summary: PROFILE_SWAGGER.get_photo })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PROFILE_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getAvatar(@Param('imagename') imagename: string) {
+    return await this.companyMemberService.getProfileImage(imagename);
   }
 }
