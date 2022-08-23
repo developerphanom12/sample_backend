@@ -7,7 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_FILTER } from '@nestjs/core/constants';
 import { HttpErrorFilter } from './shared/http-error.filter';
 import { CurrencyModule } from './currency/currency.module';
-import { AppController } from './app.controller'
+import { AppController } from './app.controller';
 import { ReceiptModule } from './receipt/receipt.module';
 import { CompanyModule } from './company/company.module';
 import { CompanyMemberModule } from './company-member/company-member.module';
@@ -22,6 +22,7 @@ import { DownloadModule } from './download/download.module';
 import { EmailsModule } from './emails/emails.module';
 import { ProfileController } from './profile/profile.controller';
 import { ProfileModule } from './profile/profile.module';
+import { InviteNewMemberModule } from './invite-new-member/invite-new-member.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -54,6 +55,7 @@ const currentEnv = process.env.NODE_ENV || 'local';
     CategoryModule,
     PaymentTypeModule,
     ProfileModule,
+    InviteNewMemberModule,
   ],
   controllers: [AppController],
   providers: [

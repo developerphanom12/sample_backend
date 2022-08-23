@@ -3,7 +3,7 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 import { ECompanyRoles } from '../company-member.constants';
 
 export class CreateCompanyAccountDTO {
-  @ApiProperty({required: false})
+  @ApiProperty({ required: false })
   @IsOptional()
   name: string;
   @ApiProperty()
@@ -12,4 +12,7 @@ export class CreateCompanyAccountDTO {
   @ApiProperty()
   @IsNotEmpty()
   email: string;
+  @ApiProperty()
+  @IsOptional()
+  companiesIds: string[];
 }

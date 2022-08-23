@@ -6,6 +6,7 @@ import { EmailsModule } from 'src/emails/emails.module';
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CompanyEntity } from '../company/entities/company.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
+import { InviteNewMemberModule } from '../invite-new-member/invite-new-member.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthEntity } from './entities/auth.entity';
@@ -26,6 +27,7 @@ import { JwtStrategy } from './jwt.strategy';
     PassportModule.register({}),
     JwtModule.register({}),
     EmailsModule,
+    InviteNewMemberModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

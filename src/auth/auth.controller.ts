@@ -1,4 +1,16 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -19,12 +31,27 @@ import { Response } from 'express';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { FRONT_END_URL } from '../constants/config';
+import { InviteMemberRequestRedirectDTO } from './dto/invite-member-request-redirect.dto';
 
 @ApiBearerAuth()
 @ApiTags(AUTH_ROUTES.main)
 @Controller(AUTH_ROUTES.main)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get(AUTH_ROUTES.redirect_member)
+  @HttpCode(HttpStatus.OK)
+  public async redirectMember(
+    @Param() params: InviteMemberRequestRedirectDTO,
+    @Res() res: Response,
+  ) {
+    try {
+      const link = `${FRONT_END_URL.development}signup-new-member/${params.token}`;
+      return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
+    }
+  }
 
   @Post(AUTH_ROUTES.sign_up)
   @ApiOperation({ summary: AUTH_SWAGGER.sign_up })
@@ -73,7 +100,7 @@ export class AuthController {
   public async logout(@User('id') id: string) {
     return await this.authService.logOut(id);
   }
-  
+
   @Get(AUTH_ROUTES.reset_password_request)
   @HttpCode(HttpStatus.OK)
   public async resetPasswordRequest(@Query() body: PasswordRequestDTO) {

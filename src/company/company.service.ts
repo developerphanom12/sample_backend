@@ -301,11 +301,16 @@ export class CompanyService {
   async getCompanyMembers(
     id: string,
     body: PaginationDTO,
-  ): Promise<{ data: MemberEntity[]; count: number }> {
+  ): Promise<{
+    data: MemberEntity[];
+    count: number;
+  }> {
     const company = await this.extractCompanyFromUser(id);
     const [result, total] = await this.memberRepository.findAndCount({
-      relations: ['user', 'company'],
-      select: { company: { id: true, date_format: true } },
+      relations: ['company', 'user', 'memberInvite'],
+      select: {
+        company: { id: true, date_format: true, name: true },
+      },
       where: {
         company: { id: company.id },
         name: Like(`%${body.search || ''}%`),
