@@ -28,8 +28,8 @@ export class MemberInvitesEntity {
   email: string;
 
   @ApiProperty()
-  @Column()
-  token: string;
+  @Column({ nullable: true })
+  userInvitorId: string;
 
   @ApiProperty()
   @OneToMany((type) => MemberEntity, (data) => data.memberInvite)

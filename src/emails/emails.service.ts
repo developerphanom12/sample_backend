@@ -4,9 +4,13 @@ import * as ses from 'node-ses';
 import { EMAIL_CONFIG } from 'src/constants/email';
 import { createPasswordMailSes } from 'src/shared/emails/create-password-email';
 import { createReceiptFileEmail } from 'src/shared/emails/receipt-file-email';
+import { inviteCompanyOwnerMailSes } from '../shared/emails/invite-company-owner-email';
 import { inviteExistMemberMailSes } from '../shared/emails/invite-exist-member-email';
 import { inviteNewMemberMailSes } from '../shared/emails/invite-new-member-email';
-import { IInviteMember } from '../shared/emails/types/emails.types';
+import {
+  IInviteCompanyOwner,
+  IInviteMember,
+} from '../shared/emails/types/emails.types';
 
 export interface IRawMessageBody {
   name: string;
@@ -57,6 +61,20 @@ export class EmailsService {
     };
   }
 
+  private async sendEmail(payload: {
+    from: string;
+    to: string;
+    subject: string;
+    message: string;
+  }) {
+    this.sesClient.sendEmail(payload, (error) => {
+      console.error(error);
+    });
+
+    return {
+      message: 'Email sent',
+    };
+  }
   public async sendResetPasswordEmail(body: IResetPasswordMessage) {
     const payload = createPasswordMailSes(body);
 
@@ -69,27 +87,21 @@ export class EmailsService {
     };
   }
 
+  public async sendInvitationCreateCompany(body: IInviteCompanyOwner) {
+    const payload = inviteCompanyOwnerMailSes(body);
+
+    await this.sendEmail(payload);
+  }
+
   public async sendInvitationExistMemberEmail(body: IInviteMember) {
     const payload = inviteExistMemberMailSes(body);
 
-    this.sesClient.sendEmail(payload, (error) => {
-      console.error(error);
-    });
-
-    return {
-      message: 'Email sent',
-    };
+    await this.sendEmail(payload);
   }
 
   public async sendInvitationNewMemberEmail(body: IInviteMember) {
     const payload = inviteNewMemberMailSes(body);
 
-    this.sesClient.sendEmail(payload, (error) => {
-      console.error(error);
-    });
-
-    return {
-      message: 'Email sent',
-    };
+    await this.sendEmail(payload);
   }
 }

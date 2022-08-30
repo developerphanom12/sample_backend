@@ -84,10 +84,11 @@ export class CompanyMemberService {
   private async createToken(tokenPayload: {
     email: string;
     id: string;
+    accountantUserId?: string;
   }): Promise<string> {
     const token = this.jwtService.sign(tokenPayload, {
       secret: this.configService.get('JWT_SECRET'),
-      expiresIn: '48h',
+      expiresIn: '2d',
     });
     return token;
   }
@@ -231,6 +232,7 @@ export class CompanyMemberService {
     name: string,
     role: ECompanyRoles,
     invitation: MemberInvitesEntity,
+    userInvitorName: string,
   ): Promise<MemberEntity[]> {
     const members = await Promise.all(
       companiesIds.map((id) =>
@@ -238,6 +240,7 @@ export class CompanyMemberService {
           name: name,
           role: role,
           company: { id },
+          userInvitorName: userInvitorName,
           memberInvite: invitation,
         }),
       ),
@@ -280,6 +283,7 @@ export class CompanyMemberService {
           name: name || existUser.fullName,
           role: role,
           user: existUser,
+          userInvitorName: userInvitor.fullName,
           company: { id },
         }),
       ),
@@ -338,14 +342,11 @@ export class CompanyMemberService {
         name,
         role,
         existedInvitation,
-      );
-
-      await this.sendEmail(
         userInvitor.fullName,
-        companiesNames,
-        existedInvitation.token,
-        email,
       );
+      const token = await this.createToken({ email: email, id: uuid() });
+
+      await this.sendEmail(userInvitor.fullName, companiesNames, token, email);
 
       return await Promise.all(
         newMembers.map((acc) =>
@@ -360,13 +361,17 @@ export class CompanyMemberService {
     if (!existedInvitation) {
       const token = await this.createToken({ email: email, id: uuid() });
       const invitationModel =
-        await this.inviteNewMemberService.createInvitation(email, token);
+        await this.inviteNewMemberService.createInvitation(
+          email,
+          userInvitor.id,
+        );
 
       const newMembers = await this.saveNotExistMember(
         companiesIds,
         name,
         role,
         invitationModel,
+        userInvitor.fullName,
       );
 
       await this.sendEmail(userInvitor.fullName, companiesNames, token, email);
@@ -382,8 +387,41 @@ export class CompanyMemberService {
     }
   }
 
+  private async inviteCompanyOwner(id: string, body: CreateCompanyAccountDTO) {
+    const { email } = body;
+    const userInvitorActiveAccount = await this.extractUserAccount(id);
+    if (userInvitorActiveAccount.role !== ECompanyRoles.accountant) {
+      throw new HttpException(
+        'USER HAS NO PERMISSION FOR INVITE COMPANY OWNER',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    const token = await this.createToken({
+      email: email,
+      id: uuid(),
+      accountantUserId: id,
+    });
+    await this.inviteNewMemberService.createInvitation(email);
+
+    await this.emailService.sendInvitationCreateCompany({
+      avatarSrc: '',
+      email,
+      host_url: this.configService.get('HOST_URL'),
+      name: userInvitorActiveAccount.name || 'Accountant',
+      token,
+    });
+
+    return {
+      message: 'INVITATION HAS BEEN SUCCESSFULLY SENT',
+    };
+  }
+
   async createCompanyMember(id: string, body: CreateCompanyAccountDTO) {
-    const { companiesIds, email } = body;
+    const { companiesIds, email, role } = body;
+
+    if (role === ECompanyRoles.owner) {
+      return await this.inviteCompanyOwner(id, body);
+    }
     const { companies, accounts, userInvitor } = await this.extractDataFromUser(
       id,
     );
@@ -457,7 +495,7 @@ export class CompanyMemberService {
         id: accountId,
         company: { id: company.id },
       },
-      relations: ['company'],
+      relations: ['company', 'memberInvite'],
     });
 
     if (deletingUser.role === ECompanyRoles.owner) {
@@ -467,9 +505,120 @@ export class CompanyMemberService {
       );
     }
 
+    if (deletingUser.memberInvite) {
+      await this.memberRepository.update(deletingUser.id, {
+        memberInvite: null,
+      });
+    }
+
     await this.memberRepository.delete(deletingUser.id);
     return {
       message: 'The account has been deleted',
+    };
+  }
+
+  private async extractUser(id: string) {
+    const user = await this.authRepository.findOne({
+      where: { id: id },
+    });
+    if (!user) {
+      throw new HttpException('USER DOES NOT EXIST', HttpStatus.BAD_REQUEST);
+    }
+    const account = await this.memberRepository.findOne({
+      where: { id: user.active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (account.role === ECompanyRoles.user) {
+      throw new HttpException(
+        'THIS ACCOUNT HAS NO PERMISSIONS TO RESEND INVITATION',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return user;
+  }
+
+  public async resendInvitation(id: string, invitationId: string) {
+    const invitationModel = await this.inviteNewMemberService.getInvitation({
+      invitationId: invitationId,
+    });
+    if (!invitationModel) {
+      throw new HttpException(
+        'INVITATION DOES NOT EXIST',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let userInvitor = await this.authRepository.findOne({
+      where: { id: invitationModel.userInvitorId },
+    });
+
+    const activeUserInvitorAccount = await this.memberRepository.findOne({
+      where: { id: userInvitor.active_account },
+    });
+
+    if (activeUserInvitorAccount.role === ECompanyRoles.user) {
+      throw new HttpException(
+        'THIS ACCOUNT HAS NO PERMISSIONS TO RESEND INVITATION',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!userInvitor) {
+      userInvitor = await this.extractUser(id);
+    }
+
+    const invitatiomMemberCompaniesNames = (
+      await Promise.all(
+        invitationModel.members.map((member) =>
+          this.companyRepository.findOne({
+            where: { members: { id: member.id } },
+          }),
+        ),
+      )
+    ).map((item) => item.name);
+
+    if (!invitatiomMemberCompaniesNames.length) {
+      throw new HttpException('COMPANIES NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    const newToken = await this.createToken({
+      email: invitationModel.email,
+      id: uuid(),
+    });
+
+    const newInvitationModel =
+      await this.inviteNewMemberService.createInvitation(
+        invitationModel.email,
+        userInvitor.id,
+      );
+
+    await Promise.all(
+      invitationModel.members.map((member) =>
+        this.memberRepository.update(member.id, {
+          memberInvite: newInvitationModel,
+        }),
+      ),
+    );
+
+    await this.inviteNewMemberService.deleteInvitation(invitationModel.id);
+
+    await this.sendEmail(
+      userInvitor.fullName,
+      invitatiomMemberCompaniesNames,
+      newToken,
+      newInvitationModel.email,
+    );
+
+    return {
+      message: 'THE INVITATION HAS BEEN SUCCESSFULLY RESENT',
     };
   }
 
@@ -478,7 +627,7 @@ export class CompanyMemberService {
     accountId: string,
     body: UpdateCompanyAccountDTO,
   ) {
-    const company = await this.extractCompanyFromUser(id);
+    const { email, role, name, isInviteCompanyMember } = body;
     const account = await this.extractUserAccount(id);
 
     if (account.role === ECompanyRoles.user) {
@@ -490,14 +639,39 @@ export class CompanyMemberService {
 
     const updateUser = await this.memberRepository.findOne({
       where: { id: accountId },
-      relations: ['company'],
+      relations: ['company', 'memberInvite'],
     });
+
+    if (isInviteCompanyMember) {
+      const invitationModel = await this.inviteNewMemberService.getInvitation({
+        email: updateUser.memberInvite.email,
+      });
+      if (!invitationModel) {
+        throw new HttpException(
+          'INVITATION DOES NOT EXIST',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (invitationModel.email.toLowerCase() !== email.toLowerCase()) {
+        await this.inviteNewMemberService.updateInvitation(invitationModel.id, {
+          email: email,
+        });
+      }
+      await this.memberRepository.update(updateUser.id, {
+        role: role,
+        name: name,
+      });
+      return await this.memberRepository.findOne({
+        where: { id: updateUser.id },
+      });
+    }
 
     if (
       account.id === updateUser.id ||
       !(updateUser.role === ECompanyRoles.owner)
     ) {
-      await this.memberRepository.update(updateUser.id, { ...body });
+      await this.memberRepository.update(updateUser.id, { role: role });
       return await this.memberRepository.findOne({
         where: { id: updateUser.id },
       });

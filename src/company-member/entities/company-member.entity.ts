@@ -36,6 +36,10 @@ export class MemberEntity {
   name: string;
 
   @ApiProperty()
+  @Column({ default: '' })
+  userInvitorName: string;
+
+  @ApiProperty()
   @Column({ default: ECompanyRoles.user })
   role: ECompanyRoles;
 

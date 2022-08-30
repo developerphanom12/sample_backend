@@ -7,3 +7,6 @@ export interface IInviteMember {
   companyNames: string[];
   avatarSrc: any;
 }
+
+export interface IInviteCompanyOwner
+  extends Omit<IInviteMember, 'memberEmail' | 'companyNames'> {}

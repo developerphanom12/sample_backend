@@ -15,4 +15,7 @@ export class CreateCompanyAccountDTO {
   @ApiProperty()
   @IsOptional()
   companiesIds: string[];
+  @ApiProperty()
+  @IsOptional()
+  token: string;
 }

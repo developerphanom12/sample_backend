@@ -96,6 +96,22 @@ export class CompanyMemberController {
     return await this.companyMemberService.selectActiveAccount(id, accountId);
   }
 
+  @Post(COMPANY_MEMBER_ROUTES.resend_invitation)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_MEMBER_SWAGGER.resend_invitation })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_MEMBER_SWAGGER.success,
+    type: AuthEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async resendInvitation(
+    @User('id') id: string,
+    @Param('invitationId') invitationId: string,
+  ) {
+    return await this.companyMemberService.resendInvitation(id, invitationId);
+  }
+
   @Delete(COMPANY_MEMBER_ROUTES.delete)
   @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: COMPANY_MEMBER_SWAGGER.delete })
