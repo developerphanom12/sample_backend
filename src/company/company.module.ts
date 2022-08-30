@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
+import { S3Module } from 'src/s3/s3.module';
+
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { AuthEntity } from '../auth/entities/auth.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
@@ -7,7 +10,7 @@ import { ReceiptEntity } from '../receipt/entities/receipt.entity';
 import { CompanyController } from './company.controller';
 import { CompanyService } from './company.service';
 import { CompanyEntity } from './entities/company.entity';
-import { S3Module } from 'src/s3/s3.module';
+import { InviteNewMemberModule } from '../invite-new-member/invite-new-member.module';
 
 @Module({
   imports: [
@@ -19,6 +22,8 @@ import { S3Module } from 'src/s3/s3.module';
       CurrencyEntity,
     ]),
     S3Module,
+    InviteNewMemberModule,
+    JwtModule.register({}),
   ],
   controllers: [CompanyController],
   providers: [CompanyService],

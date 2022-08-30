@@ -14,20 +14,20 @@ export class InviteNewMemberService {
   public async getInvitation(body: {
     token?: string;
     email?: string;
+    invitationId?: string;
   }): Promise<MemberInvitesEntity> {
-    const { email, token } = body;
+    const { email, token, invitationId } = body;
     let existedInvitation = null;
-
-    if (token) {
-      existedInvitation = await this.memberInvitesRepository.findOne({
-        where: { token: token },
-        relations: ['members'],
-      });
-    }
 
     if (email) {
       existedInvitation = await this.memberInvitesRepository.findOne({
         where: { email: email },
+        relations: ['members'],
+      });
+    }
+    if (invitationId) {
+      existedInvitation = await this.memberInvitesRepository.findOne({
+        where: { id: invitationId },
         relations: ['members'],
       });
     }
@@ -37,11 +37,11 @@ export class InviteNewMemberService {
 
   public async createInvitation(
     email: string,
-    token: string,
+    userInvitorId?: string,
   ): Promise<MemberInvitesEntity> {
     const invitation = await this.memberInvitesRepository.save({
       email: email,
-      token: token,
+      userInvitorId: userInvitorId,
     });
 
     return invitation;
@@ -59,5 +59,15 @@ export class InviteNewMemberService {
     return {
       message: 'The invitation has been deleted',
     };
+  }
+
+  public async updateInvitation(
+    id: string,
+    body: { token?: string; email?: string },
+  ): Promise<MemberInvitesEntity> {
+    await this.memberInvitesRepository.update(id, { ...body });
+    return await this.memberInvitesRepository.findOne({
+      where: { id: id },
+    });
   }
 }

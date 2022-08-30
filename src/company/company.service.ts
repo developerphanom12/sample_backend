@@ -10,10 +10,11 @@ import { COMPANY_ERRORS } from './company.errors';
 import { ICreateCompany } from './company.types';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { CompanyEntity } from './entities/company.entity';
-import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 import { S3Service } from 'src/s3/s3.service';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCompanyDTO } from './dto/update-company.dto';
+import { JwtService } from '@nestjs/jwt';
+import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
 
 @Injectable()
 export class CompanyService {
@@ -27,6 +28,8 @@ export class CompanyService {
     @InjectRepository(MemberEntity)
     private memberRepository: Repository<MemberEntity>,
     private s3Service: S3Service,
+    private jwtService: JwtService,
+    private inviteNewMemberService: InviteNewMemberService,
     private configService: ConfigService,
   ) {}
 
@@ -104,6 +107,48 @@ export class CompanyService {
     });
   }
 
+  private async bindAccountantToCompany(token: string, companyId: string) {
+    const memberInviteModel = await this.inviteNewMemberService.getInvitation({
+      token: token,
+    });
+
+    if (!memberInviteModel) {
+      throw new HttpException('INVITATION NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+    const decodedToken = this.jwtService.decode(token) as {
+      accountantUserId?: string;
+      email: string;
+      id: string;
+      iat: number;
+      exp: number;
+    };
+
+    if (memberInviteModel && new Date().getTime() > decodedToken.exp) {
+      throw new HttpException('Invite link is expired', HttpStatus.BAD_REQUEST);
+    }
+
+    const accountant = await this.authRepository.findOne({
+      where: { id: decodedToken.accountantUserId },
+      relations: ['accounts'],
+    });
+
+    if (!accountant) {
+      throw new HttpException(
+        'ACCOUNTANT DOES NOT EXIST',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.memberRepository.save({
+      name: accountant.fullName,
+      role: ECompanyRoles.accountant,
+      user: accountant,
+      company: { id: companyId },
+    });
+
+    await this.inviteNewMemberService.deleteInvitation(memberInviteModel.id);
+  }
+
   async createCompany(
     id: string,
     body: CreateCompanyDTO,
@@ -135,8 +180,13 @@ export class CompanyService {
       name: user.fullName,
       role: ECompanyRoles.owner,
       user: user,
+      userInvitorName: user.fullName,
       company: { id: company.id },
     });
+
+    if (body.token) {
+      await this.bindAccountantToCompany(body.token, company.id);
+    }
 
     if (!user.accounts || user.accounts.length === 0) {
       await this.authRepository.update(id, {

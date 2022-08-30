@@ -92,10 +92,10 @@ export class AuthService {
   }
 
   private async signUpNewMember(body: RegistrationDTO) {
-    const { password, token, country, fullName, email } = body;
+    const { password, country, token, fullName, email } = body;
 
     const memberInviteModel = await this.inviteNewMemberService.getInvitation({
-      token,
+      email: email,
     });
 
     if (!memberInviteModel) {
@@ -113,11 +113,7 @@ export class AuthService {
       exp: number;
     };
 
-    if (
-      memberInviteModel &&
-      new Date().getTime() - new Date(memberInviteModel.created).getTime() >
-        decodedToken.exp
-    ) {
+    if (memberInviteModel && new Date().getTime() > decodedToken.exp * 1000) {
       throw new HttpException(
         'Invite member link is expired',
         HttpStatus.BAD_REQUEST,
