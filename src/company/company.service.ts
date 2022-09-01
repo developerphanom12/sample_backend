@@ -15,6 +15,8 @@ import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCompanyDTO } from './dto/update-company.dto';
 import { JwtService } from '@nestjs/jwt';
 import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
+import { EmailsService } from '../emails/emails.service';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class CompanyService {
@@ -29,6 +31,7 @@ export class CompanyService {
     private memberRepository: Repository<MemberEntity>,
     private s3Service: S3Service,
     private jwtService: JwtService,
+    private emailService: EmailsService,
     private inviteNewMemberService: InviteNewMemberService,
     private configService: ConfigService,
   ) {}
@@ -107,46 +110,58 @@ export class CompanyService {
     });
   }
 
-  private async bindAccountantToCompany(token: string, companyId: string) {
-    const memberInviteModel = await this.inviteNewMemberService.getInvitation({
-      token: token,
-    });
-
-    if (!memberInviteModel) {
-      throw new HttpException('INVITATION NOT FOUND', HttpStatus.NOT_FOUND);
-    }
-    const decodedToken = this.jwtService.decode(token) as {
-      accountantUserId?: string;
-      email: string;
-      id: string;
-      iat: number;
-      exp: number;
-    };
-
-    if (memberInviteModel && new Date().getTime() > decodedToken.exp) {
-      throw new HttpException('Invite link is expired', HttpStatus.BAD_REQUEST);
-    }
-
-    const accountant = await this.authRepository.findOne({
-      where: { id: decodedToken.accountantUserId },
+  async createCompanyWithMember(id: string, body: CreateCompanyDTO) {
+    const companyOwner = await this.authRepository.findOne({
+      where: { id: id },
       relations: ['accounts'],
     });
 
-    if (!accountant) {
-      throw new HttpException(
-        'ACCOUNTANT DOES NOT EXIST',
-        HttpStatus.BAD_REQUEST,
-      );
+    if (!companyOwner) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
     }
 
-    await this.memberRepository.save({
-      name: accountant.fullName,
-      role: ECompanyRoles.accountant,
-      user: accountant,
-      company: { id: companyId },
+    const selectedCurrency = await this.currencyRepository.findOne({
+      where: { id: body.currency },
     });
 
-    await this.inviteNewMemberService.deleteInvitation(memberInviteModel.id);
+    if (!selectedCurrency) {
+      throw new HttpException(COMPANY_ERRORS.currency, HttpStatus.NOT_FOUND);
+    }
+
+    const company_owner_account = await this.memberRepository.findOne({
+      where: { id: companyOwner.accounts[0].id },
+      relations: ['company'],
+    });
+    const company = await this.companyRepository.findOne({
+      where: { id: company_owner_account.company.id },
+    });
+
+    await this.companyRepository.update(company.id, {
+      currency: selectedCurrency,
+      name: body.name || 'Default',
+      date_format: body.date_format,
+    });
+
+    if (!companyOwner.accounts.length) {
+      await this.authRepository.update(id, {
+        active_account: companyOwner.accounts[0].id,
+      });
+    } else {
+      await this.authRepository.update(id, {
+        active_account: companyOwner.accounts[0].id,
+      });
+    }
+
+    return {
+      company: await this.companyRepository.findOne({
+        where: { id: company.id },
+        relations: ['currency'],
+      }),
+      user: await this.authRepository.findOne({
+        where: { id: companyOwner.id },
+        relations: ['accounts'],
+      }),
+    };
   }
 
   async createCompany(
@@ -154,6 +169,10 @@ export class CompanyService {
     body: CreateCompanyDTO,
     logo,
   ): Promise<ICreateCompany> {
+    if (body.withAccountant) {
+      return await this.createCompanyWithMember(id, body);
+    }
+
     const user = await this.authRepository.findOne({
       where: { id: id },
       relations: ['accounts'],
@@ -169,7 +188,6 @@ export class CompanyService {
     if (!selectedCurrency) {
       throw new HttpException(COMPANY_ERRORS.currency, HttpStatus.NOT_FOUND);
     }
-
     const company = await this.companyRepository.save({
       currency: selectedCurrency,
       name: body.name || 'Default',
@@ -183,10 +201,6 @@ export class CompanyService {
       userInvitorName: user.fullName,
       company: { id: company.id },
     });
-
-    if (body.token) {
-      await this.bindAccountantToCompany(body.token, company.id);
-    }
 
     if (!user.accounts || user.accounts.length === 0) {
       await this.authRepository.update(id, {

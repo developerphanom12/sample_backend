@@ -3,7 +3,7 @@ import { EMAIL_CONFIG } from '../../constants/email';
 import { IInviteCompanyOwner } from './types/emails.types';
 
 export const inviteCompanyOwnerMailSes = (data: IInviteCompanyOwner) => {
-  const { email, host_url, name, token, avatarSrc } = data;
+  const { email, host_url, name, token, avatarSrc, memberEmail } = data;
   const srcAv = `data:image/png;base64,${avatarSrc}`;
   return {
     from: `${EMAIL_CONFIG.companyName} <${EMAIL_CONFIG.email}>`,
@@ -140,7 +140,7 @@ export const inviteCompanyOwnerMailSes = (data: IInviteCompanyOwner) => {
                                 </a>
                               </p>
                               <p style="font-family:'Open Sans', sans-serif;font-size:16px;line-height:30px;margin:0;padding-bottom:5px;padding-top:15px;text-align:center;" class="mobile_paragraph">
-                                Your login email:
+                                Your login email: ${memberEmail}
                               </p>
                               <p style="font-family:'Open Sans', sans-serif;font-size:16px;line-height:30px;margin:0;padding-bottom:5px;padding-top:15px;text-align:center;" class="mobile_paragraph">
                                 If you don't want to create company, just ignore this email.

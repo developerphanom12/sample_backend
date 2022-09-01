@@ -31,7 +31,7 @@ export class CompanyEntity {
   updated: Date;
 
   @ApiProperty()
-  @Column({ default: '' })
+  @Column({ default: '', nullable: true })
   name: string;
 
   @ApiProperty({ nullable: true })

@@ -12,11 +12,10 @@ export class InviteNewMemberService {
   ) {}
 
   public async getInvitation(body: {
-    token?: string;
     email?: string;
     invitationId?: string;
   }): Promise<MemberInvitesEntity> {
-    const { email, token, invitationId } = body;
+    const { email, invitationId } = body;
     let existedInvitation = null;
 
     if (email) {

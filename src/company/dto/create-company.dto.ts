@@ -5,12 +5,15 @@ export class CreateCompanyDTO {
   @ApiProperty({ required: false })
   @IsOptional()
   name?: string;
+
   @ApiProperty()
   @IsOptional()
-  token?: string;
+  withAccountant?: boolean;
+
   @ApiProperty()
   @IsNotEmpty()
   currency: string;
+
   @ApiProperty()
   @IsNotEmpty()
   date_format: string;
