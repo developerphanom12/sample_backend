@@ -11,6 +11,7 @@ import { CompanyController } from './company.controller';
 import { CompanyService } from './company.service';
 import { CompanyEntity } from './entities/company.entity';
 import { InviteNewMemberModule } from '../invite-new-member/invite-new-member.module';
+import { EmailsModule } from '../emails/emails.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { InviteNewMemberModule } from '../invite-new-member/invite-new-member.mo
       CurrencyEntity,
     ]),
     S3Module,
+    EmailsModule,
     InviteNewMemberModule,
     JwtModule.register({}),
   ],

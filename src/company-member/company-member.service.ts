@@ -15,6 +15,7 @@ import { v4 as uuid } from 'uuid';
 import { JwtService } from '@nestjs/jwt';
 import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
 import { MemberInvitesEntity } from '../invite-new-member/entities/company-member-invites.entity';
+import { COMPANY_ERRORS } from '../company/company.errors';
 @Injectable()
 export class CompanyMemberService {
   constructor(
@@ -85,6 +86,7 @@ export class CompanyMemberService {
     email: string;
     id: string;
     accountantUserId?: string;
+    isCompanyOwner?: boolean;
   }): Promise<string> {
     const token = this.jwtService.sign(tokenPayload, {
       secret: this.configService.get('JWT_SECRET'),
@@ -207,7 +209,7 @@ export class CompanyMemberService {
   ) {
     if (token) {
       this.emailService.sendInvitationNewMemberEmail({
-        email: 'receipthub.sender@gmail.com',
+        email: memberEmail,
         name: invitorFullName,
         companyNames: companiesNames,
         memberEmail,
@@ -218,7 +220,7 @@ export class CompanyMemberService {
     }
     if (!token) {
       this.emailService.sendInvitationExistMemberEmail({
-        email: 'receipthub.sender@gmail.com',
+        email: memberEmail,
         name: invitorFullName,
         companyNames: companiesNames,
         avatarSrc,
@@ -387,39 +389,84 @@ export class CompanyMemberService {
     }
   }
 
-  private async inviteCompanyOwner(id: string, body: CreateCompanyAccountDTO) {
-    const { email } = body;
-    const userInvitorActiveAccount = await this.extractUserAccount(id);
-    if (userInvitorActiveAccount.role !== ECompanyRoles.accountant) {
-      throw new HttpException(
-        'USER HAS NO PERMISSION FOR INVITE COMPANY OWNER',
-        HttpStatus.FORBIDDEN,
-      );
+  async inviteCompanyOwner(id: string, body: CreateCompanyAccountDTO) {
+    const { email, isDifferentsRoles, role } = body;
+
+    const existedUser = await this.authRepository.findOne({
+      where: { email: body.email.toLowerCase() },
+    });
+
+    if (existedUser) {
+      throw new HttpException('USER ALREADY EXIST', HttpStatus.CONFLICT);
     }
+
+    const userInvitor = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
+    });
+    if (!userInvitor) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+    if (userInvitor.accounts.length) {
+      const userInvitorActiveAccount = await this.extractUserAccount(id);
+      if (userInvitorActiveAccount.role === ECompanyRoles.user) {
+        throw new HttpException(
+          'USER HAS NO PERMISSION FOR INVITE COMPANY OWNER',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+    }
+    
+    const company = await this.companyRepository.save({
+      name: null,
+    });
+
     const token = await this.createToken({
-      email: email,
-      id: uuid(),
-      accountantUserId: id,
-    });
-    await this.inviteNewMemberService.createInvitation(email);
-
-    await this.emailService.sendInvitationCreateCompany({
-      avatarSrc: '',
       email,
-      host_url: this.configService.get('HOST_URL'),
-      name: userInvitorActiveAccount.name || 'Accountant',
-      token,
+      id: uuid(),
+      accountantUserId: userInvitor.id,
+      isCompanyOwner: true,
     });
 
-    return {
-      message: 'INVITATION HAS BEEN SUCCESSFULLY SENT',
-    };
+    const invitationModel = await this.inviteNewMemberService.createInvitation(
+      email,
+      userInvitor.id,
+    );
+
+    const newAcc = await this.memberRepository.save({
+      name: userInvitor.fullName,
+      role: isDifferentsRoles ? role : ECompanyRoles.accountant,
+      user: userInvitor,
+      memberInvite: invitationModel,
+      company: { id: company.id },
+    });
+
+    if (!userInvitor.active_account) {
+      await this.authRepository.update(userInvitor.id, {
+        active_account: newAcc.id,
+      });
+    }
+
+    await this.memberRepository.save({
+      role: ECompanyRoles.owner,
+      memberInvite: invitationModel,
+      company: { id: company.id },
+    });
+  
+    return await this.emailService.sendInvitationCreateCompany({
+      email,
+      memberEmail: email,
+      token: token,
+      name: userInvitor.fullName,
+      host_url: this.configService.get('HOST_URL'),
+      avatarSrc: '',
+    });
   }
 
   async createCompanyMember(id: string, body: CreateCompanyAccountDTO) {
-    const { companiesIds, email, role } = body;
+    const { companiesIds, email, role, isDifferentsRoles } = body;
 
-    if (role === ECompanyRoles.owner) {
+    if (role === ECompanyRoles.owner || isDifferentsRoles) {
       return await this.inviteCompanyOwner(id, body);
     }
     const { companies, accounts, userInvitor } = await this.extractDataFromUser(

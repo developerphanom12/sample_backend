@@ -17,5 +17,5 @@ export class CreateCompanyAccountDTO {
   companiesIds: string[];
   @ApiProperty()
   @IsOptional()
-  token: string;
+  isDifferentsRoles: boolean;
 }

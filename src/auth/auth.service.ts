@@ -23,6 +23,7 @@ import { EmailsService } from 'src/emails/emails.service';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { ILogin } from './auth.types';
 import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
+import { ECompanyRoles } from '../company-member/company-member.constants';
 
 @Injectable()
 export class AuthService {
@@ -111,6 +112,7 @@ export class AuthService {
       id: string;
       iat: number;
       exp: number;
+      isCompanyOwner?: boolean;
     };
 
     if (memberInviteModel && new Date().getTime() > decodedToken.exp * 1000) {
@@ -120,6 +122,56 @@ export class AuthService {
       );
     }
     const { newPassword, publicKey } = await this.generatePassword(password);
+
+    if (decodedToken?.isCompanyOwner) {
+      const ownerAccounts = (
+        await Promise.all(
+          memberInviteModel.members.map((member) =>
+            this.memberRepository.findOne({
+              where: { id: member.id },
+              relations: ['company'],
+            }),
+          ),
+        )
+      ).filter((item) => item.role === ECompanyRoles.owner);
+
+      const newUser = await this.authRepository.save({
+        email: email,
+        fullName: fullName.trim(),
+        country: country.trim(),
+        password: newPassword,
+        accounts: ownerAccounts,
+        publicKey,
+      });
+
+      await this.inviteNewMemberService.deleteInvitation(memberInviteModel.id);
+      await Promise.all(
+        memberInviteModel.members.map((member) =>
+          member.role === ECompanyRoles.owner
+            ? this.memberRepository.update(member.id, {
+                name: newUser.fullName,
+                user: newUser,
+                userInvitorName: newUser.fullName,
+              })
+            : this.memberRepository.update(member.id, {
+                userInvitorName: newUser.fullName,
+              }),
+        ),
+      );
+
+      return {
+        user: await this.userSerializer(
+          await this.authRepository.findOne({
+            where: { id: newUser.id },
+            relations: ['accounts'],
+          }),
+        ),
+        socialAccount: null,
+        company: null,
+        token: await this.createToken(newUser),
+        currencies: await this.currencyRepository.find(),
+      };
+    }
 
     const newUser = await this.authRepository.save({
       email: email,

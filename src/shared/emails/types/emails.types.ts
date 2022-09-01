@@ -9,4 +9,4 @@ export interface IInviteMember {
 }
 
 export interface IInviteCompanyOwner
-  extends Omit<IInviteMember, 'memberEmail' | 'companyNames'> {}
+  extends Omit<IInviteMember, 'companyNames'> {}
