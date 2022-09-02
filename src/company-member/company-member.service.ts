@@ -392,6 +392,12 @@ export class CompanyMemberService {
   async inviteCompanyOwner(id: string, body: CreateCompanyAccountDTO) {
     const { email, isDifferentsRoles, role } = body;
 
+    const existInvitationModel =
+      await this.inviteNewMemberService.getInvitation({ email: email });
+
+    if (existInvitationModel) {
+      throw new HttpException('INVITATION ALREADY EXIST', HttpStatus.CONFLICT);
+    }
     const existedUser = await this.authRepository.findOne({
       where: { email: body.email.toLowerCase() },
     });
@@ -434,7 +440,7 @@ export class CompanyMemberService {
       true,
     );
 
-    const newAcc = await this.memberRepository.save({
+    await this.memberRepository.save({
       name: userInvitor.fullName,
       role: isDifferentsRoles ? role : ECompanyRoles.accountant,
       user: userInvitor,
