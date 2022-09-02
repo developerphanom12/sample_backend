@@ -119,6 +119,8 @@ export class CompanyService {
       throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
     }
 
+    const companyOwnerCompany = await this.extractCompanyFromUser(id);
+
     const selectedCurrency = await this.currencyRepository.findOne({
       where: { id: body.currency },
     });
@@ -127,60 +129,53 @@ export class CompanyService {
       throw new HttpException(COMPANY_ERRORS.currency, HttpStatus.NOT_FOUND);
     }
 
-    const company_owner_account = await this.memberRepository.findOne({
-      where: { id: companyOwner.accounts[0].id },
-      relations: ['company'],
+    const companyOwnerAccounts = await this.memberRepository.find({
+      where: { company: { id: companyOwnerCompany.id } },
+      relations: ['user'],
     });
 
-    const company_invitor_account = await this.memberRepository.findOne({
-      where: { id: companyOwner.accounts[1].id },
-      relations: ['company', 'user'],
-    });
-
-    if (!company_owner_account || !company_invitor_account) {
+    if (!companyOwnerAccounts.length) {
       throw new HttpException('ACCOUNTS NOT FOUND', HttpStatus.NOT_FOUND);
     }
 
-    const userInvitor = await this.authRepository.findOne({
-      where: { id: company_invitor_account.user.id },
-    });
-
-    if (!userInvitor) {
-      throw new HttpException('User invitor not exist', HttpStatus.BAD_REQUEST);
-    }
-
-    if (!userInvitor.active_account) {
-      await this.authRepository.update(userInvitor.id, {
-        active_account: company_invitor_account.id,
-      });
-    }
-
-    if (!companyOwner) {
-      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
-    }
-    const company = await this.companyRepository.findOne({
-      where: { id: company_owner_account.company.id },
-    });
-
-    await this.companyRepository.update(company.id, {
+    await this.companyRepository.update(companyOwnerCompany.id, {
       currency: selectedCurrency,
       name: body.name || 'Default',
       date_format: body.date_format,
     });
 
-    if (!companyOwner.accounts.length) {
+    let companyOwnerAcc = null;
+    let company_member_account = null;
+
+    companyOwnerAccounts.map((acc) =>
+      acc.role === ECompanyRoles.owner
+        ? (companyOwnerAcc = acc)
+        : (company_member_account = acc),
+    );
+
+    if (!companyOwner.active_account) {
       await this.authRepository.update(id, {
-        active_account: companyOwner.accounts[0].id,
+        active_account: companyOwnerAcc.id,
       });
-    } else {
-      await this.authRepository.update(id, {
-        active_account: companyOwner.accounts[0].id,
+    }
+
+    const userInvitor = await this.authRepository.findOne({
+      where: { id: company_member_account.user.id },
+    });
+
+    if (!userInvitor) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+
+    if (!userInvitor.active_account) {
+      await this.authRepository.update(userInvitor.id, {
+        active_account: company_member_account.id,
       });
     }
 
     return {
       company: await this.companyRepository.findOne({
-        where: { id: company.id },
+        where: { id: companyOwnerCompany.id },
         relations: ['currency'],
       }),
       user: await this.authRepository.findOne({
@@ -215,11 +210,7 @@ export class CompanyService {
     );
   }
 
-  async createCompany(
-    id: string,
-    body: CreateCompanyDTO,
-    logo,
-  ): Promise<ICreateCompany> {
+  async createCompany(id: string, body: CreateCompanyDTO, logo): Promise<any> {
     if (body.withAccountant) {
       return await this.createCompanyWithMember(id, body);
     }
