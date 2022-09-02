@@ -16,8 +16,6 @@ import { UpdateCompanyDTO } from './dto/update-company.dto';
 import { JwtService } from '@nestjs/jwt';
 import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
 import { EmailsService } from '../emails/emails.service';
-import { v4 as uuid } from 'uuid';
-import { CompanyInvitationDTO } from './dto/company-invitation.dto';
 
 @Injectable()
 export class CompanyService {
@@ -146,7 +144,7 @@ export class CompanyService {
     const userInvitor = await this.authRepository.findOne({
       where: { id: company_invitor_account.user.id },
     });
-    
+
     if (!userInvitor) {
       throw new HttpException('User invitor not exist', HttpStatus.BAD_REQUEST);
     }
