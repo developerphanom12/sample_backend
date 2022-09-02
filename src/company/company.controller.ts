@@ -22,6 +22,7 @@ import { User } from '../shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { COMPANY_ROUTES, COMPANY_SWAGGER } from './company.constants';
 import { CompanyService } from './company.service';
+import { CompanyInvitationDTO } from './dto/company-invitation.dto';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCompanyDTO } from './dto/update-company.dto';
@@ -99,7 +100,12 @@ export class CompanyController {
     description: COMPANY_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async updateCompany(@User('id') id: string, @Param('company') company: string, @Body() body: UpdateCompanyDTO, @UploadedFile() file) {
+  public async updateCompany(
+    @User('id') id: string,
+    @Param('company') company: string,
+    @Body() body: UpdateCompanyDTO,
+    @UploadedFile() file,
+  ) {
     return await this.companyService.updateCompany(company, body, file);
   }
 
@@ -170,5 +176,21 @@ export class CompanyController {
     @Query() body: PaginationDTO,
   ) {
     return await this.companyService.getCompanyMembers(id, body);
+  }
+
+  @Get(COMPANY_ROUTES.get_invitation)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_SWAGGER.get_invitation })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_SWAGGER.success,
+    type: MemberEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getCompanyInvitations(
+    @User('id') id: string,
+    @Query() body: PaginationDTO,
+  ) {
+    return await this.companyService.getAllCompanyInvitations(id, body);
   }
 }

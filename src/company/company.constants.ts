@@ -8,6 +8,7 @@ export const COMPANY_ROUTES = {
   get_all: 'get-all',
   get_many: 'get-many',
   get_members: 'get-members',
+  get_invitation: 'get-invitation',
   delete: 'delete/:id',
   delete_logo: 'delete-logo/:company',
 };
@@ -20,6 +21,7 @@ export const COMPANY_SWAGGER = {
   change_logo: 'Change Company Logo',
   get_all: 'Get all companies',
   get_many: 'Get all companies via search and pagination',
+  get_invitation: 'Get all invitation to create company',
   get_members: 'Get company members',
   delete: 'Delete company',
   delete_logo: 'Delete company logo',

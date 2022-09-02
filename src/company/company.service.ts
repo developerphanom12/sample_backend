@@ -17,6 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
 import { EmailsService } from '../emails/emails.service';
 import { v4 as uuid } from 'uuid';
+import { CompanyInvitationDTO } from './dto/company-invitation.dto';
 
 @Injectable()
 export class CompanyService {
@@ -132,6 +133,33 @@ export class CompanyService {
       where: { id: companyOwner.accounts[0].id },
       relations: ['company'],
     });
+
+    const company_invitor_account = await this.memberRepository.findOne({
+      where: { id: companyOwner.accounts[1].id },
+      relations: ['company', 'user'],
+    });
+
+    if (!company_owner_account || !company_invitor_account) {
+      throw new HttpException('ACCOUNTS NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+
+    const userInvitor = await this.authRepository.findOne({
+      where: { id: company_invitor_account.user.id },
+    });
+    
+    if (!userInvitor) {
+      throw new HttpException('User invitor not exist', HttpStatus.BAD_REQUEST);
+    }
+
+    if (!userInvitor.active_account) {
+      await this.authRepository.update(userInvitor.id, {
+        active_account: company_invitor_account.id,
+      });
+    }
+
+    if (!companyOwner) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
     const company = await this.companyRepository.findOne({
       where: { id: company_owner_account.company.id },
     });
@@ -162,6 +190,31 @@ export class CompanyService {
         relations: ['accounts'],
       }),
     };
+  }
+
+  async getAllCompanyInvitations(id: string, body: PaginationDTO) {
+    const userInvitor = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
+    });
+
+    const accountsIds = (
+      await Promise.all(
+        userInvitor.accounts.map((acc) =>
+          this.memberRepository.findOne({
+            where: { id: acc.id },
+            relations: ['memberInvite'],
+          }),
+        ),
+      )
+    )
+      .filter((acc) => acc.memberInvite)
+      .map((acc) => acc.id);
+
+    return await this.inviteNewMemberService.getAllCompaniesInvites(
+      accountsIds,
+      body,
+    );
   }
 
   async createCompany(

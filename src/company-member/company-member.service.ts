@@ -416,7 +416,7 @@ export class CompanyMemberService {
         );
       }
     }
-    
+
     const company = await this.companyRepository.save({
       name: null,
     });
@@ -431,6 +431,7 @@ export class CompanyMemberService {
     const invitationModel = await this.inviteNewMemberService.createInvitation(
       email,
       userInvitor.id,
+      true,
     );
 
     const newAcc = await this.memberRepository.save({
@@ -441,18 +442,12 @@ export class CompanyMemberService {
       company: { id: company.id },
     });
 
-    if (!userInvitor.active_account) {
-      await this.authRepository.update(userInvitor.id, {
-        active_account: newAcc.id,
-      });
-    }
-
     await this.memberRepository.save({
       role: ECompanyRoles.owner,
       memberInvite: invitationModel,
       company: { id: company.id },
     });
-  
+
     return await this.emailService.sendInvitationCreateCompany({
       email,
       memberEmail: email,
