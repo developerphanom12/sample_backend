@@ -256,7 +256,7 @@ export class CompanyMemberService {
     body: CreateCompanyAccountDTO,
     companiesNames: string[],
   ) {
-    const { companiesIds, name, role } = body;
+    const { companiesIds, name, role, email } = body;
     const existUserAccounts = existUser.accounts.map((acc) =>
       this.memberRepository.findOne({
         where: { id: acc.id },
@@ -297,7 +297,7 @@ export class CompanyMemberService {
       });
     }
 
-    await this.sendEmail(userInvitor.fullName, companiesNames);
+    await this.sendEmail(userInvitor.fullName, companiesNames, '', email);
 
     return await Promise.all(
       newMembers.map((acc) =>
