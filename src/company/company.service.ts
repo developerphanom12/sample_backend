@@ -31,7 +31,6 @@ export class CompanyService {
     private s3Service: S3Service,
     private jwtService: JwtService,
     private emailService: EmailsService,
-    private inviteNewMemberService: InviteNewMemberService,
     private configService: ConfigService,
   ) {}
 

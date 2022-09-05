@@ -3,9 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { CompanyEntity } from 'src/company/entities/company.entity';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { EmailsService } from '../emails/emails.service';
-import { ECompanyRoles } from './company-member.constants';
+import {
+  COMPANY_MEMBER_ERRORS,
+  ECompanyRoles,
+} from './company-member.constants';
 import { CreateCompanyAccountDTO } from './dto/create-account.dto';
 import { UpdateCompanyAccountDTO } from './dto/update-account.dto';
 import { MemberEntity } from './entities/company-member.entity';
@@ -16,6 +19,8 @@ import { JwtService } from '@nestjs/jwt';
 import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
 import { MemberInvitesEntity } from '../invite-new-member/entities/company-member-invites.entity';
 import { COMPANY_ERRORS } from '../company/company.errors';
+import { Cron, CronExpression } from '@nestjs/schedule';
+
 @Injectable()
 export class CompanyMemberService {
   constructor(
@@ -25,6 +30,8 @@ export class CompanyMemberService {
     private authRepository: Repository<AuthEntity>,
     @InjectRepository(MemberEntity)
     private memberRepository: Repository<MemberEntity>,
+    @InjectRepository(MemberInvitesEntity)
+    private memberInvitesRepository: Repository<MemberInvitesEntity>,
     private emailService: EmailsService,
     private configService: ConfigService,
     private s3Service: S3Service,
@@ -389,6 +396,94 @@ export class CompanyMemberService {
     }
   }
 
+  private async resendCompanyOwnerInvite(
+    id: string,
+    invite: MemberInvitesEntity,
+    userInvitor: AuthEntity,
+  ) {
+    // Check is the same invitor
+    if (invite.userInvitorId !== id) {
+      throw new HttpException(
+        COMPANY_MEMBER_ERRORS.different_invitor,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Regenerate token for email
+    const token = await this.createToken({
+      email: invite.email,
+      id: uuid(),
+      accountantUserId: id,
+      isCompanyOwner: true,
+    });
+
+    // Update in datebase (need for CRON)
+    await this.memberInvitesRepository.update(invite.id, {
+      updated: new Date(),
+    });
+
+    // Send Email
+    return await this.emailService.sendInvitationCreateCompany({
+      email: invite.email,
+      memberEmail: invite.email,
+      token: token,
+      name: userInvitor.fullName,
+      host_url: this.configService.get('HOST_URL'),
+      avatarSrc: '',
+    });
+  }
+
+  private async resendCompanyMemberInvite(
+    id: string,
+    invite: MemberInvitesEntity,
+    userInvitor: AuthEntity,
+  ) {
+    const activeUserInvitorAccount = await this.memberRepository.findOne({
+      where: { id: userInvitor.active_account },
+    });
+    if (!activeUserInvitorAccount) {
+      throw new HttpException(
+        'THIS USER HAVE NOT ACTIVE ACCOUNT',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (activeUserInvitorAccount.role === ECompanyRoles.user) {
+      throw new HttpException(
+        'THIS ACCOUNT HAS NO PERMISSIONS TO RESEND INVITATION',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Regenerate token for email
+    const token = await this.createToken({
+      email: invite.email,
+      id: uuid(),
+      accountantUserId: id,
+    });
+
+    // Update in datebase (need for CRON)
+    await this.memberInvitesRepository.update(invite.id, {
+      updated: new Date(),
+    });
+
+    // Get members with company
+    const promises = invite.members.map((member) => {
+      return this.memberRepository.findOne({
+        where: { id: member.id },
+        relations: ['company'],
+      });
+    });
+    const members = await Promise.all(promises);
+
+    await this.sendEmail(
+      userInvitor.fullName,
+      await members.map((member) => member.company.name),
+      token,
+      invite.email,
+    );
+  }
+
   async inviteCompanyOwner(id: string, body: CreateCompanyAccountDTO) {
     const { email, isDifferentsRoles, role } = body;
 
@@ -565,109 +660,33 @@ export class CompanyMemberService {
     };
   }
 
-  private async extractUser(id: string) {
-    const user = await this.authRepository.findOne({
-      where: { id: id },
-    });
-    if (!user) {
-      throw new HttpException('USER DOES NOT EXIST', HttpStatus.BAD_REQUEST);
-    }
-    const account = await this.memberRepository.findOne({
-      where: { id: user.active_account },
-      relations: ['company'],
-    });
-
-    if (!account) {
-      throw new HttpException(
-        'COMPANY ACCOUNT NOT FOUND',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (account.role === ECompanyRoles.user) {
-      throw new HttpException(
-        'THIS ACCOUNT HAS NO PERMISSIONS TO RESEND INVITATION',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return user;
-  }
-
   public async resendInvitation(id: string, invitationId: string) {
-    const invitationModel = await this.inviteNewMemberService.getInvitation({
-      invitationId: invitationId,
+    // Check is user invitor exist
+    const userInvitor = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
     });
-    if (!invitationModel) {
-      throw new HttpException(
-        'INVITATION DOES NOT EXIST',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    let userInvitor = await this.authRepository.findOne({
-      where: { id: invitationModel.userInvitorId },
-    });
-
-    const activeUserInvitorAccount = await this.memberRepository.findOne({
-      where: { id: userInvitor.active_account },
-    });
-
-    if (activeUserInvitorAccount.role === ECompanyRoles.user) {
-      throw new HttpException(
-        'THIS ACCOUNT HAS NO PERMISSIONS TO RESEND INVITATION',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     if (!userInvitor) {
-      userInvitor = await this.extractUser(id);
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
     }
 
-    const invitatiomMemberCompaniesNames = (
-      await Promise.all(
-        invitationModel.members.map((member) =>
-          this.companyRepository.findOne({
-            where: { members: { id: member.id } },
-          }),
-        ),
-      )
-    ).map((item) => item.name);
-
-    if (!invitatiomMemberCompaniesNames.length) {
-      throw new HttpException('COMPANIES NOT FOUND', HttpStatus.BAD_REQUEST);
-    }
-
-    const newToken = await this.createToken({
-      email: invitationModel.email,
-      id: uuid(),
+    // Check is invite exist
+    const invite = await this.memberInvitesRepository.findOne({
+      where: { id: invitationId },
+      relations: ['members'],
     });
-
-    const newInvitationModel =
-      await this.inviteNewMemberService.createInvitation(
-        invitationModel.email,
-        userInvitor.id,
+    if (!invite) {
+      throw new HttpException(
+        `${COMPANY_MEMBER_ERRORS.invite_not_found} or invite is not for the company owner`,
+        HttpStatus.BAD_REQUEST,
       );
+    }
 
-    await Promise.all(
-      invitationModel.members.map((member) =>
-        this.memberRepository.update(member.id, {
-          memberInvite: newInvitationModel,
-        }),
-      ),
-    );
-
-    await this.inviteNewMemberService.deleteInvitation(invitationModel.id);
-
-    await this.sendEmail(
-      userInvitor.fullName,
-      invitatiomMemberCompaniesNames,
-      newToken,
-      newInvitationModel.email,
-    );
-
-    return {
-      message: 'THE INVITATION HAS BEEN SUCCESSFULLY RESENT',
-    };
+    // Send email depending on invite type
+    if (invite.isCompanyInvite) {
+      return this.resendCompanyOwnerInvite(id, invite, userInvitor);
+    }
+    return this.resendCompanyMemberInvite(id, invite, userInvitor);
   }
 
   async updateCompanyMember(
@@ -728,5 +747,29 @@ export class CompanyMemberService {
       'YOU HAVE NO PERMISSION TO EDIT COMPANY OWNER',
       HttpStatus.FORBIDDEN,
     );
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async clearInvitesTable() {
+    const sevenDaysAgo: Date = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    // Find all ivites without resending for 7 days
+    const invites = await this.memberInvitesRepository.find({
+      where: { updated: LessThan(sevenDaysAgo) },
+      relations: ['members'],
+    });
+
+    // return if no invites found
+    if (!invites) return;
+
+    // Delete all expired invites (with company or not depending on ivitation type)
+    const promises = invites.map((invite) => {
+      this.inviteNewMemberService.deleteInvitation(
+        invite.id,
+        invite.isCompanyInvite,
+      );
+    });
+    const deleting = await Promise.all(promises);
+    return await deleting;
   }
 }
