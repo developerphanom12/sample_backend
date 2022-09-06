@@ -2,6 +2,10 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In } from 'typeorm';
 import { PaginationDTO } from '../receipt/dto/receipt-pagination.dto';
+import { COMPANY_MEMBER_ERRORS } from 'src/company-member/company-member.constants';
+import { COMPANY_ERRORS } from 'src/company/company.errors';
+import { CompanyService } from 'src/company/company.service';
+import { CompanyEntity } from 'src/company/entities/company.entity';
 
 import { MemberInvitesEntity } from './entities/company-member-invites.entity';
 
@@ -10,6 +14,9 @@ export class InviteNewMemberService {
   constructor(
     @InjectRepository(MemberInvitesEntity)
     private memberInvitesRepository: Repository<MemberInvitesEntity>,
+    @InjectRepository(CompanyEntity)
+    private companyRepository: Repository<CompanyEntity>,
+    private companyService: CompanyService,
   ) {}
 
   public async getAllCompaniesInvites(
@@ -77,15 +84,50 @@ export class InviteNewMemberService {
     return invitation;
   }
 
-  public async deleteInvitation(id: string): Promise<{ message: string }> {
-    if (!id) {
+  public async deleteInvitation(
+    id: string,
+    isDeleteCompany?: boolean,
+  ): Promise<{ message: string }> {
+    const invite = await this.memberInvitesRepository.findOne({
+      where: { id: id },
+      relations: ['members'],
+    });
+    if (!invite) {
       throw new HttpException(
-        'Id should be exist',
-        HttpStatus.UNPROCESSABLE_ENTITY,
+        COMPANY_MEMBER_ERRORS.invite_not_found,
+        HttpStatus.BAD_REQUEST,
       );
     }
-    await this.memberInvitesRepository.delete(id);
 
+    // Check is delete only in invite table
+    if (!isDeleteCompany) {
+      await this.memberInvitesRepository.delete(invite.id);
+      return {
+        message: 'The invitation has been deleted',
+      };
+    }
+
+    // Check is invite type of the owner invitation
+    if (!invite.isCompanyInvite) {
+      throw new HttpException(
+        COMPANY_MEMBER_ERRORS.cant_delete_with_company,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Extract company from members
+    const company = await this.companyRepository.findOne({
+      where: { id: invite.members[0].company.id },
+    });
+    if (!company) {
+      throw new HttpException(COMPANY_ERRORS.company, HttpStatus.BAD_REQUEST);
+    }
+
+    // Delete company with all members
+    await this.companyService.companyDelete(invite.userInvitorId, company.id);
+
+    // Delete invite
+    await this.memberInvitesRepository.delete(invite.id);
     return {
       message: 'The invitation has been deleted',
     };

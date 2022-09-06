@@ -13,14 +13,11 @@ import { CompanyModule } from './company/company.module';
 import { CompanyMemberModule } from './company-member/company-member.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SupplierModule } from './supplier/supplier.module';
-import { CategoryController } from './category/category.controller';
 import { CategoryModule } from './category/category.module';
-import { PaymentTypeController } from './payment-type/payment-type.controller';
 import { PaymentTypeModule } from './payment-type/payment-type.module';
 import { S3Module } from './s3/s3.module';
 import { DownloadModule } from './download/download.module';
 import { EmailsModule } from './emails/emails.module';
-import { ProfileController } from './profile/profile.controller';
 import { ProfileModule } from './profile/profile.module';
 import { InviteNewMemberModule } from './invite-new-member/invite-new-member.module';
 

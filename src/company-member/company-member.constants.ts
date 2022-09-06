@@ -24,3 +24,9 @@ export const COMPANY_MEMBER_SWAGGER = {
   success: 'Success',
   resend_invitation: 'Resend Invitation',
 };
+
+export const COMPANY_MEMBER_ERRORS = {
+  invite_not_found: 'Invite not found',
+  cant_delete_with_company: "This invite can`t be deleted with company",
+  different_invitor: "Invitor should be the same for resending"
+};
