@@ -55,8 +55,10 @@ export const RECEIPT_PHOTOS_LIMIT = 10;
 export const RECEIPT_DATE_REGEX =
   /\d{2}(?:\d{2})?([.\-\/])\d{1,2}([.\-\/])\d{2}(?:\d{2})?(?=[\/]|,\s|.\s|\s|$)/g;
 export const RECEIPT_TOTAL_REGEX =
-  /(total\samount\s:)|(total\samount)|(total\s:)|total(?=\s|$)/g;
+  /(total\samount\s:)|(total\samount)|(total\s:)|total:|total amount|paid|payment|total(?=\s|$)/g;
 export const RECEIPT_TAX_REGEX = /tax(?=\s|$)/g;
+export const RECEIPT_VAT_REGEX = /vat ttl|vat(?=\s|$)/g;
+export const RECEIPT_NET_REGEX = /net ttl|net(?=\s|$)/g;
 
 export enum EReceiptStatus {
   processing = 'processing',

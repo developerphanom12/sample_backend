@@ -5,8 +5,10 @@ import { Between, Not, IsNull, Like, Repository, LessThan, In } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
   extractDate,
+  extractNet,
   extractTax,
   extractTotal,
+  extractVat,
 } from '../heplers/receipt.helper';
 import { EReceiptStatus, IFilters } from './receipt.constants';
 import { AuthEntity } from '../auth/entities/auth.entity';
@@ -141,10 +143,12 @@ export class ReceiptService {
       receipt_date: extractDate(text),
       tax: extractTax(text),
       total: extractTotal(text),
-      net: null,
+      net: extractNet(text),
       vat_code: null,
     };
-    if (receiptData.total && receiptData.tax) {
+    const receiptVat = extractVat(text);
+
+    if (receiptData.total && receiptData.tax && !receiptData.net) {
       receiptData.net = receiptData.total - receiptData.tax;
       receiptData.vat_code =
         Math.floor(
@@ -152,7 +156,18 @@ export class ReceiptService {
         ) / 100;
     }
 
-    if (!(receiptData.receipt_date || receiptData.total || receiptData.tax)) {
+    if (receiptData.total && receiptVat && !receiptData.net) {
+      receiptData.net = receiptData.total - receiptVat;
+    }
+
+    if (
+      !(
+        receiptData.receipt_date ||
+        receiptData.total ||
+        receiptData.tax ||
+        !receiptData.net
+      )
+    ) {
       return {
         ...receiptData,
         status: EReceiptStatus.rejected,

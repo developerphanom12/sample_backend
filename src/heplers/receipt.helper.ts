@@ -1,9 +1,9 @@
-import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 import {
-  EReceiptStatus,
   RECEIPT_DATE_REGEX,
+  RECEIPT_NET_REGEX,
   RECEIPT_TAX_REGEX,
   RECEIPT_TOTAL_REGEX,
+  RECEIPT_VAT_REGEX,
 } from '../receipt/receipt.constants';
 
 export const extractDate = (text: string) => {
@@ -36,28 +36,65 @@ export const extractNumbers = (text: string, regex) => {
   if (!matchKeyword) {
     return null;
   }
-  // Split line after keyword
-  const splittedText = text.split(` ${matchKeyword[matchKeyword.length - 1]} `);
-  if (!splittedText) {
+
+  //if we find vat ttl
+  if (matchKeyword.find((el) => el === 'vat ttl')) {
+    return extractVatNumbers(text);
+  } else {
+    // Split line after keyword
+    const splittedText = text.split(
+      ` ${matchKeyword[matchKeyword.length - 1]} `,
+    );
+    if (!splittedText) {
+      return null;
+    }
+
+    const firstWord = splittedText[splittedText.length - 1]
+      .split(' ')[0] // Get next word after keyword
+      .replace(',', '.') // Replace all comas to dots
+      .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
+    const secondWord = splittedText[splittedText.length - 1]
+      .split(' ')[1] // Get second next word after keyword
+      .replace(',', '.') // Replace all comas to dots
+      .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
+
+    // Get numbers from first or second words
+    const result: string[] | null =
+      firstWord.match(/\d+(\.\d+)?$/g) || secondWord.match(/\d+(\.\d+)?$/g);
+
+    if (!result || isNaN(+result[0])) {
+      return null;
+    }
+    return +result[0];
+  }
+};
+
+export const extractVatNumbers = (text: string) => {
+  //find vat ttf beetwen numbers
+  let matchesTexts = text.match(/\d.\d+\svat ttl\s\d.\d+|\d.\d+\svat ttl/g);
+
+  if (!matchesTexts.length) {
     return null;
   }
-  const firstWord = splittedText[splittedText.length - 1]
-    .split(' ')[0] // Get next word after keyword
-    .replace(',', '.') // Replace all comas to dots
-    .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
-  const secondWord = splittedText[splittedText.length - 1]
-    .split(' ')[1] // Get second next word after keyword
-    .replace(',', '.') // Replace all comas to dots
-    .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
 
-  // Get numbers from first or second words
-  const result: string[] | null =
-    firstWord.match(/\d+(\.\d+)?$/g) || secondWord.match(/\d+(\.\d+)?$/g);
+  const splitedText = matchesTexts[0].split(' ');
 
-  if (!result || isNaN(+result[0])) {
+  if (!splitedText.length) {
     return null;
   }
-  return +result[0];
+
+  //find only numbers
+  const numbers = splitedText
+    .filter((item) => item.match(/\d+(\.\d+)?$/g))
+    .map((item) => Number(item));
+
+  //find min result
+  const result = Math.min(...numbers);
+
+  if (!result || isNaN(+result)) {
+    return null;
+  }
+  return result;
 };
 
 export const extractTotal = (text: string) => {
@@ -72,6 +109,24 @@ export const extractTotal = (text: string) => {
 export const extractTax = (text: string) => {
   try {
     return extractNumbers(text, RECEIPT_TAX_REGEX);
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const extractVat = (text: string) => {
+  try {
+    return extractNumbers(text, RECEIPT_VAT_REGEX);
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const extractNet = (text: string) => {
+  try {
+    return extractNumbers(text, RECEIPT_NET_REGEX);
   } catch (err) {
     console.log(err);
     return null;
