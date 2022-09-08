@@ -16,6 +16,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { User } from 'src/shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { MemberInvitesEntity } from '../invite-new-member/entities/company-member-invites.entity';
 import { PROFILE_ROUTES, PROFILE_SWAGGER } from '../profile/profile.constants';
 import {
   COMPANY_MEMBER_ROUTES,
@@ -24,6 +25,7 @@ import {
 import { CompanyMemberService } from './company-member.service';
 import { CreateCompanyAccountDTO } from './dto/create-account.dto';
 import { UpdateCompanyAccountDTO } from './dto/update-account.dto';
+import { UpdateCreateCompanyInvitationDTO } from './dto/update-create-company-invitation.dto';
 import { MemberEntity } from './entities/company-member.entity';
 
 @Controller(COMPANY_MEMBER_ROUTES.main)
@@ -63,6 +65,29 @@ export class CompanyMemberController {
     return await this.companyMemberService.updateCompanyMember(
       id,
       accountId,
+      body,
+    );
+  }
+
+  @Put(COMPANY_MEMBER_ROUTES.update_create_company_invite)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({
+    summary: COMPANY_MEMBER_SWAGGER.update_create_company_invite,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_MEMBER_SWAGGER.success,
+    type: MemberInvitesEntity,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async updateCompanyCreateInvite(
+    @User('id') id: string,
+    @Param('inviteId') inviteId: string,
+    @Body() body: UpdateCreateCompanyInvitationDTO,
+  ) {
+    return await this.companyMemberService.updateCompanyCreateInvite(
+      id,
+      inviteId,
       body,
     );
   }
@@ -110,6 +135,24 @@ export class CompanyMemberController {
     @Param('invitationId') invitationId: string,
   ) {
     return await this.companyMemberService.resendInvitation(id, invitationId);
+  }
+
+  @Delete(COMPANY_MEMBER_ROUTES.delete_create_company_invite)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({
+    summary: COMPANY_MEMBER_SWAGGER.delete_create_company_invite,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_MEMBER_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async deleteCompanyCreateInvitation(
+    @Param('invitationId') invitationId: string,
+  ) {
+    return await this.companyMemberService.deleteCompanyCreateinvitation(
+      invitationId,
+    );
   }
 
   @Delete(COMPANY_MEMBER_ROUTES.delete)

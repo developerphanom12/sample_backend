@@ -90,7 +90,7 @@ export class DashboardService {
   async getReceiptsMetric(id: string): Promise<IReceiptMetric | null> {
     const company = await this.extractCompanyFromUser(id);
     const [receipts, total] = await this.receiptRepository.findAndCount({
-      where: { company: {id: company.id}, },
+      where: { company: { id: company.id } },
       order: { created: 'DESC' },
     });
 
@@ -123,7 +123,7 @@ export class DashboardService {
       this.getCompanyDetails(account),
     );
     const accountsWithCompanies = await Promise.all(promises);
-    return await accountsWithCompanies;
+    return await accountsWithCompanies.filter((el) => el.company.name);
   }
 
   async getRecentReceipts(
@@ -145,7 +145,7 @@ export class DashboardService {
     const company = await this.extractCompanyFromUser(id);
     const [receipts, total] = await this.receiptRepository.findAndCount({
       relations: ['currency', 'supplier'],
-      where: { company: {id: company.id}, created: sort_date },
+      where: { company: { id: company.id }, created: sort_date },
       order: { created: 'DESC' },
     });
 

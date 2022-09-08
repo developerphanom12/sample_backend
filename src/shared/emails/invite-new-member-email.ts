@@ -7,7 +7,7 @@ export const inviteNewMemberMailSes = (data: IInviteMember) => {
     data;
   const isOneCompany = companyNames.length === 1;
   const companyNameString = companyNames.join(', ');
-  const srcAv = `data:image/png;base64,${avatarSrc}`;
+
   return {
     from: `${EMAIL_CONFIG.companyName} <${EMAIL_CONFIG.email}>`,
     to: email,
@@ -132,7 +132,7 @@ export const inviteNewMemberMailSes = (data: IInviteMember) => {
                               <p style="font-family:'Open Sans', sans-serif;font-size:16px;font-weight:400;line-height:22px;margin-bottom:35px;text-align:center;" class="mobile_paragraph">
                               ${
                                 avatarSrc
-                                  ? `<img src="${srcAv}" style="width:32px;height:32px;vertical-align:middle;border-radius:50%;" />`
+                                  ? `<img src="data:image/png;base64,${avatarSrc}" alt="avatar" style="width:32px;height:32px;vertical-align:middle;border-radius:50%;" />`
                                   : ''
                               }
                                 <span style="font-size:16px;font-weight:600;color:#000000">${name}</span> added you to the <span style="font-size:16px;font-weight:600;color:#000000">${companyNameString}</span> ${

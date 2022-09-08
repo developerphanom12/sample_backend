@@ -20,6 +20,7 @@ import { InviteNewMemberService } from '../invite-new-member/invite-new-member.s
 import { MemberInvitesEntity } from '../invite-new-member/entities/company-member-invites.entity';
 import { COMPANY_ERRORS } from '../company/company.errors';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { UpdateCreateCompanyInvitationDTO } from './dto/update-create-company-invitation.dto';
 
 @Injectable()
 export class CompanyMemberService {
@@ -195,7 +196,9 @@ export class CompanyMemberService {
           relations: ['company'],
         }),
     );
-    const result = await Promise.all(promises);
+    const result = await (
+      await Promise.all(promises)
+    ).filter((el) => el.company.name);
     return await result;
   }
 
@@ -322,8 +325,8 @@ export class CompanyMemberService {
     companiesNames: string[],
   ): Promise<MemberEntity[]> {
     const { email, companiesIds, name, role } = body;
-    const existedInvitation = await this.inviteNewMemberService.getInvitation({
-      email,
+    const existedInvitation = await this.memberInvitesRepository.findOne({
+      where: { email: email, isCompanyInvite: false },
     });
 
     if (existedInvitation) {
@@ -482,6 +485,54 @@ export class CompanyMemberService {
       token,
       invite.email,
     );
+  }
+
+  async deleteCompanyCreateinvitation(inviteId: string) {
+    return await this.inviteNewMemberService.deleteInvitation(inviteId, true);
+  }
+
+  async updateCompanyCreateInvite(
+    id,
+    inviteId: string,
+    body: UpdateCreateCompanyInvitationDTO,
+  ): Promise<MemberInvitesEntity> {
+    const { email, role, isResendEmail } = body;
+
+    const existInvitationModel = await this.memberInvitesRepository.findOne({
+      where: { id: inviteId, isCompanyInvite: true },
+      relations: ['members'],
+    });
+
+    if (!existInvitationModel) {
+      throw new HttpException(
+        'INVITATION DOES NOT EXIST',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const invitorAccount = existInvitationModel.members.find(
+      (acc) => acc.role !== ECompanyRoles.owner,
+    );
+
+    await this.memberRepository.update(invitorAccount.id, {
+      role: role,
+    });
+
+    if (existInvitationModel.email.toLowerCase() !== email.toLowerCase()) {
+      await this.memberInvitesRepository.update(existInvitationModel.id, {
+        email: email,
+      });
+    }
+
+    const updatedInvitationModel = await this.memberInvitesRepository.findOne({
+      where: { id: existInvitationModel.id },
+      relations: ['members'],
+    });
+
+    if (isResendEmail) {
+      await this.resendInvitation(id, updatedInvitationModel.id);
+    }
+    return updatedInvitationModel;
   }
 
   async inviteCompanyOwner(id: string, body: CreateCompanyAccountDTO) {
@@ -649,6 +700,17 @@ export class CompanyMemberService {
     }
 
     if (deletingUser.memberInvite) {
+      const invitationModel = await this.memberInvitesRepository.findOne({
+        where: {
+          id: deletingUser.memberInvite.id,
+        },
+        relations: ['members'],
+      });
+
+      if (invitationModel.members.length === 1) {
+        await this.memberInvitesRepository.delete(invitationModel.id);
+      }
+
       await this.memberRepository.update(deletingUser.id, {
         memberInvite: null,
       });

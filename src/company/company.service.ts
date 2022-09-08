@@ -7,15 +7,12 @@ import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { In, Like, Repository } from 'typeorm';
 import { COMPANY_ERRORS } from './company.errors';
-import { ICreateCompany } from './company.types';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { CompanyEntity } from './entities/company.entity';
 import { S3Service } from 'src/s3/s3.service';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCompanyDTO } from './dto/update-company.dto';
-import { JwtService } from '@nestjs/jwt';
-import { InviteNewMemberService } from '../invite-new-member/invite-new-member.service';
-import { EmailsService } from '../emails/emails.service';
+import { MemberInvitesEntity } from '../invite-new-member/entities/company-member-invites.entity';
 
 @Injectable()
 export class CompanyService {
@@ -28,10 +25,9 @@ export class CompanyService {
     private currencyRepository: Repository<CurrencyEntity>,
     @InjectRepository(MemberEntity)
     private memberRepository: Repository<MemberEntity>,
+    @InjectRepository(MemberInvitesEntity)
+    private memberInvitesRepository: Repository<MemberInvitesEntity>,
     private s3Service: S3Service,
-    private jwtService: JwtService,
-    private emailService: EmailsService,
-    private configService: ConfigService,
   ) {}
 
   private async extractCompanyFromUser(id: string) {
@@ -190,6 +186,10 @@ export class CompanyService {
       relations: ['accounts'],
     });
 
+    if (!userInvitor) {
+      throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+
     const accountsIds = (
       await Promise.all(
         userInvitor.accounts.map((acc) =>
@@ -203,10 +203,22 @@ export class CompanyService {
       .filter((acc) => acc.memberInvite)
       .map((acc) => acc.id);
 
-    return await this.inviteNewMemberService.getAllCompaniesInvites(
-      accountsIds,
-      body,
-    );
+    const [result, total] = await this.memberInvitesRepository.findAndCount({
+      where: {
+        email: Like(`%${body.search || ''}%`),
+        members: { id: In(accountsIds) },
+        isCompanyInvite: true,
+      },
+      relations: ['members'],
+      order: { created: 'DESC' },
+      take: body.take ?? 10,
+      skip: body.skip ?? 0,
+    });
+
+    return {
+      data: result,
+      count: total,
+    };
   }
 
   async createCompany(id: string, body: CreateCompanyDTO, logo): Promise<any> {

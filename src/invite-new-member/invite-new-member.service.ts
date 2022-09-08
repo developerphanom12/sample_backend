@@ -1,13 +1,16 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, In } from 'typeorm';
-import { PaginationDTO } from '../receipt/dto/receipt-pagination.dto';
-import { COMPANY_MEMBER_ERRORS } from 'src/company-member/company-member.constants';
+import { Repository } from 'typeorm';
+import {
+  COMPANY_MEMBER_ERRORS,
+  ECompanyRoles,
+} from 'src/company-member/company-member.constants';
 import { COMPANY_ERRORS } from 'src/company/company.errors';
 import { CompanyService } from 'src/company/company.service';
 import { CompanyEntity } from 'src/company/entities/company.entity';
 
 import { MemberInvitesEntity } from './entities/company-member-invites.entity';
+import { MemberEntity } from '../company-member/entities/company-member.entity';
 
 @Injectable()
 export class InviteNewMemberService {
@@ -16,29 +19,10 @@ export class InviteNewMemberService {
     private memberInvitesRepository: Repository<MemberInvitesEntity>,
     @InjectRepository(CompanyEntity)
     private companyRepository: Repository<CompanyEntity>,
+    @InjectRepository(MemberEntity)
+    private memberRepository: Repository<MemberEntity>,
     private companyService: CompanyService,
   ) {}
-
-  public async getAllCompaniesInvites(
-    accountsWithInvites: string[],
-    body: PaginationDTO,
-  ) {
-    const [result, total] = await this.memberInvitesRepository.findAndCount({
-      where: {
-        email: Like(`%${body.search || ''}%`),
-        members: { id: In(accountsWithInvites) },
-        isCompanyInvite: true,
-      },
-      relations: ['members'],
-      order: { created: 'DESC' },
-      take: body.take ?? 10,
-      skip: body.skip ?? 0,
-    });
-    return {
-      data: result,
-      count: total,
-    };
-  }
 
   public async getInvitation(body: {
     email?: string;
@@ -92,6 +76,7 @@ export class InviteNewMemberService {
       where: { id: id },
       relations: ['members'],
     });
+
     if (!invite) {
       throw new HttpException(
         COMPANY_MEMBER_ERRORS.invite_not_found,
@@ -115,10 +100,23 @@ export class InviteNewMemberService {
       );
     }
 
+    const companyOwnerAcc = invite.members.find(
+      (el) => el.role === ECompanyRoles.owner,
+    );
+
+    //find memberAcc with company
+    const companyOwnerAccWithCompany = await this.memberRepository.findOne({
+      where: {
+        id: companyOwnerAcc.id,
+      },
+      relations: ['company'],
+    });
+
     // Extract company from members
     const company = await this.companyRepository.findOne({
-      where: { id: invite.members[0].company.id },
+      where: { id: companyOwnerAccWithCompany.company.id },
     });
+
     if (!company) {
       throw new HttpException(COMPANY_ERRORS.company, HttpStatus.BAD_REQUEST);
     }
@@ -135,7 +133,7 @@ export class InviteNewMemberService {
 
   public async updateInvitation(
     id: string,
-    body: { token?: string; email?: string },
+    body: { email?: string },
   ): Promise<MemberInvitesEntity> {
     await this.memberInvitesRepository.update(id, { ...body });
     return await this.memberInvitesRepository.findOne({

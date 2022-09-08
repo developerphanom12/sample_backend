@@ -22,7 +22,6 @@ import { User } from '../shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { COMPANY_ROUTES, COMPANY_SWAGGER } from './company.constants';
 import { CompanyService } from './company.service';
-import { CompanyInvitationDTO } from './dto/company-invitation.dto';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCompanyDTO } from './dto/update-company.dto';
