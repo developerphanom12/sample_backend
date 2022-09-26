@@ -51,14 +51,20 @@ export const RECEIPT_ROUTES = {
 };
 
 export const RECEIPT_PHOTOS_LIMIT = 10;
+export const RECEIPT_TOTAL_WORDS_REGEX =
+  /prev bal|balance due|t o t a l|total|total sale|total amount|paid|total\samount|total\samount\s:|total sale|total to pay|payment|deficit|sale amount|amount|amt|amt.due/g;
 
 export const RECEIPT_DATE_REGEX =
   /\d{2}(?:\d{2})?([.\-\/])\d{1,2}([.\-\/])\d{2}(?:\d{2})?(?=[\/]|,\s|.\s|\s|$)/g;
 export const RECEIPT_TOTAL_REGEX =
-  /(total\samount\s:)|(total\samount)|(total\s:)|total:|total amount|paid|payment|total(?=\s|$)/g;
-export const RECEIPT_TAX_REGEX = /tax(?=\s|$)/g;
-export const RECEIPT_VAT_REGEX = /vat ttl|vat(?=\s|$)/g;
-export const RECEIPT_NET_REGEX = /net ttl|net(?=\s|$)/g;
+  /(\d+\.\d+\s?)?(prev bal|balance due|t o t a l|total|total sale|total amount|paid|total\samount|total\samount\s:|total sale|total to pay|payment|deficit|sale amount|amount|amt|amt.due)(\s?[\s|:|.](\s)?(\w{1,3})?\s?\p{Sc}?\s?\d+\.\d+)/gu;
+export const RECEIPT_TAX_REGEX =
+  /(tax|total tax|tax sum)([\s|:|.]\s?\p{Sc}?\d+\.\d+)/gu;
+export const RECEIPT_VAT_REGEX =
+  /(\p{Sc}?\d+\.\d+\s?)?(vat \d+%|vat amount|vat ttl|vat rate tax|vat rate|vat included|vat|tax|total tax|tax sum)(\s?[\s|:|.]\s?\p{Sc}?\d+\.\d+)?|((\d+\.\d+\s){2,3})?totals?\s((\d+\.\d+.?\s){2,3})?/gu;
+export const RECEIPT_NET_REGEX = /(net ttl|net)([\s|:|.]\s?\p{Sc}?\d+\.\d+)/gu;
+
+export const CURRENCY_SYMBOL_REGEX = /\p{Sc}/gu;
 
 export enum EReceiptStatus {
   processing = 'processing',

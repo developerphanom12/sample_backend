@@ -423,6 +423,7 @@ export class CompanyMemberService {
     // Update in datebase (need for CRON)
     await this.memberInvitesRepository.update(invite.id, {
       updated: new Date(),
+      created: new Date(),
     });
 
     // Send Email
@@ -468,6 +469,7 @@ export class CompanyMemberService {
     // Update in datebase (need for CRON)
     await this.memberInvitesRepository.update(invite.id, {
       updated: new Date(),
+      created: new Date(),
     });
 
     // Get members with company

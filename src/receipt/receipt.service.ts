@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Not, IsNull, Like, Repository, LessThan, In } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
+  extractCurrency,
   extractDate,
   extractNet,
   extractTax,
@@ -28,7 +29,6 @@ import { EmailsService } from 'src/emails/emails.service';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
-import { isNull } from 'util';
 
 @Injectable()
 export class ReceiptService {
@@ -117,10 +117,16 @@ export class ReceiptService {
     currency: CurrencyEntity,
   ) {
     try {
+      const findedCurrency = receiptData.currency
+        ? await this.currencyRepository.findOne({
+            where: { country: receiptData.currency },
+          })
+        : currency;
+
       const receipt = await this.receiptRepository.save({
         ...receiptData,
         description: description,
-        currency: currency,
+        currency: findedCurrency,
         company: { id: company.id },
       });
       return await this.receiptRepository.findOne({
@@ -141,23 +147,23 @@ export class ReceiptService {
 
     const receiptData = {
       receipt_date: extractDate(text),
-      tax: extractTax(text),
+      tax: extractVat(text),
       total: extractTotal(text),
       net: extractNet(text),
       vat_code: null,
+      currency: extractCurrency(text),
     };
-    const receiptVat = extractVat(text);
 
     if (receiptData.total && receiptData.tax && !receiptData.net) {
       receiptData.net = receiptData.total - receiptData.tax;
-      receiptData.vat_code =
-        Math.floor(
-          (receiptData.tax / (receiptData.total - receiptData.tax)) * 10000,
-        ) / 100;
     }
 
-    if (receiptData.total && receiptVat && !receiptData.net) {
-      receiptData.net = receiptData.total - receiptVat;
+    if (
+      receiptData.total &&
+      receiptData.tax &&
+      (!receiptData.net || receiptData.net === receiptData.total)
+    ) {
+      receiptData.net = Math.abs(receiptData.total - receiptData.tax);
     }
 
     if (
@@ -165,7 +171,7 @@ export class ReceiptService {
         receiptData.receipt_date ||
         receiptData.total ||
         receiptData.tax ||
-        !receiptData.net
+        receiptData.net
       )
     ) {
       return {

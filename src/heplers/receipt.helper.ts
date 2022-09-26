@@ -1,8 +1,12 @@
+import { EKS } from 'aws-sdk';
+import { CurrencySeed } from '../constants/seed';
 import {
+  CURRENCY_SYMBOL_REGEX,
   RECEIPT_DATE_REGEX,
   RECEIPT_NET_REGEX,
   RECEIPT_TAX_REGEX,
   RECEIPT_TOTAL_REGEX,
+  RECEIPT_TOTAL_WORDS_REGEX,
   RECEIPT_VAT_REGEX,
 } from '../receipt/receipt.constants';
 
@@ -29,7 +33,7 @@ export const extractDate = (text: string) => {
   }
 };
 
-export const extractNumbers = (text: string, regex) => {
+export const extractNumbers = (text: string, regex: RegExp) => {
   // Find keyword for search
   const matchKeyword = text.match(regex);
 
@@ -37,64 +41,69 @@ export const extractNumbers = (text: string, regex) => {
     return null;
   }
 
-  //if we find vat ttl
-  if (matchKeyword.find((el) => el === 'vat ttl')) {
-    return extractVatNumbers(text);
-  } else {
-    // Split line after keyword
-    const splittedText = text.split(
-      ` ${matchKeyword[matchKeyword.length - 1]} `,
-    );
-    if (!splittedText) {
+  if (
+    matchKeyword.filter((el) => el.match(RECEIPT_TOTAL_WORDS_REGEX)).length > 1
+  ) {
+    const results = matchKeyword.flatMap((item) => item.match(/\d+.\d+/g));
+    const result = Math.max(...results.map((el) => +el));
+
+    if (!result || isNaN(result)) {
+      return null;
+    }
+    return result;
+  }
+
+  const results = matchKeyword[matchKeyword.length - 1].match(/\d+.\d+/g);
+
+  if (results?.length === 1) {
+    if (isNaN(+results[0])) {
+      return null;
+    }
+    return +results[0];
+  }
+  if (results?.length > 1) {
+    const result = Math.max(...results.map((el) => +el));
+    if (!results[0] || isNaN(+results[0])) {
       return null;
     }
 
-    const firstWord = splittedText[splittedText.length - 1]
-      .split(' ')[0] // Get next word after keyword
-      .replace(',', '.') // Replace all comas to dots
-      .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
-    const secondWord = splittedText[splittedText.length - 1]
-      .split(' ')[1] // Get second next word after keyword
-      .replace(',', '.') // Replace all comas to dots
-      .replace(/\.(?=.*\.)/g, ''); // Remove all dots except last one
-
-    // Get numbers from first or second words
-    const result: string[] | null =
-      firstWord.match(/\d+(\.\d+)?$/g) || secondWord.match(/\d+(\.\d+)?$/g);
-
-    if (!result || isNaN(+result[0])) {
-      return null;
-    }
-    return +result[0];
+    return result;
   }
 };
 
-export const extractVatNumbers = (text: string) => {
-  //find vat ttf beetwen numbers
-  let matchesTexts = text.match(/\d.\d+\svat ttl\s\d.\d+|\d.\d+\svat ttl/g);
+export const extractVatNumbers = (text: string, regex: RegExp) => {
+  let matchKeyword = text.match(regex);
 
-  if (!matchesTexts.length) {
+  console.log(matchKeyword, 'vat matchkey');
+
+  if (!matchKeyword) {
     return null;
   }
 
-  const splitedText = matchesTexts[0].split(' ');
+  const filteredStrings = matchKeyword?.filter((item) =>
+    item.match(/\d+.\d+/g),
+  );
+  if (!filteredStrings.length) {
+    return null;
+  }
+  const results = filteredStrings[filteredStrings.length - 1].match(/\d+.\d+/g);
 
-  if (!splitedText.length) {
+  if (!results) {
     return null;
   }
 
-  //find only numbers
-  const numbers = splitedText
-    .filter((item) => item.match(/\d+(\.\d+)?$/g))
-    .map((item) => Number(item));
+  if (results?.length > 1) {
+    const minResult = Math.min(...results.map((el) => +el));
+    if (!minResult || isNaN(+minResult)) {
+      return null;
+    }
+    return minResult;
+  }
 
-  //find min result
-  const result = Math.min(...numbers);
-
-  if (!result || isNaN(+result)) {
+  if (!results[0] || isNaN(+results[0])) {
     return null;
   }
-  return result;
+  return +results[0];
 };
 
 export const extractTotal = (text: string) => {
@@ -117,7 +126,29 @@ export const extractTax = (text: string) => {
 
 export const extractVat = (text: string) => {
   try {
-    return extractNumbers(text, RECEIPT_VAT_REGEX);
+    return extractVatNumbers(text, RECEIPT_VAT_REGEX);
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const extractCurrency = (text: string) => {
+  try {
+    let matchKeyword = text.match(CURRENCY_SYMBOL_REGEX);
+
+    if (!matchKeyword) {
+      return null;
+    }
+
+    const currency = CurrencySeed.find(
+      (item) => item.symbol === matchKeyword[0],
+    );
+
+    if (!currency) {
+      return null;
+    }
+    return currency.country;
   } catch (err) {
     console.log(err);
     return null;

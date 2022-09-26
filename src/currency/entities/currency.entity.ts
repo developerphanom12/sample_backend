@@ -31,13 +31,17 @@ export class CurrencyEntity {
   })
   value: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   country: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   description: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
+  symbol: string;
 
   @OneToMany((type) => CompanyEntity, (data) => data.currency)
   company: CompanyEntity;
