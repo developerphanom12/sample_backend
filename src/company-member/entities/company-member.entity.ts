@@ -54,7 +54,7 @@ export class MemberEntity {
   @ApiProperty()
   @OneToMany((type) => SupplierEntity, (data) => data.creator)
   @JoinColumn()
-  suppliers: SupplierEntity[];
+  suppliersAccounts: SupplierEntity[];
 
   @ApiProperty()
   @OneToMany((type) => CategoryEntity, (data) => data.creator)

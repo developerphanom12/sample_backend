@@ -62,7 +62,7 @@ export class CompanyEntity {
 
   @ApiProperty({ nullable: true })
   @OneToMany((type) => SupplierEntity, (data) => data.company)
-  suppliers: SupplierEntity[];
+  suppliersAccounts: SupplierEntity[];
 
   @ApiProperty({ nullable: true })
   @OneToMany((type) => CategoryEntity, (data) => data.company)
