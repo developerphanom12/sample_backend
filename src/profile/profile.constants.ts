@@ -5,6 +5,7 @@ export const PROFILE_ROUTES = {
   change_password: 'change-password',
   upload_photo: 'upload-photo',
   get_photo: 'get-photo/:imagename',
+  get_avatar_name: 'get-avatar-name',
   delete_photo: 'delete-photo',
 };
 
@@ -15,5 +16,6 @@ export const PROFILE_SWAGGER = {
   change_password: 'Change Password',
   upload_photo: 'Upload photo',
   get_photo: 'Get profile photo',
+  get_avatar_name: 'Get avatar name',
   delete_photo: 'Delete profile photo',
 };

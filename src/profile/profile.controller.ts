@@ -92,4 +92,15 @@ export class ProfileController {
   public async getAvatar(@Param('imagename') imagename: string, @Res() res) {
     return await this.profileService.getProfileImage(imagename, res);
   }
+
+  @Get(PROFILE_ROUTES.get_avatar_name)
+  @ApiOperation({ summary: PROFILE_SWAGGER.get_photo })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: PROFILE_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getAvatarName(@User('id') id: string) {
+    return await this.profileService.getAvatarName(id);
+  }
 }

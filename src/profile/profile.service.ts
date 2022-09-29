@@ -85,6 +85,14 @@ export class ProfileService {
     }
   }
 
+  async getAvatarName(id: string) {
+    const user = await this.authRepository.findOne({ where: { id: id } });
+    if (!user) {
+      throw new HttpException('USER IS NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+    return user.profile_image;
+  }
+
   async uploadProfileImage(id: string, file) {
     const user = await this.authRepository.findOne({ where: { id: id } });
     if (!user) {
