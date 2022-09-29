@@ -14,7 +14,7 @@ import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
-@Entity('supplier')
+@Entity('supplier-account')
 export class SupplierEntity {
   @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
@@ -31,17 +31,17 @@ export class SupplierEntity {
   @Column()
   name: string;
 
-  @ManyToOne((type) => MemberEntity, (data) => data.suppliers)
+  @ManyToOne((type) => MemberEntity, (data) => data.suppliersAccounts)
   @JoinColumn()
   creator: MemberEntity;
 
-  @ManyToOne((type) => CompanyEntity, (data) => data.suppliers, {
+  @ManyToOne((type) => CompanyEntity, (data) => data.suppliersAccounts, {
     cascade: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn()
   company: CompanyEntity;
 
-  @OneToMany((type) => ReceiptEntity, (data) => data.supplier)
+  @OneToMany((type) => ReceiptEntity, (data) => data.supplier_account)
   receipts: ReceiptEntity[];
 }

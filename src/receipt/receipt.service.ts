@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Not, IsNull, Like, Repository, LessThan, In } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
+  extractSupplier,
   extractCurrency,
   extractDate,
   extractNet,
@@ -146,6 +147,7 @@ export class ReceiptService {
     const text = textData.join(' ').toLocaleLowerCase();
 
     const receiptData = {
+      supplier: extractSupplier(textData[0]),
       receipt_date: extractDate(text),
       tax: extractVat(text),
       total: extractTotal(text),
@@ -269,7 +271,7 @@ export class ReceiptService {
 
     if (!body.isMobile) {
       const [result, total] = await this.receiptRepository.findAndCount({
-        relations: ['currency', 'supplier', 'category', 'payment_type'],
+        relations: ['currency', 'supplier_account', 'category', 'payment_type'],
         where: [
           {
             ...filters,
@@ -306,18 +308,18 @@ export class ReceiptService {
         filerParams.category = { id: category.id };
       }
     }
-    const isSupplierFilter = body.hasOwnProperty('supplier');
+    const isSupplierFilter = body.hasOwnProperty('supplier_account');
     if (isSupplierFilter) {
-      if (!body.supplier) {
-        filerParams.supplier = null;
+      if (!body.supplier_account) {
+        filerParams.supplier_account = null;
       } else {
         const supplier = await this.supplierRepository.findOne({
-          where: { company: { id: company.id }, id: body.supplier },
+          where: { company: { id: company.id }, id: body.supplier_account },
         });
         if (!supplier) {
           throw new HttpException('SUPPLIER NOT FOUND', HttpStatus.NOT_FOUND);
         }
-        filerParams.supplier = { id: supplier.id };
+        filerParams.supplier_account = { id: supplier.id };
       }
     }
     const isPaymentTypeFilter = body.hasOwnProperty('payment_type');
@@ -339,7 +341,7 @@ export class ReceiptService {
     }
 
     const [result, total] = await this.receiptRepository.findAndCount({
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
       where: {
         ...filerParams,
         custom_id: Like(`%${body.search || ''}%`),
@@ -417,7 +419,7 @@ export class ReceiptService {
 
     return await this.receiptRepository.findOne({
       where: { id: receiptId },
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
     });
   }
 
@@ -430,7 +432,7 @@ export class ReceiptService {
     const company = await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
       where: {
         company: { id: company.id },
         id: In(receiptsId),
@@ -485,7 +487,7 @@ export class ReceiptService {
     const company = await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
       where: {
         company: { id: company.id },
         id: In(receiptsId),
@@ -519,7 +521,7 @@ export class ReceiptService {
     const company = await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
       where: { company: { id: company.id }, id: In(receiptsId) },
       order: { custom_id: 'ASC' },
     });
@@ -528,8 +530,10 @@ export class ReceiptService {
       return {
         id: receipt.custom_id.toUpperCase(),
         date: receipt.receipt_date || null,
-        supplier: receipt.supplier ? receipt.supplier.name : null,
-        supplierAccount: receipt.supplier_account || null,
+        supplier: receipt.supplier || null,
+        supplierAccount: receipt.supplier_account
+          ? receipt.supplier_account.name
+          : null,
         category: receipt.category ? receipt.category.name : null,
         vatCode: receipt.vat_code || null,
         currency: receipt.currency ? receipt.currency.value : null,
@@ -570,7 +574,7 @@ export class ReceiptService {
     const company = await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
       where: { company: { id: company.id }, id: In(receiptsId) },
       order: { custom_id: 'ASC' },
     });
@@ -579,8 +583,10 @@ export class ReceiptService {
       return {
         id: receipt.custom_id.toUpperCase(),
         date: receipt.receipt_date || null,
-        supplier: receipt.supplier ? receipt.supplier.name : null,
-        supplierAccount: receipt.supplier_account || null,
+        supplier: receipt.supplier || null,
+        supplierAccount: receipt.supplier_account
+          ? receipt.supplier_account.name
+          : null,
         category: receipt.category ? receipt.category.name : null,
         vatCode: receipt.vat_code || null,
         currency: receipt.currency ? receipt.currency.value : null,
@@ -621,7 +627,7 @@ export class ReceiptService {
     const company = await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
-      relations: ['currency', 'supplier', 'category', 'payment_type'],
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
       where: { company: { id: company.id }, id: In(receiptsId) },
       order: { custom_id: 'ASC' },
     });
@@ -630,8 +636,10 @@ export class ReceiptService {
       return {
         id: receipt.custom_id.toUpperCase(),
         date: receipt.receipt_date || null,
-        supplier: receipt.supplier ? receipt.supplier.name : null,
-        supplierAccount: receipt.supplier_account || null,
+        supplier: receipt.supplier || null,
+        supplierAccount: receipt.supplier_account
+          ? receipt.supplier_account.name
+          : null,
         category: receipt.category ? receipt.category.name : null,
         vatCode: receipt.vat_code || null,
         currency: receipt.currency ? receipt.currency.value : null,

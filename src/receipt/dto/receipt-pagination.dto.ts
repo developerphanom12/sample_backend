@@ -44,7 +44,7 @@ export class PaginationDTO {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  supplier?: string;
+  supplier_account?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

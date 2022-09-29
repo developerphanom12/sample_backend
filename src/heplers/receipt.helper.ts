@@ -1,4 +1,3 @@
-import { EKS } from 'aws-sdk';
 import { CurrencySeed } from '../constants/seed';
 import {
   CURRENCY_SYMBOL_REGEX,
@@ -73,8 +72,6 @@ export const extractNumbers = (text: string, regex: RegExp) => {
 
 export const extractVatNumbers = (text: string, regex: RegExp) => {
   let matchKeyword = text.match(regex);
-
-  console.log(matchKeyword, 'vat matchkey');
 
   if (!matchKeyword) {
     return null;
@@ -158,6 +155,18 @@ export const extractCurrency = (text: string) => {
 export const extractNet = (text: string) => {
   try {
     return extractNumbers(text, RECEIPT_NET_REGEX);
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const extractSupplier = (text: string) => {
+  try {
+    if (text.length < 3) {
+      return null;
+    }
+    return text;
   } catch (err) {
     console.log(err);
     return null;

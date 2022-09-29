@@ -78,6 +78,6 @@ export interface IFilters {
   created: FindOperator<Date>;
   status: FindOperator<string>;
   category?: FindOptionsWhere<CategoryEntity> | null;
-  supplier?: FindOptionsWhere<SupplierEntity> | null;
+  supplier_account?: FindOptionsWhere<SupplierEntity> | null;
   payment_type?: FindOptionsWhere<PaymentTypeEntity> | null;
 }

@@ -43,7 +43,7 @@ export class ReceiptEntity {
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })
-  supplier_account: string;
+  supplier: string;
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })
@@ -90,7 +90,7 @@ export class ReceiptEntity {
 
   @ManyToOne((type) => SupplierEntity, (data) => data.receipts)
   @JoinColumn()
-  supplier: SupplierEntity;
+  supplier_account: SupplierEntity;
 
   @ManyToOne((type) => CategoryEntity, (data) => data.receipts, {
     cascade: true,

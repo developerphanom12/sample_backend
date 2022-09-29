@@ -43,7 +43,7 @@ export class SupplierService {
     }
     const company = await this.companyRepository.findOne({
       where: { id: account.company.id },
-      relations: ['receipts', 'currency', 'suppliers'],
+      relations: ['receipts', 'currency', 'suppliersAccounts'],
     });
 
     if (!company) {
@@ -86,7 +86,7 @@ export class SupplierService {
 
     const supplier = await this.supplierRepository.save({
       name: body.name,
-      company: {id: company.id},
+      company: { id: company.id },
       creator: creator,
     });
     return await this.supplierRepository.findOne({
@@ -165,7 +165,7 @@ export class SupplierService {
   async deleteSupplier(id: string, supplierId: string) {
     const company = await this.extractCompanyFromUser(id);
 
-    if (!company.suppliers) {
+    if (!company.suppliersAccounts) {
       throw new HttpException(
         'NO SUPPLIERS IN COMPANY',
         HttpStatus.BAD_REQUEST,
