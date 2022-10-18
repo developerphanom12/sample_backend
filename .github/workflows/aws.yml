@@ -19,6 +19,7 @@ jobs:
     - name: Set env vars (common)
       run: |
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+        echo "JWT_RT_SECRET=${{ secrets.JWT_RT_SECRET }}" >> $GITHUB_ENV
         echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
         echo "AWS_REGION=eu-west-2" >> $GITHUB_ENV
         echo "AWS_SES_ACCESS_KEY_ID=${{ secrets.AWS_SES_ACCESS_KEY_ID }}" >> $GITHUB_ENV
@@ -76,6 +77,7 @@ jobs:
         echo AWS_BUCKET_NAME=$AWS_BUCKET_NAME >> .env.$ENV
 
         echo JWT_SECRET=$JWT_SECRET >> .env.$ENV
+        echo JWT_RT_SECRET=$JWT_RT_SECRET >> .env.$ENV
         echo PORT=$PORT >> .env.$ENV
         cat .env.$ENV
 

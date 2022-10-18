@@ -4,7 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuthEntity } from './entities/auth.entity';
 import { JwtService } from '@nestjs/jwt';
-import { EXPIRE_JWT_TIME, EXPIRE_LINK_TIME } from '../constants/jwt';
+import {
+  EXPIRE_JWT_TIME,
+  EXPIRE_LINK_TIME,
+  EXPIRE_RT_JWT_TIME,
+} from '../constants/jwt';
 import * as bcrypt from 'bcrypt';
 import { deserialize, serialize } from 'class-transformer';
 import { RegistrationDTO } from './dto/registration.dto';
@@ -46,11 +50,30 @@ export class AuthService {
     private emailsService: EmailsService,
   ) {}
 
-  async createToken(user: AuthEntity) {
-    const expiresIn = EXPIRE_JWT_TIME + Date.now();
-    const data = { id: user.id, expiresIn };
-    const secret = await this.createSecretString(user.publicKey);
-    return this.jwtService.sign(data, { secret });
+  async createTokens(user: AuthEntity) {
+    const data = { id: user.id, expiresIn: EXPIRE_JWT_TIME };
+    const dataRt = { id: user.id, expiresIn: EXPIRE_RT_JWT_TIME };
+
+    const [secret_access, secret_refresh] = await this.createSecretString(
+      user.publicKey,
+    );
+
+    const [access_token, refresh_token] = await Promise.all([
+      this.jwtService.sign(data, { secret: secret_access, expiresIn: EXPIRE_JWT_TIME }),
+      this.jwtService.sign(dataRt, {
+        secret: secret_refresh,
+        expiresIn: EXPIRE_RT_JWT_TIME,
+      }),
+    ]);
+
+    return [access_token, refresh_token];
+  }
+
+  private async updateRefreshToken(userId: string, rt: string) {
+    const hash = await bcrypt.hash(rt, 10);
+    await this.authRepository.update(userId, {
+      hashedRt: hash,
+    });
   }
 
   private async generatePassword(password: string) {
@@ -83,11 +106,15 @@ export class AuthService {
       publicKey,
     });
 
+    const [access_token, refresh_token] = await this.createTokens(newUser);
+    await this.updateRefreshToken(newUser.id, refresh_token);
+
     return {
       user: await this.userSerializer(newUser),
       socialAccount: null,
       company: null,
-      token: await this.createToken(newUser),
+      token: access_token,
+      refreshToken: refresh_token,
       currencies: await this.currencyRepository.find(),
     };
   }
@@ -159,6 +186,9 @@ export class AuthService {
         ),
       );
 
+      const [access_token, refresh_token] = await this.createTokens(newUser);
+      await this.updateRefreshToken(newUser.id, refresh_token);
+
       return {
         user: await this.userSerializer(
           await this.authRepository.findOne({
@@ -168,7 +198,8 @@ export class AuthService {
         ),
         socialAccount: null,
         company: null,
-        token: await this.createToken(newUser),
+        token: access_token,
+        refreshToken: refresh_token,
         currencies: await this.currencyRepository.find(),
       };
     }
@@ -183,11 +214,15 @@ export class AuthService {
     });
     await this.inviteNewMemberService.deleteInvitation(memberInviteModel.id);
 
+    const [access_token, refresh_token] = await this.createTokens(newUser);
+    await this.updateRefreshToken(newUser.id, refresh_token);
+
     return {
       user: await this.userSerializer(newUser),
       socialAccount: null,
       company: null,
-      token: await this.createToken(newUser),
+      token: access_token,
+      refreshToken: refresh_token,
       currencies: await this.currencyRepository.find(),
     };
   }
@@ -206,9 +241,13 @@ export class AuthService {
       throw new HttpException('WRONG PASSWORD', HttpStatus.BAD_REQUEST);
     }
     if (!user.accounts || user.accounts.length === 0) {
+      const [access_token, refresh_token] = await this.createTokens(user);
+      await this.updateRefreshToken(user.id, refresh_token);
+
       return {
         user: await this.userSerializer(user),
-        token: await this.createToken(user),
+        token: access_token,
+        refreshToken: refresh_token,
         socialAccount: null,
         company: null,
         currencies: await this.currencyRepository.find(),
@@ -230,9 +269,13 @@ export class AuthService {
     const serializedCompany = serialize(company);
 
     if (!user.socialAuth) {
+      const [access_token, refresh_token] = await this.createTokens(user);
+      await this.updateRefreshToken(user.id, refresh_token);
+
       return {
         user: await this.userSerializer(user),
-        token: await this.createToken(user),
+        token: access_token,
+        refreshToken: refresh_token,
         company: await deserialize(CompanyEntity, serializedCompany),
         socialAccount: null,
         showSetPassword: !!user.email && !user.password,
@@ -240,9 +283,14 @@ export class AuthService {
       };
     }
     const serializedSocialAuth = serialize(user.socialAuth);
+
+    const [access_token, refresh_token] = await this.createTokens(user);
+    await this.updateRefreshToken(user.id, refresh_token);
+
     return {
       user: await this.userSerializer(user),
-      token: await this.createToken(user),
+      token: access_token,
+      refreshToken: refresh_token,
       company: await deserialize(CompanyEntity, serializedCompany),
       socialAccount: await deserialize(SocialAuthEntity, serializedSocialAuth),
       showSetPassword: !!user.email && !user.password,
@@ -281,7 +329,8 @@ export class AuthService {
         auth: newUser,
       });
 
-      const token = await this.createToken(newUser);
+      const [access_token, refresh_token] = await this.createTokens(newUser);
+      await this.updateRefreshToken(newUser.id, refresh_token);
 
       return {
         user: await this.userSerializer(newUser),
@@ -289,7 +338,8 @@ export class AuthService {
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
         company: null,
-        token,
+        token: access_token,
+        refreshToken: refresh_token,
         currencies: await this.currencyRepository.find(),
       };
     }
@@ -300,9 +350,13 @@ export class AuthService {
     });
 
     if (user.accounts.length < 1 || !user.active_account) {
+      const [access_token, refresh_token] = await this.createTokens(user);
+      await this.updateRefreshToken(user.id, refresh_token);
+
       return {
         user: await this.userSerializer(user),
-        token: await this.createToken(user),
+        token: access_token,
+        refreshToken: refresh_token,
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Id`]: socialAccountId },
         }),
@@ -329,9 +383,13 @@ export class AuthService {
     });
     const serializedCompany = serialize(company);
 
+    const [access_token, refresh_token] = await this.createTokens(user);
+    await this.updateRefreshToken(user.id, refresh_token);
+
     return {
       user: await this.userSerializer(user),
-      token: await this.createToken(user),
+      token: access_token,
+      refreshToken: refresh_token,
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Id`]: socialAccountId },
       }),
@@ -367,14 +425,17 @@ export class AuthService {
         auth: newUser,
       });
 
-      const token = await this.createToken(newUser);
+      const [access_token, refresh_token] = await this.createTokens(newUser);
+      await this.updateRefreshToken(newUser.id, refresh_token);
+
       return {
         user: await this.userSerializer(newUser),
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Email`]: email },
         }),
         company: null,
-        token,
+        token: access_token,
+        refreshToken: refresh_token,
         currencies: await this.currencyRepository.find(),
       };
     }
@@ -399,9 +460,13 @@ export class AuthService {
       });
       const serializedCompany = serialize(company);
 
+      const [access_token, refresh_token] = await this.createTokens(user);
+      await this.updateRefreshToken(user.id, refresh_token);
+
       return {
         user: await this.userSerializer(user),
-        token: await this.createToken(user),
+        token: access_token,
+        refreshToken: refresh_token,
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${type.toLowerCase()}Email`]: email },
         }),
@@ -411,9 +476,13 @@ export class AuthService {
       };
     }
 
+    const [access_token, refresh_token] = await this.createTokens(user);
+    await this.updateRefreshToken(user.id, refresh_token);
+
     return {
       user: await this.userSerializer(user),
-      token: await this.createToken(user),
+      token: access_token,
+      refreshToken: refresh_token,
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${type.toLowerCase()}Email`]: email },
       }),
@@ -425,7 +494,8 @@ export class AuthService {
 
   private async createSecretString(personalKey: string) {
     const secret = await this.configService.get('JWT_SECRET');
-    return `${secret}${personalKey}`;
+    const secretRt = await this.configService.get('JWT_RT_SECRET');
+    return [`${secret}${personalKey}`, secretRt];
   }
 
   async userSerializer(user: AuthEntity) {
@@ -455,11 +525,33 @@ export class AuthService {
 
     await this.authRepository.save({
       ...user,
+      hashedRt: null,
       publicKey,
     });
     return {
       message: 'Success',
     };
+  }
+
+  async refreshTokens(userId: string, rt: string) {
+    const user = await this.authRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('Wrong email', HttpStatus.NOT_FOUND);
+    }
+
+    const rtMatches = await bcrypt.compare(rt, user.hashedRt);
+    if (!rtMatches)
+      throw new HttpException('Refresh Token is wrong', HttpStatus.FORBIDDEN);
+
+    const [access_token, refresh_token] = await this.createTokens(user);
+    await this.updateRefreshToken(user.id, refresh_token);
+
+    return { access_token, refresh_token };
   }
 
   async updatePasswordRequest(body: PasswordRequestDTO) {

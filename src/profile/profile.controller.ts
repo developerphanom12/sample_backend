@@ -94,7 +94,7 @@ export class ProfileController {
   }
 
   @Get(PROFILE_ROUTES.get_avatar_name)
-  @ApiOperation({ summary: PROFILE_SWAGGER.get_photo })
+  @ApiOperation({ summary: PROFILE_SWAGGER.get_avatar_name })
   @ApiResponse({
     status: HttpStatus.OK,
     description: PROFILE_SWAGGER.success,
