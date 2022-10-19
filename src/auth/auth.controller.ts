@@ -32,6 +32,9 @@ import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { FRONT_END_URL } from '../constants/config';
 import { InviteMemberRequestRedirectDTO } from './dto/invite-member-request-redirect.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RtGuard } from '../shared/guards/rt.guard';
+import { GetUserRefreshToken } from '../shared/decorators/get-user-refresh-token.decorator';
 
 @ApiBearerAuth()
 @ApiTags(AUTH_ROUTES.main)
@@ -101,6 +104,20 @@ export class AuthController {
     return await this.authService.logOut(id);
   }
 
+  @Post(AUTH_ROUTES.refresh_tokens)
+  @ApiOperation({ summary: AUTH_SWAGGER.refresh_tokens })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: AUTH_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RtGuard)
+  public async refreshToken(
+    @User('id') id: string,
+    @GetUserRefreshToken('refreshToken') refreshToken: string,
+  ) {
+    return await this.authService.refreshTokens(id, refreshToken);
+  }
   @Get(AUTH_ROUTES.reset_password_request)
   @HttpCode(HttpStatus.OK)
   public async resetPasswordRequest(@Query() body: PasswordRequestDTO) {

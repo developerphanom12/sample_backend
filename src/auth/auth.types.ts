@@ -7,6 +7,7 @@ export interface ILogin {
   user: AuthEntity;
   socialAccount: SocialAuthEntity | null;
   token: string;
+  refreshToken?: string;
   company: CompanyEntity | null;
   currencies: CurrencyEntity[];
   showSetPassword?: boolean;

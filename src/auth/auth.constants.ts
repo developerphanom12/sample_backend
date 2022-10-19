@@ -2,6 +2,7 @@ export const AUTH_SWAGGER = {
   sign_in: 'Sign-in user',
   sign_up: 'Sign-up user',
   sign_up_member: 'Sign-up-member',
+  refresh_tokens: 'Refresh-tokens',
   success: 'Success',
   log_out: 'LogOut',
 };
@@ -13,6 +14,7 @@ export const AUTH_ROUTES = {
   sign_in: 'sign-in',
   o_auth: 'o-auth',
   log_out: 'log-out',
+  refresh_tokens: 'refresh-tokens',
   reset_password_request: 'reset-password-request',
   redirect_password: 'redirect-password/:token',
   redirect_member: 'redirect-member/:token',

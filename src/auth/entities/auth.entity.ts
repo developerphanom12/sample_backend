@@ -39,16 +39,21 @@ export class AuthEntity {
   })
   country: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   email: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
+  @Exclude()
+  hashedRt: string;
+
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   @Exclude()
   password: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   profile_image: string;
 
@@ -58,15 +63,15 @@ export class AuthEntity {
   @Exclude()
   publicKey: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @OneToOne((type) => SocialAuthEntity, (data) => data.auth)
   socialAuth: SocialAuthEntity;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   active_account: string;
 
-  @ApiProperty({nullable: true})
+  @ApiProperty({ nullable: true })
   @JoinColumn()
   @OneToMany((type) => MemberEntity, (data) => data.user)
   accounts: MemberEntity[];

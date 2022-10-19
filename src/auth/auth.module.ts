@@ -13,6 +13,7 @@ import { AuthEntity } from './entities/auth.entity';
 import { ResetPasswordEntity } from './entities/reset-password.entity';
 import { SocialAuthEntity } from './entities/social-auth.entity';
 import { JwtStrategy } from './jwt.strategy';
+import { RtStrategy } from './rt.strategy';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { JwtStrategy } from './jwt.strategy';
     EmailsModule,
     InviteNewMemberModule,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, RtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}
