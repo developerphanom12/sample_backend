@@ -105,8 +105,6 @@ export const extractVatNumbers = (text: string, regex: RegExp) => {
 
 export const extractTotal = (text: string) => {
   try {
-    console.log(text);
-
     return extractNumbers(text, RECEIPT_TOTAL_REGEX);
   } catch (err) {
     console.log(err);
