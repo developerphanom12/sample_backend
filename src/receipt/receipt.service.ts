@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Like, Repository, LessThan, In } from 'typeorm';
+import { Between, Like, Repository, LessThan, In, Not, IsNull } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
   extractSupplier,
@@ -99,13 +99,13 @@ export class ReceiptService {
 
       return {
         ...data,
-        custom_id: `rc${customId}`,
+        custom_id: `rc ${customId}`,
       };
     } catch (err) {
       console.log('Error', err);
       return {
         status: EReceiptStatus.rejected,
-        custom_id: `rc${customId}`,
+        custom_id: `rc ${customId}`,
         photos: [photo.filename],
       };
     }
@@ -250,6 +250,27 @@ export class ReceiptService {
     };
   }
 
+  filterHashMap = {
+    category: this.categoryRepository,
+    supplier_account: this.supplierRepository,
+  };
+
+  private async getDataBySearch(
+    type: 'category' | 'supplier_account',
+    search?: string,
+  ) {
+    const res = await this.filterHashMap[type].findOne({
+      where: {
+        name: Like(`%${search || ''}%`),
+      },
+    });
+    if (!res) {
+      return null;
+    } else {
+      return res.id;
+    }
+  }
+
   async getReceipts(id: string, body: PaginationDTO) {
     const company = await this.extractCompanyFromUser(id);
 
@@ -263,19 +284,46 @@ export class ReceiptService {
         ? Between(body.date_start, body.date_end)
         : LessThan(nextDay);
 
-    const filters = {
+    const filters: IFilters = {
       company: { id: company.id },
       status: Like(`%${body.status || ''}%`),
       created: dateFilter,
     };
 
     if (!body.isMobile) {
+      if (body.search) {
+        const catRes = await this.getDataBySearch('category', body.search);
+        filters.category = catRes ? { id: catRes } : null;
+        const suppAcc = await this.getDataBySearch(
+          'supplier_account',
+          body.search,
+        );
+        filters.supplier_account = suppAcc ? { id: suppAcc } : null;
+      }
       const [result, total] = await this.receiptRepository.findAndCount({
         relations: ['currency', 'supplier_account', 'category', 'payment_type'],
         where: [
           {
             ...filters,
-            custom_id: Like(`%${body.search || ''}%`),
+            custom_id: Like(`%${body.search?.toLowerCase() || ''}%`),
+          },
+          {
+            ...filters,
+            supplier: Like(`%${body.search || ''}%`),
+          },
+          {
+            category: filters?.category?.id
+              ? {
+                  id: filters.category.id,
+                }
+              : null,
+          },
+          {
+            supplier_account: filters?.supplier_account?.id
+              ? {
+                  id: filters.supplier_account.id,
+                }
+              : null,
           },
         ],
         order: { created: 'DESC' },

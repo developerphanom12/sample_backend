@@ -6,6 +6,7 @@ import {
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3 } from 'aws-sdk';
+import { FILE_FORMAT_REGEX } from './s3.constants';
 
 @Injectable()
 export class S3Service {
@@ -30,12 +31,14 @@ export class S3Service {
     folderName: string,
   ): Promise<any> {
     const name = originalname.includes('.')
-      ? originalname.split('.').slice(0, -1).join()
+      ? originalname.split(FILE_FORMAT_REGEX).slice(0, -1).join()
       : originalname;
 
     const params = {
       Bucket: this.bucketName,
-      Key: `${folderName}/${Date.now()}-${name.replace(/\s/g, '-')}.${mimetype.split('/')[1]}`,
+      Key: `${folderName}/${Date.now()}-${name.replace(/\s/g, '-')}.${
+        mimetype.split('/')[1]
+      }`,
       Body: buffer,
     };
     let location = '';

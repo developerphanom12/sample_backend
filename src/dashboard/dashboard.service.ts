@@ -82,6 +82,7 @@ export class DashboardService {
       }),
       company: await this.companyRepository.findOne({
         where: { id: company.id },
+        relations: ['currency'],
       }),
       company_owner: companyOwner,
     };
