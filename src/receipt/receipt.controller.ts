@@ -63,7 +63,7 @@ export class ReceiptController {
     return await this.ReceiptService.createReceipt(id, body, files);
   }
 
-  @Get(RECEIPT_ROUTES.download_csv)
+  @Post(RECEIPT_ROUTES.download_csv)
   @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: RECEIPT_SWAGGER.download_csv })
   @ApiResponse({
