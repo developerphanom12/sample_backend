@@ -8,6 +8,7 @@ import {
   EXPIRE_JWT_TIME,
   EXPIRE_LINK_TIME,
   EXPIRE_RT_JWT_TIME,
+  EXPIRE_CAPIUM_JWT_TIME,
 } from '../constants/jwt';
 import * as bcrypt from 'bcrypt';
 import { deserialize, serialize } from 'class-transformer';
@@ -59,7 +60,10 @@ export class AuthService {
     );
 
     const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.sign(data, { secret: secret_access, expiresIn: EXPIRE_JWT_TIME }),
+      this.jwtService.sign(data, {
+        secret: secret_access,
+        expiresIn: EXPIRE_JWT_TIME,
+      }),
       this.jwtService.sign(dataRt, {
         secret: secret_refresh,
         expiresIn: EXPIRE_RT_JWT_TIME,
@@ -299,18 +303,123 @@ export class AuthService {
   }
 
   async socialSignIn(data: SocialLoginDTO): Promise<ILogin> {
-    const { socialAccountId, type } = data;
+    const { type } = data;
 
     if (type === EOAuthTypes.capium) {
       return await this.signInWithCapium(data);
     }
 
-    if (!data.socialAccountId) {
+    return await this.createUserBySocialSignin(data);
+  }
+
+  async signInWithCapium(data: SocialLoginDTO): Promise<ILogin> {
+    const { email, type } = data;
+
+    if (!data.email) {
       throw new HttpException(
-        'Apple should contain id',
+        'Capium should contain email',
         HttpStatus.BAD_REQUEST,
       );
     }
+    const socialAccount = await this.socialAuthRepository.findOne({
+      where: { [`${type.toLowerCase()}Email`]: data.email },
+      relations: ['auth'],
+    });
+
+    if (!socialAccount) {
+      const publicKey = await bcrypt.genSalt(6);
+      const { email, fullName } = data;
+      const newUser = await this.authRepository.save({
+        fullName: fullName ? fullName.trim() : '',
+        publicKey,
+      });
+      await this.socialAuthRepository.save({
+        [`${type.toLowerCase()}Email`]: email,
+        auth: newUser,
+      });
+
+      const [access_token, refresh_token] = await this.createTokens(newUser);
+      await this.updateRefreshToken(newUser.id, refresh_token);
+
+      return {
+        user: await this.userSerializer(newUser),
+        socialAccount: await this.socialAuthRepository.findOne({
+          where: { [`${type.toLowerCase()}Email`]: email },
+        }),
+        company: null,
+        token: access_token,
+        refreshToken: refresh_token,
+        currencies: await this.currencyRepository.find(),
+      };
+    }
+
+    const user = await this.authRepository.findOne({
+      where: { id: socialAccount.auth.id },
+      relations: ['accounts'],
+    });
+
+    if (!!user.active_account) {
+      const activeAccount = await this.memberRepository.findOne({
+        relations: ['company'],
+        where: {
+          id: user.active_account,
+        },
+      });
+
+      const company = await this.companyRepository.findOne({
+        where: {
+          id: activeAccount.company.id,
+        },
+        relations: ['currency'],
+      });
+      const serializedCompany = serialize(company);
+
+      const [access_token, refresh_token] = await this.createTokens(user);
+      await this.updateRefreshToken(user.id, refresh_token);
+
+      return {
+        user: await this.userSerializer(user),
+        token: access_token,
+        refreshToken: refresh_token,
+        socialAccount: await this.socialAuthRepository.findOne({
+          where: { [`${type.toLowerCase()}Email`]: email },
+        }),
+        company: await deserialize(CompanyEntity, serializedCompany),
+        showSetPassword: !!user.email && !user.password,
+        currencies: await this.currencyRepository.find(),
+      };
+    }
+
+    const [access_token, refresh_token] = await this.createTokens(user);
+    await this.updateRefreshToken(user.id, refresh_token);
+
+    return {
+      user: await this.userSerializer(user),
+      token: access_token,
+      refreshToken: refresh_token,
+      socialAccount: await this.socialAuthRepository.findOne({
+        where: { [`${type.toLowerCase()}Email`]: email },
+      }),
+      company: null,
+      showSetPassword: !!user.email && !user.password,
+      currencies: await this.currencyRepository.find(),
+    };
+  }
+
+  private async createSecretString(personalKey: string) {
+    const secret = await this.configService.get('JWT_SECRET');
+    const secretRt = await this.configService.get('JWT_RT_SECRET');
+    return [`${secret}${personalKey}`, secretRt];
+  }
+
+  private async createUserBySocialSignin(data: SocialLoginDTO) {
+    if (!data.socialAccountId) {
+      throw new HttpException(
+        `${data.type} should contain id`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const { fullName, socialAccountId, type, email } = data;
     const socialAccount = await this.socialAuthRepository.findOne({
       where: { [`${type.toLowerCase()}Id`]: socialAccountId },
       relations: ['auth'],
@@ -318,7 +427,6 @@ export class AuthService {
 
     if (!socialAccount) {
       const publicKey = await bcrypt.genSalt(6);
-      const { email, fullName } = data;
       const newUser = await this.authRepository.save({
         fullName: fullName ? fullName.trim() : '',
         publicKey,
@@ -397,105 +505,6 @@ export class AuthService {
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),
     };
-  }
-
-  async signInWithCapium(data: SocialLoginDTO): Promise<ILogin> {
-    const { email, type } = data;
-
-    if (!data.email) {
-      throw new HttpException(
-        'Capium should contain email',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    const socialAccount = await this.socialAuthRepository.findOne({
-      where: { [`${type.toLowerCase()}Email`]: data.email },
-      relations: ['auth'],
-    });
-
-    if (!socialAccount) {
-      const publicKey = await bcrypt.genSalt(6);
-      const { email, fullName } = data;
-      const newUser = await this.authRepository.save({
-        fullName: fullName ? fullName.trim() : '',
-        publicKey,
-      });
-      await this.socialAuthRepository.save({
-        [`${type.toLowerCase()}Email`]: email,
-        auth: newUser,
-      });
-
-      const [access_token, refresh_token] = await this.createTokens(newUser);
-      await this.updateRefreshToken(newUser.id, refresh_token);
-
-      return {
-        user: await this.userSerializer(newUser),
-        socialAccount: await this.socialAuthRepository.findOne({
-          where: { [`${type.toLowerCase()}Email`]: email },
-        }),
-        company: null,
-        token: access_token,
-        refreshToken: refresh_token,
-        currencies: await this.currencyRepository.find(),
-      };
-    }
-
-    const user = await this.authRepository.findOne({
-      where: { id: socialAccount.auth.id },
-    });
-
-    if (!!user.active_account) {
-      const activeAccount = await this.memberRepository.findOne({
-        relations: ['company'],
-        where: {
-          id: user.active_account,
-        },
-      });
-
-      const company = await this.companyRepository.findOne({
-        where: {
-          id: activeAccount.company.id,
-        },
-        relations: ['currency'],
-      });
-      const serializedCompany = serialize(company);
-
-      const [access_token, refresh_token] = await this.createTokens(user);
-      await this.updateRefreshToken(user.id, refresh_token);
-
-      return {
-        user: await this.userSerializer(user),
-        token: access_token,
-        refreshToken: refresh_token,
-        socialAccount: await this.socialAuthRepository.findOne({
-          where: { [`${type.toLowerCase()}Email`]: email },
-        }),
-        company: await deserialize(CompanyEntity, serializedCompany),
-        showSetPassword: !!user.email && !user.password,
-        currencies: await this.currencyRepository.find(),
-      };
-    }
-
-    const [access_token, refresh_token] = await this.createTokens(user);
-    await this.updateRefreshToken(user.id, refresh_token);
-
-    return {
-      user: await this.userSerializer(user),
-      token: access_token,
-      refreshToken: refresh_token,
-      socialAccount: await this.socialAuthRepository.findOne({
-        where: { [`${type.toLowerCase()}Email`]: email },
-      }),
-      company: null,
-      showSetPassword: !!user.email && !user.password,
-      currencies: await this.currencyRepository.find(),
-    };
-  }
-
-  private async createSecretString(personalKey: string) {
-    const secret = await this.configService.get('JWT_SECRET');
-    const secretRt = await this.configService.get('JWT_RT_SECRET');
-    return [`${secret}${personalKey}`, secretRt];
   }
 
   async userSerializer(user: AuthEntity) {

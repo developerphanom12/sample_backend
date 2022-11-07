@@ -12,22 +12,15 @@ import {
   Query,
   Req,
   Res,
-  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import {
-  ApiConsumes,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { ReceiptService } from './receipt.service';
 import {
-  receiptPhotoStorage,
   RECEIPT_PHOTOS_LIMIT,
   RECEIPT_ROUTES,
   RECEIPT_SWAGGER,

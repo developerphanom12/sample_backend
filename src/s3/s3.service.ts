@@ -1,6 +1,8 @@
 import {
   AnalyzeDocumentCommand,
   AnalyzeExpenseCommand,
+  AnalyzeExpenseResponse,
+  ExpenseDocument,
   TextractClient,
 } from '@aws-sdk/client-textract';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';

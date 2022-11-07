@@ -61,7 +61,7 @@ export const RECEIPT_TOTAL_REGEX =
 export const RECEIPT_TAX_REGEX =
   /(tax|total tax|tax sum)([\s|:|.]\s?\p{Sc}?\d+\.\d+)/gu;
 export const RECEIPT_VAT_REGEX =
-  /(\p{Sc}?\d+\.\d+\s?)?(vat \d+%|vat amount|vat ttl|vat rate tax|vat rate|vat included|vat|tax|total tax|tax sum)(\s?[\s|:|.]\s?\p{Sc}?\d+\.\d+)?|((\d+\.\d+\s){2,3})?totals?\s((\d+\.\d+.?\s){2,3})?/gu;
+  /(\p{Sc}?\d+\.\d+\s?)?(vat \d+%|vat amount|vat ttl|vat rate tax|vat rate|vat included|vat|tax|total tax|tax sum)((\s?[\s|:|.]\s?\p{Sc}?\d+\.\d+%?){1,3})?(totals?\s((\d+\.\d+.?\s){2,3})?)?/gu;
 export const RECEIPT_NET_REGEX = /(net ttl|net)([\s|:|.]\s?\p{Sc}?\d+\.\d+)/gu;
 
 export const CURRENCY_SYMBOL_REGEX = /\p{Sc}/gu;

@@ -32,7 +32,6 @@ import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
 import { FRONT_END_URL } from '../constants/config';
 import { InviteMemberRequestRedirectDTO } from './dto/invite-member-request-redirect.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { RtGuard } from '../shared/guards/rt.guard';
 import { GetUserRefreshToken } from '../shared/decorators/get-user-refresh-token.decorator';
 
@@ -85,7 +84,6 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: AUTH_SWAGGER.success,
-    type: AuthEntity,
   })
   @HttpCode(HttpStatus.OK)
   public async socialSignIn(@Body() body: SocialLoginDTO) {
