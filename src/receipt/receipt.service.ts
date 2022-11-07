@@ -8,7 +8,6 @@ import {
   extractCurrency,
   extractDate,
   extractNet,
-  extractTax,
   extractTotal,
   extractVat,
 } from '../heplers/receipt.helper';
@@ -30,6 +29,8 @@ import { EmailsService } from 'src/emails/emails.service';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
+import { ExpenseField } from '@aws-sdk/client-textract';
+import { isBooleanString, IS_BOOLEAN_STRING } from 'class-validator';
 
 @Injectable()
 export class ReceiptService {
@@ -85,6 +86,37 @@ export class ReceiptService {
     return company;
   }
 
+  async textractImage(photoPath) {
+    const textractImage = await this.s3Service.textractFile(photoPath);
+    const imageName = photoPath.key.split('/')[2];
+    return { textractImage, imageName };
+  }
+
+  async getImageDataForCapium(
+    photo: string,
+    companyId: string,
+    userId: string,
+    isCapium: boolean,
+  ) {
+    const photoPath = await this.uploadPhotoToBucket(photo, companyId);
+    try {
+      const { imageName, textractImage } = await this.textractImage(photoPath);
+      const data = await this.extractData({
+        textData: textractImage,
+        photo: imageName,
+        isCapium,
+      });
+      await this.deleteImage(userId, imageName);
+
+      return data;
+    } catch (err) {
+      console.log('Error', err);
+      return {
+        status: EReceiptStatus.rejected,
+      };
+    }
+  }
+
   async getImageData(
     photo,
     customId: number,
@@ -93,9 +125,12 @@ export class ReceiptService {
   ) {
     const photoPath = await this.uploadPhotoToBucket(photo, companyId);
     try {
-      const textractImage = await this.s3Service.textractFile(photoPath);
-      const imageName = photoPath.key.split('/')[2];
-      const data = await this.extractData(textractImage, imageName, userRole);
+      const { imageName, textractImage } = await this.textractImage(photoPath);
+      const data = await this.extractData({
+        textData: textractImage,
+        photo: imageName,
+        userRole,
+      });
 
       return {
         ...data,
@@ -139,13 +174,18 @@ export class ReceiptService {
     }
   }
 
-  async extractData(
-    textData: string[],
-    photo: string,
-    userRole: ECompanyRoles,
-  ) {
+  async extractData({
+    textData,
+    isCapium,
+    photo,
+    userRole,
+  }: {
+    userRole?: ECompanyRoles;
+    isCapium?: boolean;
+    textData: string[];
+    photo: string;
+  }) {
     const text = textData.join(' ').toLocaleLowerCase();
-
     const receiptData = {
       supplier: extractSupplier(textData[0]),
       receipt_date: extractDate(text),
@@ -156,16 +196,15 @@ export class ReceiptService {
       currency: extractCurrency(text),
     };
 
-    if (receiptData.total && receiptData.tax && !receiptData.net) {
-      receiptData.net = receiptData.total - receiptData.tax;
-    }
-
     if (
       receiptData.total &&
       receiptData.tax &&
       (!receiptData.net || receiptData.net === receiptData.total)
     ) {
-      receiptData.net = Math.abs(receiptData.total - receiptData.tax);
+      const totalNet = Math.abs(receiptData.total - receiptData.tax);
+      totalNet > receiptData.total
+        ? (receiptData.net = null)
+        : (receiptData.net = totalNet);
     }
 
     if (
@@ -176,20 +215,31 @@ export class ReceiptService {
         receiptData.net
       )
     ) {
-      return {
-        ...receiptData,
-        status: EReceiptStatus.rejected,
-        photos: [photo],
-      };
+      return isCapium
+        ? {
+            ...receiptData,
+            status: EReceiptStatus.rejected,
+          }
+        : {
+            ...receiptData,
+            status: EReceiptStatus.rejected,
+            photos: [photo],
+          };
     }
-    return {
-      ...receiptData,
-      status:
-        userRole === ECompanyRoles.user
-          ? EReceiptStatus.processing
-          : EReceiptStatus.review,
-      photos: [photo],
-    };
+
+    return isCapium
+      ? {
+          ...receiptData,
+          status: EReceiptStatus.review,
+        }
+      : {
+          ...receiptData,
+          status:
+            userRole === ECompanyRoles.user
+              ? EReceiptStatus.processing
+              : EReceiptStatus.review,
+          photos: [photo],
+        };
   }
 
   async createReceipt(id: string, body: CreateReceiptDTO, photos) {
@@ -206,6 +256,16 @@ export class ReceiptService {
     const currency = await this.currencyRepository.findOne({
       where: { id: company.currency.id },
     });
+
+    const isCapium = isBooleanString(body.isCapium);
+
+    if (isCapium) {
+      const promises = photos.map((photo) => {
+        return this.getImageDataForCapium(photo, company.id, id, isCapium);
+      });
+      const textractData = await Promise.all(promises);
+      return textractData;
+    }
 
     const receipts = await this.receiptRepository.find({
       where: { company: { id: company.id } },

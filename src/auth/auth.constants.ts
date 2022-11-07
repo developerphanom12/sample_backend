@@ -25,6 +25,7 @@ export const AUTH_ROUTES = {
 export enum EOAuthTypes {
   apple = 'apple',
   capium = 'capium',
+  google = 'google',
 }
 
 export const EMAIL_VALIDATION =

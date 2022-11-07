@@ -41,6 +41,18 @@ export class SocialAuthEntity {
   @Column({
     nullable: true,
   })
+  googleId: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({
+    nullable: true,
+  })
+  googleEmail: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({
+    nullable: true,
+  })
   capiumId: string;
 
   @ApiProperty({ nullable: true })
