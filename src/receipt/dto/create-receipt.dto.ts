@@ -11,9 +11,4 @@ export class CreateReceiptDTO {
   @IsOptional()
   @IsString()
   currency?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  isCapium?: string;
 }
