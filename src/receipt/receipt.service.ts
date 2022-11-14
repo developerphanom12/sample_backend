@@ -244,6 +244,7 @@ export class ReceiptService {
 
     const newReceipts = await this.receiptRepository.find({
       where: { company: { id: company.id } },
+      relations: ['currency', 'company'],
       take: photos.length,
       skip: 0,
       order: { created: 'DESC' },
