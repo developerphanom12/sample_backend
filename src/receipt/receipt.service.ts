@@ -238,13 +238,17 @@ export class ReceiptService {
 
     const textractData = await Promise.all(promises);
 
-    const generateReceipt = textractData.map((receiptData) =>
-      this.saveReceipt(receiptData, body.description, company, currency),
-    );
+    for await (const data of textractData) {
+      await this.saveReceipt(data, body.description, company, currency);
+    }
 
-    const createdReceipts = await Promise.all(generateReceipt);
-
-    return await createdReceipts;
+    const newReceipts = await this.receiptRepository.find({
+      where: { company: { id: company.id } },
+      take: photos.length,
+      skip: 0,
+      order: { created: 'DESC' },
+    });
+    return newReceipts;
   }
 
   async uploadPhotoToBucket(file, companyId: string) {
@@ -341,6 +345,12 @@ export class ReceiptService {
         take: body.take ?? 10,
         skip: body.skip ?? 0,
       });
+
+      const descSortedResultById = result.sort(
+        (a: ReceiptEntity, b: ReceiptEntity) =>
+          +b.custom_id.match(/\d+/g)[0] - +a.custom_id.match(/\d+/g)[0],
+      );
+
       return {
         data: result,
         count: total,
