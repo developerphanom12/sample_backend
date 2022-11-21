@@ -220,6 +220,7 @@ export class ReceiptService {
 
     const receipts = await this.receiptRepository.find({
       where: { company: { id: company.id } },
+      order: { created: 'ASC' },
     });
 
     const promises = photos.map((photo, i) => {
@@ -346,11 +347,6 @@ export class ReceiptService {
         take: body.take ?? 10,
         skip: body.skip ?? 0,
       });
-
-      const descSortedResultById = result.sort(
-        (a: ReceiptEntity, b: ReceiptEntity) =>
-          +b.custom_id.match(/\d+/g)[0] - +a.custom_id.match(/\d+/g)[0],
-      );
 
       return {
         data: result,
