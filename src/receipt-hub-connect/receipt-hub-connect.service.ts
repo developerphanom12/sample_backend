@@ -35,10 +35,10 @@ export class ReceiptHubConnectService {
     const photoPath = await this.uploadPhotoToBucket(photo);
     try {
       const { imageName, textractImage } = await this.textractImage(photoPath);
-      const data = await this.extractData(textractImage);
+      // const data = await this.extractData(textractImage);
       await this.deleteImage(imageName);
 
-      return data;
+      // return data;
     } catch (err) {
       console.log('Error', err);
       return {
