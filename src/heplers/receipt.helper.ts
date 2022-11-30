@@ -1,4 +1,6 @@
+import { FindOptionsOrderValue } from 'typeorm';
 import { CurrencySeed } from '../constants/seed';
+import { ReceiptEntity } from '../receipt/entities/receipt.entity';
 import {
   CURRENCY_SYMBOL_REGEX,
   RECEIPT_DATE_REGEX,
@@ -8,6 +10,7 @@ import {
   RECEIPT_TOTAL_WORDS_REGEX,
   RECEIPT_VAT_REGEX,
 } from '../receipt/receipt.constants';
+import { TSortField, TSortOrder } from '../receipt/types/receipt.types';
 
 export const extractDate = (text: string) => {
   try {
@@ -176,4 +179,21 @@ export const extractSupplier = (text: string) => {
     console.log(err);
     return null;
   }
+};
+
+export const getSortObject = (key: TSortField, value: TSortOrder) => {
+  const obj = {
+    ...Object.fromEntries(
+      [key]?.map((key) => {
+        if (key === 'supplier_account' || key === 'category') {
+          return [key, { name: value }];
+        }
+        if (key === 'currency') {
+          return [key, { value }];
+        }
+        return [key, value];
+      }),
+    ),
+  };
+  return obj;
 };

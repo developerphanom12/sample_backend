@@ -10,7 +10,6 @@ import { AuthEntity } from '../auth/entities/auth.entity';
 import { EXPIRE_CAPIUM_JWT_TIME } from '../constants/jwt';
 import { IRHconnect } from './receipt-hub-connect.types';
 import { S3Service } from '../s3/s3.service';
-import { DownloadService } from '../download/download.service';
 import {
   extractCurrency,
   extractDate,
@@ -28,17 +27,17 @@ export class ReceiptHubConnectService {
     private authRepository: Repository<AuthEntity>,
     private configService: ConfigService,
     private jwtService: JwtService,
-    private s3Service: S3Service, // private downloadService: DownloadService,
+    private s3Service: S3Service,
   ) {}
 
   async getImageDataForCapium(photo: string) {
     const photoPath = await this.uploadPhotoToBucket(photo);
     try {
       const { imageName, textractImage } = await this.textractImage(photoPath);
-      // const data = await this.extractData(textractImage);
+      const data = await this.extractData(textractImage);
       await this.deleteImage(imageName);
 
-      // return data;
+      return data;
     } catch (err) {
       console.log('Error', err);
       return {

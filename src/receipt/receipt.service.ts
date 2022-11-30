@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Like, Repository, LessThan, In, Not, IsNull } from 'typeorm';
+import { Between, Like, Repository, LessThan, In } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
   extractSupplier,
@@ -10,6 +10,7 @@ import {
   extractNet,
   extractTotal,
   extractVat,
+  getSortObject,
 } from '../heplers/receipt.helper';
 import { EReceiptStatus, IFilters } from './receipt.constants';
 import { AuthEntity } from '../auth/entities/auth.entity';
@@ -29,6 +30,7 @@ import { EmailsService } from 'src/emails/emails.service';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
+import { TSortOrder } from './types/receipt.types';
 
 @Injectable()
 export class ReceiptService {
@@ -317,6 +319,13 @@ export class ReceiptService {
         );
         filters.supplier_account = suppAcc ? { id: suppAcc } : null;
       }
+
+      const isSortValues = body?.sortField && body?.sortOrder;
+
+      const sortOrderObj = isSortValues
+        ? getSortObject(body?.sortField, body?.sortOrder)
+        : { created: 'DESC' as TSortOrder };
+
       const [result, total] = await this.receiptRepository.findAndCount({
         relations: ['currency', 'supplier_account', 'category', 'payment_type'],
         where: [
@@ -343,7 +352,8 @@ export class ReceiptService {
               : null,
           },
         ],
-        order: { created: 'DESC' },
+        // order: { created: 'DESC' },
+        order: sortOrderObj,
         take: body.take ?? 10,
         skip: body.skip ?? 0,
       });
