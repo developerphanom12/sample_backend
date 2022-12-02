@@ -324,7 +324,7 @@ export class ReceiptService {
 
       const sortOrderObj = isSortValues
         ? getSortObject(body?.sortField, body?.sortOrder)
-        : { created: 'DESC' as TSortOrder };
+        : { created: 'DESC' };
 
       const [result, total] = await this.receiptRepository.findAndCount({
         relations: ['currency', 'supplier_account', 'category', 'payment_type'],
@@ -352,7 +352,6 @@ export class ReceiptService {
               : null,
           },
         ],
-        // order: { created: 'DESC' },
         order: sortOrderObj,
         take: body.take ?? 10,
         skip: body.skip ?? 0,
