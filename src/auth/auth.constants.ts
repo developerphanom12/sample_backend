@@ -17,6 +17,8 @@ export const AUTH_ROUTES = {
   refresh_tokens: 'refresh-tokens',
   reset_password_request: 'reset-password-request',
   redirect_password: 'redirect-password/:token',
+  redirect_bind_social_account: 'redirect_bind-social-account/:token',
+  bind_social_account: 'bind-social-account',
   redirect_member: 'redirect-member/:token',
   update_password: 'update-password',
   reset_password: 'reset-password',

@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Patch,
   Query,
   Res,
   UseGuards,
@@ -34,6 +35,7 @@ import { FRONT_END_URL } from '../constants/config';
 import { InviteMemberRequestRedirectDTO } from './dto/invite-member-request-redirect.dto';
 import { RtGuard } from '../shared/guards/rt.guard';
 import { GetUserRefreshToken } from '../shared/decorators/get-user-refresh-token.decorator';
+import { BindSocialAccountDTO } from './dto/bind-social-account.dto';
 
 @ApiBearerAuth()
 @ApiTags(AUTH_ROUTES.main)
@@ -116,6 +118,7 @@ export class AuthController {
   ) {
     return await this.authService.refreshTokens(id, refreshToken);
   }
+
   @Get(AUTH_ROUTES.reset_password_request)
   @HttpCode(HttpStatus.OK)
   public async resetPasswordRequest(@Query() body: PasswordRequestDTO) {
@@ -134,6 +137,26 @@ export class AuthController {
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
     }
+  }
+
+  @Get(AUTH_ROUTES.redirect_bind_social_account)
+  @HttpCode(HttpStatus.OK)
+  public async redirectBindSocialAccount(
+    @Param() params: PasswordRequestRedirectDTO,
+    @Res() res: Response,
+  ) {
+    try {
+      const link = `${FRONT_END_URL.development}bind-social-account/${params.token}`;
+      return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
+    }
+  }
+
+  @Patch(AUTH_ROUTES.bind_social_account)
+  @HttpCode(HttpStatus.OK)
+  public async bindSocialAccount(@Body() body: BindSocialAccountDTO) {
+    return await this.authService.bindSocialAccount(body);
   }
 
   @Put(AUTH_ROUTES.update_password)

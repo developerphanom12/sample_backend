@@ -24,7 +24,7 @@ export const config = () => ({
 });
 
 export const FRONT_END_URL = {
-  local: 'http://localhost:3000/',
+  local: 'http://localhost:3001/',
   development: 'http://35.176.1.24/',
   staging: 'http://18.133.68.78/',
 };

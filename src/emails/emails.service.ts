@@ -7,6 +7,7 @@ import { createReceiptFileEmail } from 'src/shared/emails/receipt-file-email';
 import { inviteCompanyOwnerMailSes } from '../shared/emails/invite-company-owner-email';
 import { inviteExistMemberMailSes } from '../shared/emails/invite-exist-member-email';
 import { inviteNewMemberMailSes } from '../shared/emails/invite-new-member-email';
+import { bindSocialAccMailSes } from '../shared/emails/bind-social-account-email';
 import {
   IInviteCompanyOwner,
   IInviteMember,
@@ -85,6 +86,11 @@ export class EmailsService {
     return {
       message: 'Email sent',
     };
+  }
+
+  public async sendLinkSocialAccToUser(body: IResetPasswordMessage) {
+    const payload = bindSocialAccMailSes(body);
+    await this.sendEmail(payload);
   }
 
   public async sendInvitationCreateCompany(body: IInviteCompanyOwner) {
