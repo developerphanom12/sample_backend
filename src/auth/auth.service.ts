@@ -451,7 +451,11 @@ export class AuthService {
           });
         }
 
-        return await this.returnUserData(socialAccountByEmail.auth.id, type);
+        return await this.returnUserData(
+          socialAccountByEmail.auth.id,
+          socialAccountId,
+          type,
+        );
       }
 
       const publicKey = await bcrypt.genSalt(6);
@@ -481,7 +485,11 @@ export class AuthService {
       };
     }
 
-    return await this.returnUserData(socialAccount.auth.id, type);
+    return await this.returnUserData(
+      socialAccount.auth.id,
+      socialAccountId,
+      type,
+    );
   }
 
   async userSerializer(user: AuthEntity) {
@@ -718,9 +726,13 @@ export class AuthService {
     });
   }
 
-  private async returnUserData(socialAccountId: string, socialType: string) {
+  private async returnUserData(
+    userId: string,
+    socialAccountId: string,
+    socialType: string,
+  ) {
     const user = await this.authRepository.findOne({
-      where: { id: socialAccountId },
+      where: { id: userId },
       relations: ['accounts'],
     });
 
