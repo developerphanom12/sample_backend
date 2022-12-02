@@ -250,7 +250,7 @@ export class AuthService {
       await this.updateRefreshToken(user.id, refresh_token);
 
       const serializedSocialAuth =
-        user.socialAuth && serialize(user.socialAuth);
+        user.socialAuth && (await serialize(user.socialAuth));
 
       return {
         user: await this.userSerializer(user),
@@ -276,7 +276,7 @@ export class AuthService {
       },
       relations: ['currency'],
     });
-    const serializedCompany = serialize(company);
+    const serializedCompany = await serialize(company);
 
     if (!user.socialAuth) {
       const [access_token, refresh_token] = await this.createTokens(user);
@@ -335,10 +335,6 @@ export class AuthService {
     if (!socialAccount) {
       const publicKey = await bcrypt.genSalt(6);
       const { email, fullName } = data;
-      // const newUser = await this.authRepository.save({
-      //   fullName: fullName ? fullName.trim() : '',
-      //   publicKey,
-      // });
       const newUser = await this.authRepository.save({
         fullName: fullName ? fullName.trim() : '',
         email: email,
@@ -571,8 +567,6 @@ export class AuthService {
       token,
     });
 
-    //тут токен не подходит
-    // need jwt token
     if (!user.password) {
       const jwtToken = this.jwtService.sign(
         { email, resetPasswordModelToken: token },
