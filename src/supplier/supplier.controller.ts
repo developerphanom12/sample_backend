@@ -70,8 +70,13 @@ export class SupplierController {
   public async getSupplier(
     @User('id') id: string,
     @Param('supplierId') supplierId: string,
+    @Query('active_account') active_account: string,
   ) {
-    return await this.SupplierService.getSupplierDetails(id, supplierId);
+    return await this.SupplierService.getSupplierDetails(
+      id,
+      supplierId,
+      active_account,
+    );
   }
 
   @Get(SUPPLIER_ROUTES.get_all)
@@ -83,8 +88,11 @@ export class SupplierController {
     type: SupplierEntity,
   })
   @HttpCode(HttpStatus.OK)
-  public async getAllSuppliers(@User('id') id: string) {
-    return await this.SupplierService.getAllSuppliers(id);
+  public async getAllSuppliers(
+    @User('id') id: string,
+    @Query('active_account') active_account: string,
+  ) {
+    return await this.SupplierService.getAllSuppliers(id, active_account);
   }
 
   @Get(SUPPLIER_ROUTES.get_many)
@@ -113,8 +121,13 @@ export class SupplierController {
   @HttpCode(HttpStatus.OK)
   public async deleteReceipt(
     @User('id') id: string,
-    @Param('supplierId') supplierId,
+    @Param('supplierId') supplierId: string,
+    @Query('active_account') active_account: string,
   ) {
-    return await this.SupplierService.deleteSupplier(id, supplierId);
+    return await this.SupplierService.deleteSupplier(
+      id,
+      supplierId,
+      active_account,
+    );
   }
 }

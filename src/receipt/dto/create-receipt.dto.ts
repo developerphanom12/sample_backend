@@ -11,4 +11,9 @@ export class CreateReceiptDTO {
   @IsOptional()
   @IsString()
   currency?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  active_account?: string;
 }

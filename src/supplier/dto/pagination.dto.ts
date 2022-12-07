@@ -3,20 +3,25 @@ import { Transform } from 'class-transformer';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class PaginationDTO {
-  @ApiProperty({ required: false})
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   @Transform(({ value }) => Number.parseInt(value))
   take?: number;
 
-  @ApiProperty({ required: false})
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   @Transform(({ value }) => Number.parseInt(value))
   skip?: number;
 
-  @ApiProperty({ required: false})
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  active_account?: string;
 }

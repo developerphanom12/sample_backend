@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthEntity } from '../auth/entities/auth.entity';
 import { ECompanyRoles } from '../company-member/company-member.constants';
@@ -31,8 +30,31 @@ export class DashboardService {
     private currencyRepository: Repository<CurrencyEntity>,
     @InjectRepository(MemberEntity)
     private memberRepository: Repository<MemberEntity>,
-    private configService: ConfigService,
   ) {}
+
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
+  }
 
   private async extractCompanyFromUser(id: string): Promise<CompanyEntity> {
     const user = await this.authRepository.findOne({
@@ -88,8 +110,13 @@ export class DashboardService {
     };
   }
 
-  async getReceiptsMetric(id: string): Promise<IReceiptMetric | null> {
-    const company = await this.extractCompanyFromUser(id);
+  async getReceiptsMetric(
+    id: string,
+    active_account?: string,
+  ): Promise<IReceiptMetric | null> {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
     const [receipts, total] = await this.receiptRepository.findAndCount({
       where: { company: { id: company.id } },
       order: { created: 'DESC' },
@@ -143,7 +170,10 @@ export class DashboardService {
         ? Between(sort_date_start, sort_date_end)
         : MoreThan(sort_date_start);
 
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const [receipts, total] = await this.receiptRepository.findAndCount({
       relations: ['currency', 'supplier_account'],
       where: { company: { id: company.id }, created: sort_date },

@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
@@ -8,6 +7,7 @@ import { CompanyEntity } from 'src/company/entities/company.entity';
 import { Like, Repository } from 'typeorm';
 import { CreateSupplierDTO } from './dto/create-supplier.dto';
 import { PaginationDTO } from './dto/pagination.dto';
+import { UpdateSupplierDTO } from './dto/update-supplier.dto';
 import { SupplierEntity } from './entities/supplier.entity';
 
 @Injectable()
@@ -21,8 +21,32 @@ export class SupplierService {
     private memberRepository: Repository<MemberEntity>,
     @InjectRepository(SupplierEntity)
     private supplierRepository: Repository<SupplierEntity>,
-    private configService: ConfigService,
   ) {}
+
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
+  }
+
   private async extractCompanyFromUser(id: string) {
     const user = await this.authRepository.findOne({
       where: { id: id },
@@ -81,7 +105,10 @@ export class SupplierService {
   }
 
   async createSupplier(id: string, body: CreateSupplierDTO) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const creator = await this.extractCreator(id);
 
     const supplier = await this.supplierRepository.save({
@@ -95,8 +122,11 @@ export class SupplierService {
     });
   }
 
-  async updateSupplier(id, body) {
-    const company = await this.extractCompanyFromUser(id);
+  async updateSupplier(id: string, body: UpdateSupplierDTO) {
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const supplierId = body.id;
     if (!supplierId) {
       throw new HttpException(
@@ -114,7 +144,7 @@ export class SupplierService {
       throw new HttpException('SUPPLIER NOT FOUND', HttpStatus.NOT_FOUND);
     }
     await this.supplierRepository.update(supplier.id, {
-      ...body,
+      name: body.name,
     });
 
     return await this.supplierRepository.findOne({
@@ -125,8 +155,10 @@ export class SupplierService {
     });
   }
 
-  async getAllSuppliers(id: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async getAllSuppliers(id: string, active_account: string) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
 
     return await this.supplierRepository.find({
       where: {
@@ -137,7 +169,10 @@ export class SupplierService {
   }
 
   async getSuppliers(id: string, body: PaginationDTO) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const [result, total] = await this.supplierRepository.findAndCount({
       relations: ['creator'],
       where: {
@@ -154,16 +189,29 @@ export class SupplierService {
     };
   }
 
-  async getSupplierDetails(id: string, supplierId: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async getSupplierDetails(
+    id: string,
+    supplierId: string,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
+
     return await this.supplierRepository.findOne({
       where: { id: supplierId, company: { id: company.id } },
       relations: ['receipts', 'company', 'creator'],
     });
   }
 
-  async deleteSupplier(id: string, supplierId: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async deleteSupplier(
+    id: string,
+    supplierId: string,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
 
     if (!company.suppliersAccounts) {
       throw new HttpException(

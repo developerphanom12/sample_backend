@@ -17,4 +17,9 @@ export class CreateCompanyDTO {
   @ApiProperty()
   @IsNotEmpty()
   date_format: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsOptional()
+  active_account: string;
 }

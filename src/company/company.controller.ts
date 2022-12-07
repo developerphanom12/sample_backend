@@ -86,8 +86,16 @@ export class CompanyController {
     description: COMPANY_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async changeCompanyLogo(@User('id') id: string, @UploadedFile() file) {
-    return await this.companyService.changeCompanyLogo(id, file);
+  public async changeCompanyLogo(
+    @User('id') id: string,
+    @UploadedFile() file,
+    @Body() body: { active_account?: string },
+  ) {
+    return await this.companyService.changeCompanyLogo(
+      id,
+      file,
+      body?.active_account,
+    );
   }
 
   @Put(COMPANY_ROUTES.update)
@@ -170,7 +178,7 @@ export class CompanyController {
     type: MemberEntity,
   })
   @HttpCode(HttpStatus.OK)
-  public async getCategories(
+  public async getCompanyMembers(
     @User('id') id: string,
     @Query() body: PaginationDTO,
   ) {

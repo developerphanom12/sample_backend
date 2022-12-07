@@ -11,4 +11,9 @@ export class DashboardStatisticDTO {
   @IsOptional()
   @IsString()
   date_end?: Date;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  active_account?: string;
 }

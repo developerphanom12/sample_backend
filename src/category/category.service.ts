@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
@@ -8,6 +7,7 @@ import { CompanyEntity } from 'src/company/entities/company.entity';
 import { Like, Repository } from 'typeorm';
 import { CreateCategoryDTO } from './dto/create-category.dto';
 import { PaginationDTO } from './dto/pagination.dto';
+import { UpdateCategoryDTO } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
 
 @Injectable()
@@ -21,8 +21,31 @@ export class CategoryService {
     private memberRepository: Repository<MemberEntity>,
     @InjectRepository(CategoryEntity)
     private categoryRepository: Repository<CategoryEntity>,
-    private configService: ConfigService,
   ) {}
+
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
+  }
 
   private async extractCompanyFromUser(id: string) {
     const user = await this.authRepository.findOne({
@@ -82,7 +105,10 @@ export class CategoryService {
   }
 
   async createCategory(id: string, body: CreateCategoryDTO) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const creator = await this.extractCreator(id);
 
     const category = await this.categoryRepository.save({
@@ -96,8 +122,11 @@ export class CategoryService {
     });
   }
 
-  async updateCategory(id, body) {
-    const company = await this.extractCompanyFromUser(id);
+  async updateCategory(id: string, body: UpdateCategoryDTO) {
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const categoryId = body.id;
     if (!categoryId) {
       throw new HttpException(
@@ -111,11 +140,12 @@ export class CategoryService {
         company: { id: company.id },
       },
     });
+
     if (!category) {
       throw new HttpException('CATEGORY NOT FOUND', HttpStatus.NOT_FOUND);
     }
     await this.categoryRepository.update(category.id, {
-      ...body,
+      name: body.name,
     });
 
     return await this.categoryRepository.findOne({
@@ -126,8 +156,10 @@ export class CategoryService {
     });
   }
 
-  async getAllCategories(id: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async getAllCategories(id: string, active_account?: string) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
 
     return await this.categoryRepository.find({
       where: { company: { id: company.id } },
@@ -136,7 +168,10 @@ export class CategoryService {
   }
 
   async getCategories(id: string, body: PaginationDTO) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const [result, total] = await this.categoryRepository.findAndCount({
       relations: ['creator'],
       where: {
@@ -153,16 +188,28 @@ export class CategoryService {
     };
   }
 
-  async getCategoryDetails(id: string, categoryId: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async getCategoryDetails(
+    id: string,
+    categoryId: string,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
     return await this.categoryRepository.findOne({
       where: { id: categoryId, company: { id: company.id } },
       relations: ['receipts', 'company', 'creator'],
     });
   }
 
-  async deleteCategory(id: string, categoryId: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async deleteCategory(
+    id: string,
+    categoryId: string,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
 
     if (!company.categories) {
       throw new HttpException(

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ECompanyRoles } from '../company-member.constants';
 
 export class UpdateCompanyAccountDTO {
@@ -18,4 +18,9 @@ export class UpdateCompanyAccountDTO {
   @ApiProperty()
   @IsNotEmpty()
   role: ECompanyRoles;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  active_account: string;
 }

@@ -26,4 +26,9 @@ export class UpdateProfileDTO {
   @IsOptional()
   @IsString()
   date_format: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  active_account: string;
 }

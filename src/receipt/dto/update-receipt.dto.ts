@@ -68,4 +68,9 @@ export class UpdateReceiptDTO {
   @ApiProperty({ required: false, nullable: true })
   @IsOptional()
   payment_status?: boolean;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  active_account?: string;
 }

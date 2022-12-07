@@ -57,6 +57,30 @@ export class ReceiptService {
     private emailsService: EmailsService,
   ) {}
 
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
+  }
+
   private async extractCompanyFromUser(id: string) {
     const user = await this.authRepository.findOne({
       where: { id: id },
@@ -206,13 +230,17 @@ export class ReceiptService {
   }
 
   async createReceipt(id: string, body: CreateReceiptDTO, photos) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const activeAccount = await this.memberRepository.findOne({
       where: {
-        id: (
-          await this.authRepository.findOne({ where: { id: id } })
-        ).active_account,
+        id:
+          body.active_account ||
+          (
+            await this.authRepository.findOne({ where: { id: id } })
+          ).active_account,
       },
     });
 
@@ -291,7 +319,9 @@ export class ReceiptService {
   }
 
   async getReceipts(id: string, body: PaginationDTO) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const today = new Date(new Date().setHours(0, 0, 0, 0));
     const nextDay = new Date(
@@ -433,7 +463,10 @@ export class ReceiptService {
 
   async updateReceipt(id: string, body: UpdateReceiptDTO) {
     const receiptId = body.id;
-    const company = await this.extractCompanyFromUser(id);
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     if (!company.receipts) {
       throw new HttpException('NO RECEIPTS IN COMPANY', HttpStatus.BAD_REQUEST);
@@ -441,9 +474,11 @@ export class ReceiptService {
 
     const activeAccount = await this.memberRepository.findOne({
       where: {
-        id: (
-          await this.authRepository.findOne({ where: { id: id } })
-        ).active_account,
+        id:
+          body.active_account ||
+          (
+            await this.authRepository.findOne({ where: { id: id } })
+          ).active_account,
       },
     });
 
@@ -473,6 +508,7 @@ export class ReceiptService {
         ...body,
         id: undefined,
         currency: undefined,
+        active_account: undefined,
       }),
     );
 
@@ -504,7 +540,10 @@ export class ReceiptService {
     if (!receiptsId) {
       throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
     }
-    const company = await this.extractCompanyFromUser(id);
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier_account', 'category', 'payment_type'],
@@ -529,8 +568,16 @@ export class ReceiptService {
     }
   }
 
-  async getReceiptImage(id: string, image_name: string, res) {
-    const company = await this.extractCompanyFromUser(id);
+  async getReceiptImage(
+    id: string,
+    image_name: string,
+    res,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
+
     try {
       const readStream = await this.s3Service.getFilesStream(
         `${company.id}/receipts/${image_name}`,
@@ -542,8 +589,10 @@ export class ReceiptService {
     }
   }
 
-  async deleteImage(id: string, image_name: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async deleteImage(id: string, image_name: string, active_account?: string) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
     try {
       await this.s3Service.deleteFile(`${company.id}/receipts/${image_name}`);
       return 'Image Delete Success';
@@ -559,7 +608,10 @@ export class ReceiptService {
     if (!receiptsId) {
       throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
     }
-    const company = await this.extractCompanyFromUser(id);
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier_account', 'category', 'payment_type'],
@@ -593,7 +645,9 @@ export class ReceiptService {
       throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
     }
 
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier_account', 'category', 'payment_type'],
@@ -646,7 +700,9 @@ export class ReceiptService {
       throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
     }
 
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier_account', 'category', 'payment_type'],
@@ -699,7 +755,9 @@ export class ReceiptService {
       throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
     }
 
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
       relations: ['currency', 'supplier_account', 'category', 'payment_type'],

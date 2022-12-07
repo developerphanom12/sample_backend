@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AuthEntity } from './entities/auth.entity';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -428,12 +428,12 @@ export class AuthService {
 
     const { fullName, socialAccountId, type, email } = data;
 
-    const socialAccount = await this.socialAuthRepository.findOne({
-      where: { [`${type.toLowerCase()}Id`]: socialAccountId },
-      relations: ['auth'],
+    const userByEmail = await this.authRepository.findOne({
+      where: { email: email },
+      relations: ['socialAuth'],
     });
 
-    if (!socialAccount) {
+    if (!userByEmail) {
       const socialAccountByEmail = await this.socialAuthRepository.findOne({
         where: [
           { appleEmail: email },
@@ -443,46 +443,71 @@ export class AuthService {
         relations: ['auth'],
       });
 
-      if (socialAccountByEmail) {
-        if (!socialAccountByEmail[`${type.toLowerCase()}Id`]) {
-          await this.socialAuthRepository.update(socialAccountByEmail.id, {
-            [`${type.toLowerCase()}Id`]: socialAccountId,
-            [`${type.toLowerCase()}Email`]: email,
-          });
-        }
+      if (!socialAccountByEmail) {
+        const publicKey = await bcrypt.genSalt(6);
+        const newUser = await this.authRepository.save({
+          fullName: fullName ? fullName.trim() : '',
+          email: email.toLowerCase(),
+          publicKey,
+        });
 
-        return await this.returnUserData(
-          socialAccountByEmail.auth.id,
-          socialAccountId,
-          type,
-        );
+        await this.socialAuthRepository.save({
+          [`${type.toLowerCase()}Id`]: socialAccountId,
+          [`${type.toLowerCase()}Email`]: email,
+          auth: newUser,
+        });
+
+        const [access_token, refresh_token] = await this.createTokens(newUser);
+        await this.updateRefreshToken(newUser.id, refresh_token);
+
+        return {
+          user: await this.userSerializer(newUser),
+          socialAccount: await this.socialAuthRepository.findOne({
+            where: { [`${type.toLowerCase()}Id`]: socialAccountId },
+          }),
+          company: null,
+          token: access_token,
+          refreshToken: refresh_token,
+          currencies: await this.currencyRepository.find(),
+        };
       }
 
-      const publicKey = await bcrypt.genSalt(6);
-      const newUser = await this.authRepository.save({
-        fullName: fullName ? fullName.trim() : '',
-        email: email.toLowerCase(),
-        publicKey,
-      });
+      if (!socialAccountByEmail[`${type.toLowerCase()}Id`]) {
+        await this.socialAuthRepository.update(socialAccountByEmail.id, {
+          [`${type.toLowerCase()}Id`]: socialAccountId,
+          [`${type.toLowerCase()}Email`]: email,
+        });
+      }
+
+      return await this.returnUserData(
+        socialAccountByEmail.auth.id,
+        socialAccountId,
+        type,
+      );
+    }
+
+    const socialAccount = await this.socialAuthRepository.findOne({
+      where: {
+        auth: { id: userByEmail.id },
+      },
+      relations: ['auth'],
+    });
+
+    if (!socialAccount) {
       await this.socialAuthRepository.save({
         [`${type.toLowerCase()}Id`]: socialAccountId,
         [`${type.toLowerCase()}Email`]: email,
-        auth: newUser,
+        auth: userByEmail,
       });
 
-      const [access_token, refresh_token] = await this.createTokens(newUser);
-      await this.updateRefreshToken(newUser.id, refresh_token);
+      return await this.returnUserData(userByEmail.id, socialAccountId, type);
+    }
 
-      return {
-        user: await this.userSerializer(newUser),
-        socialAccount: await this.socialAuthRepository.findOne({
-          where: { [`${type.toLowerCase()}Id`]: socialAccountId },
-        }),
-        company: null,
-        token: access_token,
-        refreshToken: refresh_token,
-        currencies: await this.currencyRepository.find(),
-      };
+    if (!socialAccount[`${type.toLowerCase()}Id`]) {
+      await this.socialAuthRepository.update(socialAccount.id, {
+        [`${type.toLowerCase()}Id`]: socialAccountId,
+        [`${type.toLowerCase()}Email`]: email,
+      });
     }
 
     return await this.returnUserData(

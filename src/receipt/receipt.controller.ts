@@ -150,9 +150,15 @@ export class ReceiptController {
   public async findReceiptImage(
     @User('id') id: string,
     @Param('imagename') imagename: string,
+    @Query('active_account') active_account: string,
     @Res() res,
   ) {
-    return await this.ReceiptService.getReceiptImage(id, imagename, res);
+    return await this.ReceiptService.getReceiptImage(
+      id,
+      imagename,
+      res,
+      active_account,
+    );
   }
 
   @Delete(RECEIPT_ROUTES.delete_image)
@@ -166,8 +172,9 @@ export class ReceiptController {
   public async deleteReceiptImage(
     @User('id') id: string,
     @Param('imagename') imagename: string,
+    @Query('active_account') active_account: string,
   ) {
-    return await this.ReceiptService.deleteImage(id, imagename);
+    return await this.ReceiptService.deleteImage(id, imagename, active_account);
   }
 
   @Delete(RECEIPT_ROUTES.delete)
