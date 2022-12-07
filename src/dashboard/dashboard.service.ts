@@ -191,7 +191,7 @@ export class DashboardService {
     body?: DashboardStatisticDTO,
   ): Promise<IDashboardStatistic> {
     return {
-      metric: await this.getReceiptsMetric(id),
+      metric: await this.getReceiptsMetric(id, body.active_account),
       companies: await this.getUserCompanies(id),
       receipts: await this.getRecentReceipts(id, body),
     };
