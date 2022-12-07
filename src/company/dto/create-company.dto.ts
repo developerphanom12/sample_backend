@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateCompanyDTO {
   @ApiProperty({ required: false })
@@ -18,8 +18,8 @@ export class CreateCompanyDTO {
   @IsNotEmpty()
   date_format: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ required: false })
+  @IsString()
   @IsOptional()
   active_account: string;
 }
