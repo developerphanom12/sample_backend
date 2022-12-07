@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Redirect,
   Res,
   UseGuards,
@@ -166,8 +167,13 @@ export class CompanyMemberController {
   public async deleteCompanyAcc(
     @User('id') id: string,
     @Param('accountId') accountId: string,
+    @Query() body: { active_account?: string },
   ) {
-    return await this.companyMemberService.deleteCompanyMember(id, accountId);
+    return await this.companyMemberService.deleteCompanyMember(
+      id,
+      accountId,
+      body?.active_account,
+    );
   }
 
   @Get(PROFILE_ROUTES.get_photo)

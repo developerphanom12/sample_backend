@@ -30,6 +30,30 @@ export class CompanyService {
     private s3Service: S3Service,
   ) {}
 
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
+  }
+
   private async extractCompanyFromUser(id: string) {
     const user = await this.authRepository.findOne({
       where: { id: id },
@@ -114,7 +138,9 @@ export class CompanyService {
       throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
     }
 
-    const companyOwnerCompany = await this.extractCompanyFromUser(id);
+    const companyOwnerCompany = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
 
     const selectedCurrency = await this.currencyRepository.findOne({
       where: { id: body.currency },
@@ -287,8 +313,11 @@ export class CompanyService {
     };
   }
 
-  async changeCompanyLogo(id: string, file) {
-    const company = await this.extractCompanyFromUser(id);
+  async changeCompanyLogo(id: string, file, active_account?: string) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
+
     if (!file) {
       throw new HttpException('NO LOGO FILE', HttpStatus.FORBIDDEN);
     }
@@ -422,7 +451,10 @@ export class CompanyService {
     data: MemberEntity[];
     count: number;
   }> {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const [result, total] = await this.memberRepository.findAndCount({
       relations: ['company', 'user', 'memberInvite'],
       select: {

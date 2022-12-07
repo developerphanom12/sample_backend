@@ -8,6 +8,7 @@ import { CompanyEntity } from 'src/company/entities/company.entity';
 import { Like, Repository } from 'typeorm';
 import { CreatePaymentTypeDTO } from './dto/create-payment-type.dto';
 import { PaginationDTO } from './dto/pagination.dto';
+import { UpdatePaymentTypeDTO } from './dto/update-payment-type.dto';
 import { PaymentTypeEntity } from './entities/payment-type.entity';
 
 @Injectable()
@@ -21,8 +22,32 @@ export class PaymentTypeService {
     private memberRepository: Repository<MemberEntity>,
     @InjectRepository(PaymentTypeEntity)
     private paymentTypeRepository: Repository<PaymentTypeEntity>,
-    private configService: ConfigService,
   ) {}
+
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
+  }
+
   private async extractCompanyFromUser(id: string) {
     const user = await this.authRepository.findOne({
       where: { id: id },
@@ -81,12 +106,15 @@ export class PaymentTypeService {
   }
 
   async createPaymentType(id: string, body: CreatePaymentTypeDTO) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const creator = await this.extractCreator(id);
 
     const paymentType = await this.paymentTypeRepository.save({
       name: body.name,
-      company: {id: company.id},
+      company: { id: company.id },
       creator: creator,
     });
     return await this.paymentTypeRepository.findOne({
@@ -95,8 +123,11 @@ export class PaymentTypeService {
     });
   }
 
-  async updatePaymentType(id, body) {
-    const company = await this.extractCompanyFromUser(id);
+  async updatePaymentType(id: string, body: UpdatePaymentTypeDTO) {
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const paymentTypeId = body.id;
     if (!paymentTypeId) {
       throw new HttpException(
@@ -107,39 +138,44 @@ export class PaymentTypeService {
     const paymentType = await this.paymentTypeRepository.findOne({
       where: {
         id: paymentTypeId,
-        company: {id: company.id},
+        company: { id: company.id },
       },
     });
     if (!paymentType) {
       throw new HttpException('PAYMENT TYPE NOT FOUND', HttpStatus.NOT_FOUND);
     }
     await this.paymentTypeRepository.update(paymentType.id, {
-      ...body,
+      name: body.name,
     });
 
     return await this.paymentTypeRepository.findOne({
       where: {
         id: paymentTypeId,
-        company: {id: company.id},
+        company: { id: company.id },
       },
     });
   }
 
-  async getAllPaymentTypes(id: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async getAllPaymentTypes(id: string, active_account?: string) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
 
     return await this.paymentTypeRepository.find({
-      where: { company: {id: company.id}, },
+      where: { company: { id: company.id } },
       relations: ['creator'],
     });
   }
 
   async getPaymentTypes(id: string, body: PaginationDTO) {
-    const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const [result, total] = await this.paymentTypeRepository.findAndCount({
       relations: ['creator'],
       where: {
-        company: {id: company.id},
+        company: { id: company.id },
         name: Like(`%${body.search || ''}%`),
       },
       order: { created: 'DESC' },
@@ -152,16 +188,29 @@ export class PaymentTypeService {
     };
   }
 
-  async getPaymentTypeDetails(id: string, paymentTypeId: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async getPaymentTypeDetails(
+    id: string,
+    paymentTypeId: string,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
+
     return await this.paymentTypeRepository.findOne({
-      where: { id: paymentTypeId, company: {id: company.id}, },
+      where: { id: paymentTypeId, company: { id: company.id } },
       relations: ['receipts', 'company', 'creator'],
     });
   }
 
-  async deletePaymentType(id: string, paymentTypeId: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async deletePaymentType(
+    id: string,
+    paymentTypeId: string,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
 
     if (!company.payment_types) {
       throw new HttpException(
@@ -171,7 +220,7 @@ export class PaymentTypeService {
     }
 
     const paymentType = await this.paymentTypeRepository.findOne({
-      where: { id: paymentTypeId, company: {id: company.id}, },
+      where: { id: paymentTypeId, company: { id: company.id } },
     });
 
     if (!paymentType) {

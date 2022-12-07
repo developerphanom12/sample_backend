@@ -70,8 +70,13 @@ export class CategoryController {
   public async getCategory(
     @User('id') id: string,
     @Param('categoryId') categoryId: string,
+    @Query('active_account') active_account: string,
   ) {
-    return await this.CategoryService.getCategoryDetails(id, categoryId);
+    return await this.CategoryService.getCategoryDetails(
+      id,
+      categoryId,
+      active_account,
+    );
   }
 
   @Get(CATEGORY_ROUTES.get_all)
@@ -83,8 +88,11 @@ export class CategoryController {
   })
   @HttpCode(HttpStatus.OK)
   @UseGuards(new JwtAuthenticationGuard())
-  public async getAllCategories(@User('id') id: string) {
-    return await this.CategoryService.getAllCategories(id);
+  public async getAllCategories(
+    @User('id') id: string,
+    @Query('active_account') active_account: string,
+  ) {
+    return await this.CategoryService.getAllCategories(id, active_account);
   }
 
   @Get(CATEGORY_ROUTES.get_many)
@@ -113,8 +121,13 @@ export class CategoryController {
   @UseGuards(new JwtAuthenticationGuard())
   public async deleteReceipt(
     @User('id') id: string,
-    @Param('categoryId') categoryId,
+    @Param('categoryId') categoryId: string,
+    @Query('active_account') active_account: string,
   ) {
-    return await this.CategoryService.deleteCategory(id, categoryId);
+    return await this.CategoryService.deleteCategory(
+      id,
+      categoryId,
+      active_account,
+    );
   }
 }

@@ -40,7 +40,7 @@ export class CompanyMemberService {
     private inviteNewMemberService: InviteNewMemberService,
   ) {}
 
-  private async extractUserAccount(id: string) {
+  private async extractUserAccount(id: string, active_account?: string) {
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
@@ -48,7 +48,7 @@ export class CompanyMemberService {
       throw new HttpException('USER DOES NOT EXIST', HttpStatus.BAD_REQUEST);
     }
     const account = await this.memberRepository.findOne({
-      where: { id: user.active_account },
+      where: { id: active_account || user.active_account },
       relations: ['company'],
     });
 
@@ -59,6 +59,30 @@ export class CompanyMemberService {
       );
     }
     return account;
+  }
+
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+    return company;
   }
 
   private async extractCompanyFromUser(id: string) {
@@ -218,7 +242,7 @@ export class CompanyMemberService {
     avatarSrc?: string,
   ) {
     if (token) {
-      this.emailService.sendInvitationNewMemberEmail({
+      await this.emailService.sendInvitationNewMemberEmail({
         email: memberEmail,
         name: invitorFullName,
         companyNames: companiesNames,
@@ -229,7 +253,7 @@ export class CompanyMemberService {
       });
     }
     if (!token) {
-      this.emailService.sendInvitationExistMemberEmail({
+      await this.emailService.sendInvitationExistMemberEmail({
         email: memberEmail,
         name: invitorFullName,
         companyNames: companiesNames,
@@ -327,6 +351,7 @@ export class CompanyMemberService {
     const { email, companiesIds, name, role } = body;
     const existedInvitation = await this.memberInvitesRepository.findOne({
       where: { email: email, isCompanyInvite: false },
+      relations: ['members'],
     });
 
     if (existedInvitation) {
@@ -675,8 +700,15 @@ export class CompanyMemberService {
     }
   }
 
-  async deleteCompanyMember(id: string, accountId: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async deleteCompanyMember(
+    id: string,
+    accountId: string,
+    active_account?: string,
+  ) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
+
     const account = await this.extractUserAccount(id);
 
     if (account.role === ECompanyRoles.user) {
@@ -759,7 +791,7 @@ export class CompanyMemberService {
     body: UpdateCompanyAccountDTO,
   ) {
     const { email, role, name, isInviteCompanyMember } = body;
-    const account = await this.extractUserAccount(id);
+    const account = await this.extractUserAccount(id, body.active_account);
 
     if (account.role === ECompanyRoles.user) {
       throw new HttpException(

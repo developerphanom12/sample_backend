@@ -11,9 +11,9 @@ export const CATEGORY_ROUTES = {
 export const CATEGORY_SWAGGER = {
   create: 'Create category',
   success: 'Success',
-  update: "Update category",
-  get: "Get category details",
-  get_all: "Get all categories",
-  get_many: "Get categories with pagination",
-  delete: "Delete category",
+  update: 'Update category',
+  get: 'Get category details',
+  get_all: 'Get all categories',
+  get_many: 'Get categories with pagination',
+  delete: 'Delete category',
 };

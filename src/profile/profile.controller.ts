@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Res,
   UploadedFile,
   UseGuards,
@@ -35,8 +36,11 @@ export class ProfileController {
     description: PROFILE_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async getProfile(@User('id') id: string) {
-    return await this.profileService.getProfile(id);
+  public async getProfile(
+    @User('id') id: string,
+    @Query() body: { active_account?: string },
+  ) {
+    return await this.profileService.getProfile(id, body?.active_account);
   }
 
   @Put(PROFILE_ROUTES.update)

@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
@@ -22,9 +21,33 @@ export class ProfileService {
     private memberRepository: Repository<MemberEntity>,
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
-    private configService: ConfigService,
     private s3Service: S3Service,
   ) {}
+
+  private async extractCompanyFromActiveAccount(active_account: string) {
+    const account = await this.memberRepository.findOne({
+      where: { id: active_account },
+      relations: ['company'],
+    });
+
+    if (!account) {
+      throw new HttpException(
+        'COMPANY ACCOUNT NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const company = await this.companyRepository.findOne({
+      where: { id: account.company.id },
+      relations: ['receipts', 'currency', 'categories'],
+    });
+
+    if (!company) {
+      throw new HttpException('COMPANY NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    return company;
+  }
 
   private async extractCompanyFromUser(id: string) {
     const user = await this.authRepository.findOne({
@@ -55,8 +78,11 @@ export class ProfileService {
     return company;
   }
 
-  async getProfile(id: string) {
-    const company = await this.extractCompanyFromUser(id);
+  async getProfile(id: string, active_account?: string) {
+    const company = active_account
+      ? await this.extractCompanyFromActiveAccount(active_account)
+      : await this.extractCompanyFromUser(id);
+
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
@@ -133,7 +159,11 @@ export class ProfileService {
 
   async updateProfile(id: string, body: UpdateProfileDTO) {
     const { fullName, email, country, currency, date_format } = body;
-    const company = await this.extractCompanyFromUser(id);
+    // const company = await this.extractCompanyFromUser(id);
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
     const user = await this.authRepository.findOne({
       where: { id: id },
       relations: ['accounts'],

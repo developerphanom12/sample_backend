@@ -73,10 +73,12 @@ export class PaymentTypeController {
   public async getSupplier(
     @User('id') id: string,
     @Param('paymentTypeId') paymentTypeId: string,
+    @Query('active_account') active_account: string,
   ) {
     return await this.paymentTypeService.getPaymentTypeDetails(
       id,
       paymentTypeId,
+      active_account,
     );
   }
 
@@ -89,8 +91,11 @@ export class PaymentTypeController {
     type: PaymentTypeEntity,
   })
   @HttpCode(HttpStatus.OK)
-  public async getAllSuppliers(@User('id') id: string) {
-    return await this.paymentTypeService.getAllPaymentTypes(id);
+  public async getAllSuppliers(
+    @User('id') id: string,
+    @Query('active_account') active_account: string,
+  ) {
+    return await this.paymentTypeService.getAllPaymentTypes(id, active_account);
   }
 
   @Get(PAYMENT_TYPE_ROUTES.get_many)
@@ -120,8 +125,13 @@ export class PaymentTypeController {
   @HttpCode(HttpStatus.OK)
   public async deleteReceipt(
     @User('id') id: string,
-    @Param('paymentTypeId') paymentTypeId,
+    @Param('paymentTypeId') paymentTypeId: string,
+    @Query('active_account') active_account: string,
   ) {
-    return await this.paymentTypeService.deletePaymentType(id, paymentTypeId);
+    return await this.paymentTypeService.deletePaymentType(
+      id,
+      paymentTypeId,
+      active_account,
+    );
   }
 }

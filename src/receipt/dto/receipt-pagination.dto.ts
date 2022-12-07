@@ -66,4 +66,9 @@ export class PaginationDTO {
   @IsOptional()
   @IsString()
   sortOrder?: TSortOrder;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  active_account?: string;
 }
