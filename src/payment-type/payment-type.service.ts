@@ -39,7 +39,7 @@ export class PaymentTypeService {
 
     const company = await this.companyRepository.findOne({
       where: { id: account.company.id },
-      relations: ['receipts', 'currency', 'categories'],
+      relations: ['receipts', 'currency', 'payment_types'],
     });
 
     if (!company) {
