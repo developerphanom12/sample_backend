@@ -491,18 +491,24 @@ export class CompanyService {
     if (!company) {
       throw new HttpException('COMPANY NOT FOUND', HttpStatus.NOT_FOUND);
     }
-    if (company.receipts) {
-      this.s3Service.deleteFolder(company.id);
-    }
 
     // SET DIFFERENT ACTIVE_ACCOUNT FOR USERS IN COMPANY
     const accounts = await this.memberRepository.find({
       where: { company: { id: company.id } },
       relations: ['user'],
     });
-
-    if (accounts) {
-      const promises = accounts.map(async (acc) => {
+    const accountsPromises = await accounts.map(async (acc) => {
+      return {
+        ...acc,
+        user: await this.authRepository.findOne({
+          where: { id: acc.user.id },
+          relations: ['accounts'],
+        }),
+      };
+    });
+    const accWithUsers = await Promise.all(accountsPromises);
+    if (accWithUsers) {
+      const promises = accWithUsers.map(async (acc) => {
         if (acc.user.active_account === acc.id) {
           if (acc.user.accounts.length > 1) {
             await this.authRepository.update(acc.user.id, {
@@ -519,7 +525,10 @@ export class CompanyService {
       });
       await Promise.all(promises);
     }
-
+    if (company.receipts) {
+      this.s3Service.deleteFolder(company.id);
+    }
+  
     try {
       await this.companyRepository.remove(company);
       return 'COMPANY DELETED';
