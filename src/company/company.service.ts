@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthEntity } from '../auth/entities/auth.entity';
 import { ECompanyRoles } from '../company-member/company-member.constants';
@@ -258,6 +257,26 @@ export class CompanyService {
     });
     if (!user) {
       throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
+    }
+
+    const user_accounts = await Promise.all(
+      user.accounts.map(
+        async (acc) =>
+          await this.memberRepository.findOne({
+            where: { id: acc.id },
+            relations: ['company'],
+          }),
+      ),
+    );
+
+    const existed_company = user_accounts.find(
+      (item) => item.company.name === body.name,
+    );
+    if (existed_company) {
+      throw new HttpException(
+        COMPANY_ERRORS.existed_company,
+        HttpStatus.CONFLICT,
+      );
     }
 
     const selectedCurrency = await this.currencyRepository.findOne({
@@ -528,7 +547,7 @@ export class CompanyService {
     if (company.receipts) {
       this.s3Service.deleteFolder(company.id);
     }
-  
+
     try {
       await this.companyRepository.remove(company);
       return 'COMPANY DELETED';

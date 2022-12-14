@@ -1,9 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 import { EReceiptStatus } from '../receipt.constants';
-import { TSortField, TSortOrder } from '../types/receipt.types';
 
 export class PaginationDTO {
   @ApiProperty({ required: false })
@@ -56,16 +55,6 @@ export class PaginationDTO {
   @ApiProperty({ required: false, default: false })
   @IsOptional()
   isMobile?: boolean | string = false;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  sortField?: TSortField;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  sortOrder?: TSortOrder;
 
   @ApiProperty({ required: false })
   @IsOptional()

@@ -7,14 +7,16 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
+
 import { EReceiptStatus } from '../receipt.constants';
 import { CurrencyEntity } from '../../currency/entities/currency.entity';
 import { CompanyEntity } from '../../company/entities/company.entity';
 import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
-import { ApiProperty } from '@nestjs/swagger';
+import { ColumnNumericTransformer } from '../types/receipt.types';
 
 @Entity('receipt')
 export class ReceiptEntity {
@@ -50,15 +52,33 @@ export class ReceiptEntity {
   vat_code: string;
 
   @ApiProperty({ nullable: true })
-  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   net: number;
 
   @ApiProperty({ nullable: true })
-  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   tax: number;
 
   @ApiProperty({ nullable: true })
-  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   total: number;
 
   @ApiProperty({ nullable: true })

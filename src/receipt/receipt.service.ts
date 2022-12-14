@@ -10,7 +10,6 @@ import {
   extractNet,
   extractTotal,
   extractVat,
-  getSortObject,
 } from '../heplers/receipt.helper';
 import { EReceiptStatus, IFilters } from './receipt.constants';
 import { AuthEntity } from '../auth/entities/auth.entity';
@@ -30,7 +29,7 @@ import { EmailsService } from 'src/emails/emails.service';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
-import { TSortOrder } from './types/receipt.types';
+import { ExpenseField } from '@aws-sdk/client-textract';
 
 @Injectable()
 export class ReceiptService {
@@ -186,9 +185,9 @@ export class ReceiptService {
     const receiptData = {
       supplier: extractSupplier(textData[0]),
       receipt_date: extractDate(text),
-      tax: extractVat(text),
-      total: extractTotal(text),
-      net: extractNet(text),
+      tax: extractVat(text) || 0,
+      total: extractTotal(text) || 0,
+      net: extractNet(text) || 0,
       vat_code: null,
       currency: extractCurrency(text),
     };
@@ -200,7 +199,7 @@ export class ReceiptService {
     ) {
       const totalNet = Math.abs(receiptData.total - receiptData.tax);
       totalNet > receiptData.total
-        ? (receiptData.net = null)
+        ? (receiptData.net = 0)
         : (receiptData.net = totalNet);
     }
 
@@ -350,12 +349,6 @@ export class ReceiptService {
         filters.supplier_account = suppAcc ? { id: suppAcc } : null;
       }
 
-      const isSortValues = body?.sortField && body?.sortOrder;
-
-      const sortOrderObj = isSortValues
-        ? getSortObject(body?.sortField, body?.sortOrder)
-        : { created: 'DESC' };
-
       const [result, total] = await this.receiptRepository.findAndCount({
         relations: ['currency', 'supplier_account', 'category', 'payment_type'],
         where: [
@@ -382,7 +375,7 @@ export class ReceiptService {
               : null,
           },
         ],
-        order: sortOrderObj,
+        order: { created: 'DESC' },
         take: body.take ?? 10,
         skip: body.skip ?? 0,
       });
@@ -463,7 +456,6 @@ export class ReceiptService {
 
   async updateReceipt(id: string, body: UpdateReceiptDTO) {
     const receiptId = body.id;
-
     const company = body.active_account
       ? await this.extractCompanyFromActiveAccount(body.active_account)
       : await this.extractCompanyFromUser(id);

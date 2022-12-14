@@ -1,6 +1,8 @@
-import { FindOptionsOrderValue } from 'typeorm';
-
-import { ReceiptEntity } from '../entities/receipt.entity';
-
-export type TSortOrder = FindOptionsOrderValue;
-export type TSortField = keyof ReceiptEntity;
+export class ColumnNumericTransformer {
+  to(data: number): number {
+    return data;
+  }
+  from(data: string): number {
+    return parseFloat(data);
+  }
+}
