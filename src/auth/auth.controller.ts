@@ -50,7 +50,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      const link = `${FRONT_END_URL.development}signup-new-member/${params.token}`;
+      const link = `${FRONT_END_URL.local}signup-new-member/${params.token}`;
       return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(error);
