@@ -38,9 +38,13 @@ export class ProfileController {
   @HttpCode(HttpStatus.OK)
   public async getProfile(
     @User('id') id: string,
-    @Query() body: { active_account?: string },
+    @Query() body: { active_account?: string; isSkipOnboarding?: boolean },
   ) {
-    return await this.profileService.getProfile(id, body?.active_account);
+    return await this.profileService.getProfile(
+      id,
+      body?.active_account,
+      body?.isSkipOnboarding,
+    );
   }
 
   @Put(PROFILE_ROUTES.update)

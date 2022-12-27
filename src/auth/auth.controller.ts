@@ -174,4 +174,14 @@ export class AuthController {
   ) {
     return await this.authService.resetPassword(id, body);
   }
+
+  @Post(AUTH_ROUTES.bind_social_account)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(new JwtAuthenticationGuard())
+  public async linkSocialAccount(
+    @User('id') id: string,
+    @Body() body: BindSocialAccountDTO,
+  ) {
+    return await this.authService.linkSocialAccount(id, body);
+  }
 }
