@@ -425,7 +425,6 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     }
-
     const { fullName, socialAccountId, type, email } = data;
 
     const userByEmail = await this.authRepository.findOne({
@@ -465,6 +464,7 @@ export class AuthService {
           socialAccount: await this.socialAuthRepository.findOne({
             where: { [`${type.toLowerCase()}Id`]: socialAccountId },
           }),
+          isLinkedSocAcc: !!newUser.password,
           company: null,
           token: access_token,
           refreshToken: refresh_token,
@@ -625,6 +625,40 @@ export class AuthService {
     });
   }
 
+  async linkSocialAccount(id: string, body: BindSocialAccountDTO) {
+    const { newPassword: password, country, email } = body;
+
+    const user = await this.authRepository.findOne({
+      where: {
+        id: id,
+      },
+      relations: ['socialAuth'],
+    });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const newPassword = await bcrypt.hash(password, 10);
+
+    if (email !== user.email) {
+      await this.authRepository.update(user.id, {
+        password: newPassword,
+        email: email,
+        country: country,
+      });
+    } else {
+      await this.authRepository.update(user.id, {
+        password: newPassword,
+        country: country,
+      });
+    }
+
+    return {
+      message: 'Social account was successfully linked to the RH account',
+    };
+  }
+
   async bindSocialAccount(body: BindSocialAccountDTO) {
     const { email, newPassword: password, token, country } = body;
 
@@ -640,6 +674,7 @@ export class AuthService {
       where: {
         email: resetPassModel.email.toLowerCase(),
       },
+      relations: ['socialAuth'],
     });
 
     if (!user) {
@@ -654,7 +689,7 @@ export class AuthService {
       await this.resetPasswordRepository.delete(resetPassModel.id);
       throw new HttpException(
         'Reset password link is expired',
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.NOT_FOUND,
       );
     }
 
@@ -707,7 +742,7 @@ export class AuthService {
       await this.resetPasswordRepository.delete(resetPassModel.id);
       throw new HttpException(
         'Reset password link is expired',
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.NOT_FOUND,
       );
     }
 
@@ -772,6 +807,7 @@ export class AuthService {
         socialAccount: await this.socialAuthRepository.findOne({
           where: { [`${socialType.toLowerCase()}Id`]: socialAccountId },
         }),
+        isLinkedSocAcc: !!user.password,
         company: null,
         showSetPassword: !!user.email && !user.password,
         currencies: await this.currencyRepository.find(),
@@ -805,6 +841,7 @@ export class AuthService {
       socialAccount: await this.socialAuthRepository.findOne({
         where: { [`${socialType.toLowerCase()}Id`]: socialAccountId },
       }),
+      isLinkedSocAcc: !!user.password,
       company: await deserialize(CompanyEntity, serializedCompany),
       showSetPassword: !!user.email && !user.password,
       currencies: await this.currencyRepository.find(),

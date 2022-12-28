@@ -78,14 +78,30 @@ export class ProfileService {
     return company;
   }
 
-  async getProfile(id: string, active_account?: string) {
+  async getProfile(
+    id: string,
+    active_account?: string,
+    isSkipOnboarding?: boolean,
+  ) {
+    const user = await this.authRepository.findOne({
+      where: { id: id },
+    });
+
+    if (isSkipOnboarding) {
+      return {
+        user: {
+          fullName: user.fullName,
+          email: user.email,
+          country: user.country,
+        },
+        company: null,
+      };
+    }
+
     const company = active_account
       ? await this.extractCompanyFromActiveAccount(active_account)
       : await this.extractCompanyFromUser(id);
 
-    const user = await this.authRepository.findOne({
-      where: { id: id },
-    });
     return {
       user: {
         fullName: user.fullName,
@@ -159,7 +175,7 @@ export class ProfileService {
 
   async updateProfile(id: string, body: UpdateProfileDTO) {
     const { fullName, email, country, currency, date_format } = body;
-    // const company = await this.extractCompanyFromUser(id);
+    
     const company = body.active_account
       ? await this.extractCompanyFromActiveAccount(body.active_account)
       : await this.extractCompanyFromUser(id);

@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 import { UpdatePasswordDTO } from './update-password.dto';
 
 export class BindSocialAccountDTO extends UpdatePasswordDTO {
   @ApiProperty()
   @IsEmail()
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @ApiProperty()
   @IsString()

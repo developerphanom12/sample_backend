@@ -7,7 +7,7 @@ export const bindSocialAccMailSes = (data: IResetPasswordMessage) => {
   return {
     from: `${EMAIL_CONFIG.companyName} <${EMAIL_CONFIG.email}>`,
     to: email,
-    subject: 'Bind your social account with RH account',
+    subject: 'Link your social account with RH account',
     message: `<!doctype html>
     <html>
       <head>
@@ -122,8 +122,11 @@ export const bindSocialAccMailSes = (data: IResetPasswordMessage) => {
                           <tr>
                             <td>
 
-                              <p style="font-family:'Open Sans', sans-serif;font-size:16px;font-weight:600;line-height:22px;margin-bottom:43px;text-align:center;color:#000000;" class="mobile_paragraph">
-                               ${name}, looks like you don't have a ReceiptHub account. You can bind your social account to your ReceiptHub account using the Create RH account button
+                              <p style="font-family:'Open Sans', sans-serif;font-size:16px;font-weight:600;line-height:22px;margin-bottom:14px;text-align:center;color:#000000;" class="mobile_paragraph">
+                               ${name}, looks like you don't have a ReceiptHub account.
+                              </p>
+                              <p style="font-family:'Open Sans', sans-serif;font-size:16px;font-weight:600;line-height:22px;margin-bottom:18px;text-align:center;color:#000000;" class="mobile_paragraph">
+                              You can link your social account to your ReceiptHub account using the Create RH account button.
                               </p>
       
                               <p style="padding-bottom:0px;" class="mobile_paragraph">
