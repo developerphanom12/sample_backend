@@ -76,7 +76,7 @@ export class CategoryService {
     return company;
   }
 
-  private async extractCreator(id: string) {
+  private async extractCreator(id: string, active_account: string) {
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
@@ -84,7 +84,7 @@ export class CategoryService {
       throw new HttpException('USER DOES NOT EXIST', HttpStatus.BAD_REQUEST);
     }
     const account = await this.memberRepository.findOne({
-      where: { id: user.active_account },
+      where: { id: active_account || user.active_account },
       relations: ['company'],
     });
 
@@ -109,7 +109,7 @@ export class CategoryService {
       ? await this.extractCompanyFromActiveAccount(body.active_account)
       : await this.extractCompanyFromUser(id);
 
-    const creator = await this.extractCreator(id);
+    const creator = await this.extractCreator(id, body.active_account);
 
     const category = await this.categoryRepository.save({
       name: body.name,

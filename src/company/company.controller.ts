@@ -165,7 +165,10 @@ export class CompanyController {
     description: COMPANY_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async deleteReceipt(@User('id') id: string, @Param('id') companyId) {
+  public async companyDelete(
+    @User('id') id: string,
+    @Param('id') companyId: string,
+  ) {
     return await this.companyService.companyDelete(id, companyId);
   }
 
