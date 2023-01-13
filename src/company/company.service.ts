@@ -1,14 +1,16 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { In, Like, Repository } from 'typeorm';
+
+import { S3Service } from 'src/s3/s3.service';
+
 import { AuthEntity } from '../auth/entities/auth.entity';
 import { ECompanyRoles } from '../company-member/company-member.constants';
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
-import { In, Like, Repository } from 'typeorm';
 import { COMPANY_ERRORS } from './company.errors';
 import { CreateCompanyDTO } from './dto/create-company.dto';
 import { CompanyEntity } from './entities/company.entity';
-import { S3Service } from 'src/s3/s3.service';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCompanyDTO } from './dto/update-company.dto';
 import { MemberInvitesEntity } from '../invite-new-member/entities/company-member-invites.entity';
@@ -300,11 +302,7 @@ export class CompanyService {
       company: { id: company.id },
     });
 
-    if (!user.accounts || user.accounts.length === 0) {
-      await this.authRepository.update(id, {
-        active_account: user_company_account.id,
-      });
-    } else {
+    if (!user.accounts.length) {
       await this.authRepository.update(id, {
         active_account: user_company_account.id,
       });

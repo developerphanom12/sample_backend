@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
@@ -77,7 +76,7 @@ export class PaymentTypeService {
     return company;
   }
 
-  private async extractCreator(id: string) {
+  private async extractCreator(id: string, active_account: string) {
     const user = await this.authRepository.findOne({
       where: { id: id },
     });
@@ -85,7 +84,7 @@ export class PaymentTypeService {
       throw new HttpException('USER DOES NOT EXIST', HttpStatus.BAD_REQUEST);
     }
     const account = await this.memberRepository.findOne({
-      where: { id: user.active_account },
+      where: { id: active_account || user.active_account },
       relations: ['company'],
     });
 
@@ -110,7 +109,7 @@ export class PaymentTypeService {
       ? await this.extractCompanyFromActiveAccount(body.active_account)
       : await this.extractCompanyFromUser(id);
 
-    const creator = await this.extractCreator(id);
+    const creator = await this.extractCreator(id, body.active_account);
 
     const paymentType = await this.paymentTypeRepository.save({
       name: body.name,
