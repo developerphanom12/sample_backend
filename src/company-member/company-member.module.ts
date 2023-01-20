@@ -13,7 +13,12 @@ import { MemberEntity } from './entities/company-member.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CompanyEntity, MemberEntity, AuthEntity, MemberInvitesEntity]),
+    TypeOrmModule.forFeature([
+      CompanyEntity,
+      MemberEntity,
+      AuthEntity,
+      MemberInvitesEntity,
+    ]),
     EmailsModule,
     S3Module,
     InviteNewMemberModule,
