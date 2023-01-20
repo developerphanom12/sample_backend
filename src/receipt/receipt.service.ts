@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Like, Repository, LessThan, In } from 'typeorm';
+import { Between, Like, Repository, LessThan, In, Brackets } from 'typeorm';
 import { ReceiptEntity } from './entities/receipt.entity';
 import {
   extractSupplier,
@@ -50,7 +49,6 @@ export class ReceiptService {
     private supplierRepository: Repository<SupplierEntity>,
     @InjectRepository(PaymentTypeEntity)
     private paymentTypeRepository: Repository<PaymentTypeEntity>,
-    private configService: ConfigService,
     private s3Service: S3Service,
     private downloadService: DownloadService,
     private emailsService: EmailsService,
@@ -296,27 +294,6 @@ export class ReceiptService {
     };
   }
 
-  filterHashMap = {
-    category: this.categoryRepository,
-    supplier_account: this.supplierRepository,
-  };
-
-  private async getDataBySearch(
-    type: 'category' | 'supplier_account',
-    search?: string,
-  ) {
-    const res = await this.filterHashMap[type].findOne({
-      where: {
-        name: Like(`%${search || ''}%`),
-      },
-    });
-    if (!res) {
-      return null;
-    } else {
-      return res.id;
-    }
-  }
-
   async getReceipts(id: string, body: PaginationDTO) {
     const company = body.active_account
       ? await this.extractCompanyFromActiveAccount(body.active_account)
@@ -339,46 +316,58 @@ export class ReceiptService {
     };
 
     if (!body.isMobile) {
-      if (body.search) {
-        const catRes = await this.getDataBySearch('category', body.search);
-        filters.category = catRes ? { id: catRes } : null;
-        const suppAcc = await this.getDataBySearch(
-          'supplier_account',
-          body.search,
-        );
-        filters.supplier_account = suppAcc ? { id: suppAcc } : null;
+      const query = this.receiptRepository
+        .createQueryBuilder('receipt')
+        .leftJoinAndSelect('receipt.supplier_account', 'supplier_account')
+        .leftJoinAndSelect('receipt.company', 'company')
+        .leftJoinAndSelect('receipt.currency', 'currency')
+        .leftJoinAndSelect('receipt.category', 'category')
+        .leftJoinAndSelect('receipt.payment_type', 'payment_type')
+        .where('company.id = :companyId', {
+          companyId: company.id,
+        });
+
+      if (body.status.length) {
+        query.andWhere('receipt.status like :status', {
+          status: `%${body.status || ''}%`,
+        });
       }
 
-      const [result, total] = await this.receiptRepository.findAndCount({
-        relations: ['currency', 'supplier_account', 'category', 'payment_type'],
-        where: [
-          {
-            ...filters,
-            custom_id: Like(`%${body.search?.toLowerCase() || ''}%`),
-          },
-          {
-            ...filters,
-            supplier: Like(`%${body.search || ''}%`),
-          },
-          {
-            category: filters?.category?.id
-              ? {
-                  id: filters.category.id,
-                }
-              : null,
-          },
-          {
-            supplier_account: filters?.supplier_account?.id
-              ? {
-                  id: filters.supplier_account.id,
-                }
-              : null,
-          },
-        ],
-        order: { created: 'DESC' },
-        take: body.take ?? 10,
-        skip: body.skip ?? 0,
-      });
+      if (body.date_start && body.date_end) {
+        query.andWhere('receipt.created BETWEEN :startDate AND :endDate', {
+          startDate: new Date(body.date_start),
+          endDate: new Date(body.date_end),
+        });
+      } else {
+        query.andWhere('receipt.created < :nextDay', {
+          nextDay,
+        });
+      }
+
+      if (body.search) {
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.orWhere('receipt.supplier like :supplier', {
+              supplier: `%${body.search || ''}%`,
+            })
+              .orWhere('receipt.custom_id like :custom_id', {
+                custom_id: `%${body.search.toLowerCase() || ''}%`,
+              })
+              .orWhere('supplier_account.name like :name', {
+                name: `%${body.search || null}%`,
+              })
+              .orWhere('category.name like :name', {
+                name: `%${body.search || null}%`,
+              });
+          }),
+        );
+      }
+
+      const [result, total] = await query
+        .orderBy('receipt.created', 'DESC')
+        .take(body.take ?? 10)
+        .skip(body.skip ?? 0)
+        .getManyAndCount();
 
       return {
         data: result,

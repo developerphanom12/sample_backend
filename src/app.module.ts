@@ -21,6 +21,7 @@ import { EmailsModule } from './emails/emails.module';
 import { ProfileModule } from './profile/profile.module';
 import { InviteNewMemberModule } from './invite-new-member/invite-new-member.module';
 import { ReceiptHubConnectModule } from './receipt-hub-connect/receipt-hub-connect.module';
+import { QuickbooksModule } from './integrations/quickbooks/quickbooks.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -54,7 +55,8 @@ const currentEnv = process.env.NODE_ENV || 'local';
     PaymentTypeModule,
     ProfileModule,
     InviteNewMemberModule,
-    ReceiptHubConnectModule
+    ReceiptHubConnectModule,
+    QuickbooksModule,
   ],
   controllers: [AppController],
   providers: [
