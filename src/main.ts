@@ -26,7 +26,7 @@ async function bootstrap() {
   app.use(
     rateLimit({
       windowMs: 60 * 1000, // 1 minute
-      max: 100, // limit each IP to 100 requests per windowMs
+      max: 200, // limit each IP to 100 requests per windowMs
     }),
   );
   const configService = app.get(ConfigService);

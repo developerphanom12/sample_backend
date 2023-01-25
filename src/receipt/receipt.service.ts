@@ -309,13 +309,17 @@ export class ReceiptService {
         ? Between(body.date_start, body.date_end)
         : LessThan(nextDay);
 
-    const filters: IFilters = {
-      company: { id: company.id },
-      status: Like(`%${body.status || ''}%`),
-      created: dateFilter,
-    };
-
     if (!body.isMobile) {
+      const [result, count] = await this.receiptRepository.findAndCount({
+        relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+        where: {
+          company: { id: company.id },
+        },
+        order: { created: 'DESC' },
+        take: body.take ?? 10,
+        skip: body.skip ?? 0,
+      });
+
       const query = this.receiptRepository
         .createQueryBuilder('receipt')
         .leftJoinAndSelect('receipt.supplier_account', 'supplier_account')
@@ -323,11 +327,18 @@ export class ReceiptService {
         .leftJoinAndSelect('receipt.currency', 'currency')
         .leftJoinAndSelect('receipt.category', 'category')
         .leftJoinAndSelect('receipt.payment_type', 'payment_type')
+        .orderBy('receipt.created', 'DESC')
         .where('company.id = :companyId', {
           companyId: company.id,
         });
 
-      if (body.status.length) {
+      if (result.length) {
+        query.andWhere('receipt.id IN(:...ids)', {
+          ids: result?.map((el) => el.id),
+        });
+      }
+
+      if (body.status) {
         query.andWhere('receipt.status like :status', {
           status: `%${body.status || ''}%`,
         });
@@ -362,16 +373,12 @@ export class ReceiptService {
           }),
         );
       }
-
-      const [result, total] = await query
-        .orderBy('receipt.created', 'DESC')
-        .take(body.take ?? 10)
-        .skip(body.skip ?? 0)
-        .getManyAndCount();
+      const [searchRes, searchCount] = await query.getManyAndCount();
 
       return {
-        data: result,
-        count: total,
+        data: searchRes,
+        count: searchCount,
+        totalCount: count,
       };
     }
 
