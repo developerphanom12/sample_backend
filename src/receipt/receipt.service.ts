@@ -28,7 +28,6 @@ import { EmailsService } from 'src/emails/emails.service';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
-import { ExpenseField } from '@aws-sdk/client-textract';
 
 @Injectable()
 export class ReceiptService {
@@ -310,14 +309,10 @@ export class ReceiptService {
         : LessThan(nextDay);
 
     if (!body.isMobile) {
-      const [result, count] = await this.receiptRepository.findAndCount({
-        relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      const companyReceipts = await this.receiptRepository.find({
         where: {
           company: { id: company.id },
         },
-        order: { created: 'DESC' },
-        take: body.take ?? 10,
-        skip: body.skip ?? 0,
       });
 
       const query = this.receiptRepository
@@ -330,13 +325,9 @@ export class ReceiptService {
         .orderBy('receipt.created', 'DESC')
         .where('company.id = :companyId', {
           companyId: company.id,
-        });
-
-      if (result.length) {
-        query.andWhere('receipt.id IN(:...ids)', {
-          ids: result?.map((el) => el.id),
-        });
-      }
+        })
+        .take(body.take ?? 10)
+        .skip(body.skip ?? 0);
 
       if (body.status) {
         query.andWhere('receipt.status like :status', {
@@ -358,17 +349,17 @@ export class ReceiptService {
       if (body.search) {
         query.andWhere(
           new Brackets((qb) => {
-            qb.orWhere('receipt.supplier like :supplier', {
+            qb.orWhere('LOWER(receipt.supplier) like :supplier', {
               supplier: `%${body.search || ''}%`,
             })
               .orWhere('receipt.custom_id like :custom_id', {
                 custom_id: `%${body.search.toLowerCase() || ''}%`,
               })
-              .orWhere('supplier_account.name like :name', {
-                name: `%${body.search || null}%`,
+              .orWhere('LOWER(supplier_account.name) like :name', {
+                name: `%${body.search.toLowerCase() || null}%`,
               })
-              .orWhere('category.name like :name', {
-                name: `%${body.search || null}%`,
+              .orWhere('LOWER(category.name) like :name', {
+                name: `%${body.search.toLowerCase() || null}%`,
               });
           }),
         );
@@ -378,7 +369,7 @@ export class ReceiptService {
       return {
         data: searchRes,
         count: searchCount,
-        totalCount: count,
+        totalCount: companyReceipts.length,
       };
     }
 
