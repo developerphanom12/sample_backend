@@ -349,17 +349,17 @@ export class ReceiptService {
       if (body.search) {
         query.andWhere(
           new Brackets((qb) => {
-            qb.orWhere('LOWER(receipt.supplier) like :supplier', {
-              supplier: `%${body.search.toLowerCase() || ''}%`,
+            qb.orWhere('LOWER(receipt.supplier) like LOWER(:supplier)', {
+              supplier: `%${body.search || ''}%`,
             })
-              .orWhere('receipt.custom_id like :custom_id', {
-                custom_id: `%${body.search.toLowerCase() || ''}%`,
+              .orWhere('receipt.custom_id like LOWER(:custom_id)', {
+                custom_id: `%${body.search || ''}%`,
               })
-              .orWhere('LOWER(supplier_account.name) like :name', {
-                name: `%${body.search.toLowerCase() || ''}%`,
+              .orWhere('LOWER(supplier_account.name) like LOWER(:name)', {
+                name: `%${body.search || ''}%`,
               })
-              .orWhere('LOWER(category.name) like :name', {
-                name: `%${body.search.toLowerCase() || ''}%`,
+              .orWhere('LOWER(category.name) like LOWER(:name)', {
+                name: `%${body.search || ''}%`,
               });
           }),
         );
