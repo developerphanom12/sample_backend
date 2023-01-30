@@ -102,12 +102,12 @@ export class EmailsService {
   public async sendInvitationExistMemberEmail(body: IInviteMember) {
     const payload = inviteExistMemberMailSes(body);
 
-   return await this.sendEmail(payload);
+    await this.sendEmail(payload);
   }
 
   public async sendInvitationNewMemberEmail(body: IInviteMember) {
     const payload = inviteNewMemberMailSes(body);
 
-  return  await this.sendEmail(payload);
+    await this.sendEmail(payload);
   }
 }

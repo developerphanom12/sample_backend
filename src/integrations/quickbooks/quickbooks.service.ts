@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 
-// import OAuthClient from 'intuit-oauth';
 const OAuthClient = require('intuit-oauth');
 
 @Injectable()
