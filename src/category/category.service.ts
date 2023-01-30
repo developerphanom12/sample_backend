@@ -4,7 +4,7 @@ import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { CompanyEntity } from 'src/company/entities/company.entity';
-import { Like, Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { CreateCategoryDTO } from './dto/create-category.dto';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateCategoryDTO } from './dto/update-category.dto';
@@ -176,7 +176,10 @@ export class CategoryService {
       relations: ['creator'],
       where: {
         company: { id: company.id },
-        name: Like(`%${body.search || ''}%`),
+        name: Raw(
+          (alias) =>
+            `LOWER(${alias}) Like '%${body?.search?.toLowerCase() || ''}%'`,
+        ),
       },
       order: { created: 'DESC' },
       take: body.take ?? 10,

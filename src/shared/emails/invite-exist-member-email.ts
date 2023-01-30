@@ -1,9 +1,10 @@
+import { FRONT_END_URL } from '../../constants/config';
 import { EMAIL_CONFIG } from '../../constants/email';
 
 import { IInviteMember } from './types/emails.types';
 
 export const inviteExistMemberMailSes = (data: IInviteMember) => {
-  const { companyNames, email, host_url, name, avatarSrc } = data;
+  const { companyNames, email, name, avatarSrc } = data;
   const isOneCompany = companyNames.length === 1;
   const companyNameString = companyNames.join(', ');
 
@@ -139,7 +140,9 @@ export const inviteExistMemberMailSes = (data: IInviteMember) => {
     }
                               </p>
                               <p style="padding-bottom:0px;" class="mobile_paragraph">
-                                <a class="button_mobile" href=${host_url}inbox style="font-family:'Open Sans', sans-serif;display:block;background-color:#FF5252;border-radius:5px;padding:13.5px 16px;color:#F2F2F2;font-weight:400;text-decoration:none;margin:0 auto;text-align:center;max-width:180px;width:100%;">
+                                <a class="button_mobile" href=${
+                                  FRONT_END_URL.development
+                                }inbox style="font-family:'Open Sans', sans-serif;display:block;background-color:#FF5252;border-radius:5px;padding:13.5px 16px;color:#F2F2F2;font-weight:400;text-decoration:none;margin:0 auto;text-align:center;max-width:180px;width:100%;">
                                   See the company now
                                 </a>
                               </p>

@@ -4,7 +4,7 @@ import { AuthEntity } from 'src/auth/entities/auth.entity';
 import { ECompanyRoles } from 'src/company-member/company-member.constants';
 import { MemberEntity } from 'src/company-member/entities/company-member.entity';
 import { CompanyEntity } from 'src/company/entities/company.entity';
-import { Like, Raw, Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import { CreateSupplierDTO } from './dto/create-supplier.dto';
 import { PaginationDTO } from './dto/pagination.dto';
 import { UpdateSupplierDTO } from './dto/update-supplier.dto';
@@ -177,7 +177,10 @@ export class SupplierService {
       relations: ['creator'],
       where: {
         company: { id: company.id },
-        name: Like(`%${body.search || ''}%`),
+        name: Raw(
+          (alias) =>
+            `LOWER(${alias}) Like '%${body?.search?.toLowerCase() || ''}%'`,
+        ),
       },
       order: { created: 'DESC' },
       take: body.take ?? 10,
