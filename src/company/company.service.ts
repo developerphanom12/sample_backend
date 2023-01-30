@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Like, Repository } from 'typeorm';
+import { In, Like, Raw, Repository } from 'typeorm';
 
 import { S3Service } from 'src/s3/s3.service';
 
@@ -447,7 +447,9 @@ export class CompanyService {
     const accounts = user.accounts.map((acc) => acc.id);
     const [result, total] = await this.companyRepository.findAndCount({
       where: {
-        name: Like(`%${body.search || ''}%`),
+        name: Raw((alias) => `LOWER(${alias}) Like LOWER(:name)`, {
+          name: `%${body.search || ''}%`,
+        }),
         members: { id: In(accounts) },
       },
       relations: ['members'],
@@ -479,7 +481,9 @@ export class CompanyService {
       },
       where: {
         company: { id: company.id },
-        name: Like(`%${body.search || ''}%`),
+        name: Raw((alias) => `LOWER(${alias}) Like LOWER(:name)`, {
+          name: `%${body.search || ''}%`,
+        }),
       },
       order: { created: 'DESC' },
       take: body.take ?? 10,
