@@ -139,9 +139,21 @@ export class CompanyService {
       throw new HttpException(COMPANY_ERRORS.user, HttpStatus.BAD_REQUEST);
     }
 
-    const companyOwnerCompany = body.active_account
-      ? await this.extractCompanyFromActiveAccount(body.active_account)
-      : await this.extractCompanyFromUser(id);
+    if (!companyOwner.accounts.length) {
+      throw new HttpException(
+        'COMPANY ACCOUNTS NOT FOUND',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const companyOwnerAccount = await this.memberRepository.findOne({
+      where: { id: companyOwner.accounts[0].id },
+      relations: ['company'],
+    });
+
+    const companyOwnerCompany = await this.companyRepository.findOne({
+      where: { id: companyOwnerAccount.company.id },
+    });
 
     const selectedCurrency = await this.currencyRepository.findOne({
       where: { id: body.currency },
@@ -169,11 +181,15 @@ export class CompanyService {
     let companyOwnerAcc = null;
     let company_member_account = null;
 
-    companyOwnerAccounts.map((acc) =>
+    companyOwnerAccounts.forEach((acc) =>
       acc.role === ECompanyRoles.owner
         ? (companyOwnerAcc = acc)
         : (company_member_account = acc),
     );
+
+    await this.memberRepository.update(companyOwnerAcc.id, {
+      memberInvite: null,
+    });
 
     if (!companyOwner.active_account) {
       await this.authRepository.update(id, {
@@ -512,22 +528,28 @@ export class CompanyService {
     if (!company) {
       throw new HttpException('COMPANY NOT FOUND', HttpStatus.NOT_FOUND);
     }
-
     // SET DIFFERENT ACTIVE_ACCOUNT FOR USERS IN COMPANY
     const accounts = await this.memberRepository.find({
       where: { company: { id: company.id } },
       relations: ['user'],
     });
+
     const accountsPromises = await accounts.map(async (acc) => {
       return {
         ...acc,
-        user: await this.authRepository.findOne({
-          where: { id: acc.user.id },
-          relations: ['accounts'],
-        }),
+        user: acc.user
+          ? await this.authRepository.findOne({
+              where: { id: acc.user.id },
+              relations: ['accounts'],
+            })
+          : null,
       };
     });
-    const accWithUsers = await Promise.all(accountsPromises);
+
+    const accWithUsers = (await Promise.all(accountsPromises)).filter(
+      (acc) => acc.user,
+    );
+
     if (accWithUsers) {
       const promises = accWithUsers.map(async (acc) => {
         if (acc.user.active_account === acc.id) {

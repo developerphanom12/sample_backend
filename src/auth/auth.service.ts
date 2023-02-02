@@ -134,7 +134,12 @@ export class AuthService {
     if (!memberInviteModel) {
       throw new HttpException('Request not found', HttpStatus.NOT_FOUND);
     }
-
+    if (memberInviteModel.isActive) {
+      throw new HttpException(
+        'This invitation was successfuly used',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
     if (email !== memberInviteModel.email) {
       throw new HttpException('WRONG EMAIL', HttpStatus.BAD_REQUEST);
     }
@@ -176,7 +181,13 @@ export class AuthService {
         publicKey,
       });
 
-      await this.inviteNewMemberService.deleteInvitation(memberInviteModel.id);
+      if (memberInviteModel.isCompanyInvite) {
+        await this.inviteNewMemberService.updateInvitation(
+          memberInviteModel.id,
+          { isActive: true },
+        );
+      }
+
       await Promise.all(
         memberInviteModel.members.map((member) =>
           member.role === ECompanyRoles.owner
@@ -186,10 +197,14 @@ export class AuthService {
                 userInvitorName: newUser.fullName,
               })
             : this.memberRepository.update(member.id, {
-                userInvitorName: newUser.fullName,
+                userInvitorName: member.name,
               }),
         ),
       );
+
+      await this.memberRepository.update(ownerAccounts[0].id, {
+        memberInvite: null,
+      });
 
       const [access_token, refresh_token] = await this.createTokens(newUser);
       await this.updateRefreshToken(newUser.id, refresh_token);
@@ -205,6 +220,7 @@ export class AuthService {
         company: null,
         token: access_token,
         refreshToken: refresh_token,
+        withAccountant: true,
         currencies: await this.currencyRepository.find(),
       };
     }
