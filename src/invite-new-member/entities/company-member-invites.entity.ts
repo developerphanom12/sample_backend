@@ -36,6 +36,10 @@ export class MemberInvitesEntity {
   isCompanyInvite: boolean;
 
   @ApiProperty()
+  @Column({ nullable: true, default: false })
+  isActive: boolean;
+
+  @ApiProperty()
   @OneToMany((type) => MemberEntity, (data) => data.memberInvite)
   @JoinColumn()
   members: MemberEntity[];

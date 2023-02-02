@@ -28,3 +28,6 @@ export const FRONT_END_URL = {
   development: 'http://35.176.1.24/',
   staging: 'http://18.133.68.78/',
 };
+
+export const CURRENT_FRONT_END_URL =
+  FRONT_END_URL[process.env.NODE_ENV || 'development'];

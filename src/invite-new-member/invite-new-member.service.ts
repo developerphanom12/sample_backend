@@ -133,7 +133,7 @@ export class InviteNewMemberService {
 
   public async updateInvitation(
     id: string,
-    body: { email?: string },
+    body: { email?: string; isActive?: boolean },
   ): Promise<MemberInvitesEntity> {
     await this.memberInvitesRepository.update(id, { ...body });
     return await this.memberInvitesRepository.findOne({

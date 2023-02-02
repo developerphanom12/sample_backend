@@ -844,28 +844,4 @@ export class CompanyMemberService {
       HttpStatus.FORBIDDEN,
     );
   }
-
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async clearInvitesTable() {
-    const sevenDaysAgo: Date = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-    // Find all ivites without resending for 7 days
-    const invites = await this.memberInvitesRepository.find({
-      where: { updated: LessThan(sevenDaysAgo) },
-      relations: ['members'],
-    });
-
-    // return if no invites found
-    if (!invites) return;
-
-    // Delete all expired invites (with company or not depending on ivitation type)
-    const promises = invites.map((invite) => {
-      this.inviteNewMemberService.deleteInvitation(
-        invite.id,
-        invite.isCompanyInvite,
-      );
-    });
-    const deleting = await Promise.all(promises);
-    return await deleting;
-  }
 }
