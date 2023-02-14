@@ -18,6 +18,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import e = require('express');
 import { User } from 'src/shared/decorators/user.decorator';
 import { JwtAuthenticationGuard } from 'src/shared/guards';
+import { AuthEntity } from '../auth/entities/auth.entity';
 import { ChangePasswordDTO } from './dto/change-password.dto';
 import { UpdateProfileDTO } from './dto/update-profile.dto';
 import { PROFILE_ROUTES, PROFILE_SWAGGER } from './profile.constants';
@@ -84,6 +85,7 @@ export class ProfileController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: PROFILE_SWAGGER.success,
+    type: AuthEntity,
   })
   @HttpCode(HttpStatus.OK)
   public async uploadAvatar(@User('id') id: string, @UploadedFile() file) {

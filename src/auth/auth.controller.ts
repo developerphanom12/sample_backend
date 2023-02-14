@@ -31,7 +31,7 @@ import { AuthEntity } from './entities/auth.entity';
 import { Response } from 'express';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { ResetPasswordDTO } from './dto/resset-password.dto';
-import { CURRENT_FRONT_END_URL, FRONT_END_URL } from '../constants/config';
+import { CURRENT_FRONT_END_URL } from '../constants/config';
 import { InviteMemberRequestRedirectDTO } from './dto/invite-member-request-redirect.dto';
 import { RtGuard } from '../shared/guards/rt.guard';
 import { GetUserRefreshToken } from '../shared/decorators/get-user-refresh-token.decorator';
@@ -50,7 +50,6 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      // const link = `${FRONT_END_URL.development}signup-new-member/${params.token}`;
       const link = `${CURRENT_FRONT_END_URL}signup-new-member/${params.token}`;
       return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
     } catch (error) {
@@ -133,7 +132,6 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      // const link = `${FRONT_END_URL.development}reset-password/${params.token}`;
       const link = `${CURRENT_FRONT_END_URL}reset-password/${params.token}`;
       return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
     } catch (error) {
@@ -148,7 +146,6 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      // const link = `${FRONT_END_URL.development}bind-social-account/${params.token}`;
       const link = `${CURRENT_FRONT_END_URL}bind-social-account/${params.token}`;
       return res.status(HttpStatus.MOVED_PERMANENTLY).redirect(link);
     } catch (error) {

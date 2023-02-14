@@ -2,9 +2,10 @@ import { HttpModule, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_FILTER } from '@nestjs/core/constants';
+
 import { DatabaseConfig } from './shared/configs/database.config';
 import { AuthModule } from './auth/auth.module';
-import { APP_FILTER } from '@nestjs/core/constants';
 import { HttpErrorFilter } from './shared/http-error.filter';
 import { CurrencyModule } from './currency/currency.module';
 import { AppController } from './app.controller';
@@ -22,6 +23,7 @@ import { ProfileModule } from './profile/profile.module';
 import { InviteNewMemberModule } from './invite-new-member/invite-new-member.module';
 import { ReceiptHubConnectModule } from './receipt-hub-connect/receipt-hub-connect.module';
 import { QuickbooksModule } from './integrations/quickbooks/quickbooks.module';
+import { FreeAgentModule } from './integrations/freeAgent/freeAgent.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -57,6 +59,7 @@ const currentEnv = process.env.NODE_ENV || 'local';
     InviteNewMemberModule,
     ReceiptHubConnectModule,
     QuickbooksModule,
+    FreeAgentModule,
   ],
   controllers: [AppController],
   providers: [

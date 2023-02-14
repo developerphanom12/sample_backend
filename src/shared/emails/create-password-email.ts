@@ -121,7 +121,7 @@ export const createPasswordMailSes = ({
                         <table border="0" style="width:100%;background-color:#FF5252;padding:15px 45px" class="content_wrapper">
                           <tr>
                             <td style="text-align:left;width:100%" align="left">
-<p style="font-family:Helvetica, Verdana, Arial, sans-serif;font-size:24px;color:white;margin:0;line-height:30px;font-weight:bold">ReceiptHub</p>
+<p style="font-family:Helvetica, Verdana, Arial, sans-serif;font-size:24px;color:white;margin:0;line-height:30px;font-weight:bold">ReceiptHub <img src='https://i.postimg.cc/Hx2kBbG3/logo.png' alt='logo' style="margin-right:5px;vertical-align:middle" /></p>
                             </td>
                           </tr>
                         </table>
