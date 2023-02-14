@@ -135,7 +135,7 @@ export class ProfileService {
     return user.profile_image;
   }
 
-  async uploadProfileImage(id: string, file) {
+  async uploadProfileImage(id: string, file): Promise<AuthEntity> {
     const user = await this.authRepository.findOne({ where: { id: id } });
     if (!user) {
       throw new HttpException('USER IS NOT FOUND', HttpStatus.NOT_FOUND);
@@ -175,7 +175,7 @@ export class ProfileService {
 
   async updateProfile(id: string, body: UpdateProfileDTO) {
     const { fullName, email, country, currency, date_format } = body;
-    
+
     const company = body.active_account
       ? await this.extractCompanyFromActiveAccount(body.active_account)
       : await this.extractCompanyFromUser(id);

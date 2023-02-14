@@ -90,24 +90,21 @@ export class EmailsService {
 
   public async sendLinkSocialAccToUser(body: IResetPasswordMessage) {
     const payload = bindSocialAccMailSes(body);
-    await this.sendEmail(payload);
+    return await this.sendEmail(payload);
   }
 
   public async sendInvitationCreateCompany(body: IInviteCompanyOwner) {
     const payload = inviteCompanyOwnerMailSes(body);
-
-    await this.sendEmail(payload);
+    return await this.sendEmail(payload);
   }
 
   public async sendInvitationExistMemberEmail(body: IInviteMember) {
     const payload = inviteExistMemberMailSes(body);
-
-    await this.sendEmail(payload);
+    return await this.sendEmail(payload);
   }
 
   public async sendInvitationNewMemberEmail(body: IInviteMember) {
     const payload = inviteNewMemberMailSes(body);
-
-    await this.sendEmail(payload);
+    return await this.sendEmail(payload);
   }
 }
