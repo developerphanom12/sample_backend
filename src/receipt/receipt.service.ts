@@ -205,6 +205,7 @@ export class ReceiptService {
         receiptData.receipt_date ||
         receiptData.total ||
         receiptData.tax ||
+        receiptData.currency ||
         receiptData.net
       )
     ) {
