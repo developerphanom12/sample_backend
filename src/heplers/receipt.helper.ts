@@ -9,19 +9,95 @@ import {
   RECEIPT_TOTAL_WORDS_REGEX,
   RECEIPT_VAT_REGEX,
 } from '../receipt/receipt.constants';
+import { parse } from 'date-fns';
 
 export const extractDate = (text: string) => {
   try {
-    const receiptData: string[] | null = text.match(RECEIPT_DATE_REGEX);
+    const regex1 = /\d{4}-\d{2}-\d{2}/;
+    const regex2 = /\d{2}\/\d{2}\/\d{4}/;
+    const regex3 = /\d{2}\/\d{2}\/\d{4}/;
+    const regex4 = /\d{4}\/\d{2}\/\d{2}/;
+    const regex5 = /[A-Z][a-z]+ \d{1,2}, \d{4}/;
+    const regex6 = /\d{1,2} [A-Z][a-z]+ \d{4}/;
+    const regex7 = /\d{1,2}\/\d{1,2}\/\d{2,4}/;
+    const regex8 = /\d{2}\.\d{2}\.\d{4}/;
+    const regex9 = /\d{4}\.\d{2}\.\d{2}/;
+    const regex10 = /\d{4}\/\d{2}\/\d{2}/;
+    const regex11 = /[A-Za-z]{3} \d{2} [A-Za-z]{3} \d{4}/;
+
+    const receiptData: string[] | null =
+      text.match(RECEIPT_DATE_REGEX) ||
+      text.match(regex1) ||
+      text.match(regex2) ||
+      text.match(regex3) ||
+      text.match(regex4) ||
+      text.match(regex5) ||
+      text.match(regex6) ||
+      text.match(regex7) ||
+      text.match(regex8) ||
+      text.match(regex9) ||
+      text.match(regex10) ||
+      text.match(regex11);
+
     if (!receiptData) {
       return null;
     }
+
+    const parseDateString = (dateString: string) => {
+      // Define an array of regular expressions for common date formats
+      const dateFormats = [
+        { reg: /\d{4}-\d{2}-\d{2}/, type: 'yyyy-MM-dd' },
+        { reg: /\d{2}\/\d{2}\/\d{4}/, type: 'MM/dd/yyyy' },
+        { reg: /\d{2}\/\d{2}\/\d{4}/, type: 'dd/MM/yyyy' },
+        { reg: /\d{2}\.\d{2}\.\d{4}/, type: 'dd.MM.yyyy' },
+        { reg: /\d{2}\.\d{2}\.\d{4}/, type: 'MM.dd.yyyy' },
+        { reg: /\d{4}\.\d{2}\.\d{2}/, type: 'yyyy.MM.dd' },
+        { reg: /\d{2}-\d{2}-\d{4}/, type: 'MM-dd-yyyy' },
+        { reg: /\d{2}-\d{2}-\d{4}/, type: 'dd-MM-yyyy' },
+        { reg: /\d{2}\/\d{2}\/\d{2}/, type: 'MM/dd/yy' },
+        { reg: /\d{2}\/\d{2}\/\d{2}/, type: 'dd/MM/yy' },
+      ];
+      const matched = [];
+
+      for (const format of dateFormats) {
+        const match = dateString.match(format.reg);
+
+        if (match) {
+          matched.push({ date: match[0], type: format.type });
+        }
+      }
+
+      const parseValidDate = (dateObjects) => {
+        for (const dateObject of dateObjects) {
+          const dateString = dateObject.date;
+          const dateFormat = dateObject.type;
+
+          try {
+            const parsedDate = parse(dateString, dateFormat, new Date());
+            if (!isNaN(parsedDate.getTime())) {
+              return parsedDate;
+            }
+          } catch (error) {
+            // Invalid date format, continue to the next format
+            continue;
+          }
+        }
+
+        // If none of the formats are valid, return null or handle as needed
+        return null;
+      };
+
+      return parseValidDate(matched) || new Date(NaN);
+    };
+
     const timeString = receiptData[0]
       .replace(/\./g, '/')
       .split('/')
       .reverse()
       .join('/');
-    const timestamp = Date.parse(timeString);
+
+    const timestamp =
+      Date.parse(timeString) || parseDateString(receiptData[0]).getTime();
 
     if (isNaN(timestamp)) {
       return null;
@@ -164,10 +240,10 @@ export const extractNet = (text: string) => {
 
 export const extractSupplier = (text: string) => {
   try {
-    if (text.length < 3) {
+    if (text?.length < 3) {
       return null;
     }
-    const result = text.match(/\w+\s?\w+/g);
+    const result = text?.match(/\w+\s?\w+/g);
     if (!result) {
       return text;
     } else {
