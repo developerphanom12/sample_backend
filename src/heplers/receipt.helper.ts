@@ -24,6 +24,8 @@ export const extractDate = (text: string) => {
     const regex9 = /\d{4}\.\d{2}\.\d{2}/;
     const regex10 = /\d{4}\/\d{2}\/\d{2}/;
     const regex11 = /[A-Za-z]{3} \d{2} [A-Za-z]{3} \d{4}/;
+    const regex12 = /\d{1,2} [A-Za-z]{3} \d{4}/;
+    const regex13 = /\d{1,2} [A-Za-z]{3} \d{2}/;
 
     const receiptData: string[] | null =
       text.match(RECEIPT_DATE_REGEX) ||
@@ -37,7 +39,9 @@ export const extractDate = (text: string) => {
       text.match(regex8) ||
       text.match(regex9) ||
       text.match(regex10) ||
-      text.match(regex11);
+      text.match(regex11) ||
+      text.match(regex12) ||
+      text.match(regex13);
 
     if (!receiptData) {
       return null;

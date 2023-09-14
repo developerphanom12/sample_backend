@@ -159,6 +159,7 @@ export class ReceiptService {
         description: description,
         currency: findedCurrency,
         company: { id: company.id },
+        payment_status: true,
       });
       return await this.receiptRepository.findOne({
         where: { id: receipt.id },
