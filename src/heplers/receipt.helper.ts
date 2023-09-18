@@ -103,11 +103,11 @@ export const extractDate = (text: string) => {
       .reverse()
       .join('/');
 
-    const regexReplacedText = regexData[0]
-      .replace(/\./g, '/')
-      .split('/')
-      .reverse()
-      .join('/');
+    const regexReplacedText = regexData?.[0]
+      ?.replace(/\./g, '/')
+      ?.split('/')
+      ?.reverse()
+      ?.join('/');
 
     const timestamp =
       Date.parse(timeString) ||

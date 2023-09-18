@@ -251,21 +251,49 @@ export class ReceiptService {
       order: { created: 'ASC' },
     });
 
-    const promises = photos.map((photo, i) => {
-      const custom_id =
-        (receipts.length > 0 &&
-          +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')) +
-          (i + 1) || i + 1;
+    const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
 
-      return this.getImageData(
-        photo,
-        custom_id,
-        company.id,
-        activeAccount.role,
-      );
-    });
+    const uploadAll = async (files) => {
+      const results = [];
 
-    const textractData = await Promise.all(promises);
+      for (let i = 0; i < files.length; i++) {
+        if (results.length) {
+          await delay(1); // 1 second
+        }
+        const custom_id =
+          (receipts.length > 0 &&
+            +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')) +
+            (i + 1) || i + 1;
+
+        const response = await this.getImageData(
+          files[i],
+          custom_id,
+          company.id,
+          activeAccount.role,
+        );
+
+        results.push(response);
+      }
+
+      return results;
+    };
+    // const bal = await uploadAll(photos);
+    // console.log('🟥  ReceiptService  uploadAll:', bal);
+    // // const promises = photos.map((photo, i) => {
+    // //   const custom_id =
+    // //     (receipts.length > 0 &&
+    // //       +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')) +
+    // //       (i + 1) || i + 1;
+
+    // //   return this.getImageData(
+    // //     photo,
+    // //     custom_id,
+    // //     company.id,
+    // //     activeAccount.role,
+    // //   );
+    // // });
+
+    const textractData = await uploadAll(photos);
 
     for await (const data of textractData) {
       await this.saveReceipt(data, body.description, company, currency);
