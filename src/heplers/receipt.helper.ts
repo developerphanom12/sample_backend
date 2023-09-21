@@ -10,7 +10,6 @@ import {
   RECEIPT_VAT_REGEX,
 } from '../receipt/receipt.constants';
 import { parse } from 'date-fns';
-import dateExtractor from 'extract-date';
 
 export const extractDate = (text: string) => {
   try {
@@ -27,8 +26,10 @@ export const extractDate = (text: string) => {
     const regex11 = /[A-Za-z]{3} \d{2} [A-Za-z]{3} \d{4}/;
     const regex12 = /\d{1,2} [A-Za-z]{3} \d{4}/;
     const regex13 = /\d{1,2} [A-Za-z]{3} \d{2}/;
+    const regex14 = /([A-Za-z]+)(\d{1,2})'(\d{2})/;
+    const regex15 = /(\d{1,2})([A-Za-z]+)'(\d{2})/;
 
-    const regexData: string[] | null =
+    const receiptData: string[] | null =
       text.match(RECEIPT_DATE_REGEX) ||
       text.match(regex1) ||
       text.match(regex2) ||
@@ -42,9 +43,9 @@ export const extractDate = (text: string) => {
       text.match(regex10) ||
       text.match(regex11) ||
       text.match(regex12) ||
-      text.match(regex13);
-
-    const receiptData = dateExtractor(text)?.[0]?.date;
+      text.match(regex13) ||
+      text.match(regex14) ||
+      text.match(regex15);
 
     if (!receiptData) {
       return null;
@@ -54,11 +55,11 @@ export const extractDate = (text: string) => {
       // Define an array of regular expressions for common date formats
       const dateFormats = [
         { reg: /\d{4}-\d{2}-\d{2}/, type: 'yyyy-MM-dd' },
-        { reg: /\d{2}\/\d{2}\/\d{4}/, type: 'MM/dd/yyyy' },
-        { reg: /\d{2}\/\d{2}\/\d{4}/, type: 'dd/MM/yyyy' },
         { reg: /\d{2}\.\d{2}\.\d{4}/, type: 'dd.MM.yyyy' },
+        { reg: /\d{2}\/\d{2}\/\d{4}/, type: 'dd/MM/yyyy' },
         { reg: /\d{2}\.\d{2}\.\d{4}/, type: 'MM.dd.yyyy' },
-        { reg: /\d{4}\.\d{2}\.\d{2}/, type: 'yyyy.dd.mm' },
+        { reg: /\d{2}\/\d{2}\/\d{4}/, type: 'MM/dd/yyyy' },
+        { reg: /\d{4}\.\d{2}\.\d{2}/, type: 'yyyy.MM.dd' },
         { reg: /\d{2}-\d{2}-\d{4}/, type: 'MM-dd-yyyy' },
         { reg: /\d{2}-\d{2}-\d{4}/, type: 'dd-MM-yyyy' },
         { reg: /\d{2}\/\d{2}\/\d{2}/, type: 'MM/dd/yy' },
@@ -97,21 +98,14 @@ export const extractDate = (text: string) => {
       return parseValidDate(matched) || new Date(NaN);
     };
 
-    const timeString = receiptData
+    const timeString = receiptData[0]
       .replace(/\./g, '/')
       .split('/')
       .reverse()
       .join('/');
 
-    const regexReplacedText = regexData?.[0]
-      ?.replace(/\./g, '/')
-      ?.split('/')
-      ?.reverse()
-      ?.join('/');
-
     const timestamp =
-      Date.parse(timeString) ||
-      parseDateString(receiptData[0] || regexReplacedText).getTime();
+      Date.parse(timeString) || parseDateString(receiptData[0]).getTime();
 
     if (isNaN(timestamp)) {
       return null;
