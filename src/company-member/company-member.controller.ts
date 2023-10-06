@@ -183,7 +183,7 @@ export class CompanyMemberController {
     description: PROFILE_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async getAvatar(@Param('imagename') imagename: string) {
-    return await this.companyMemberService.getProfileImage(imagename);
+  public async getAvatar(@Param('id') id: string) {
+    return await this.companyMemberService.getProfileImage(id);
   }
 }

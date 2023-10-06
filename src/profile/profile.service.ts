@@ -115,11 +115,13 @@ export class ProfileService {
     };
   }
 
-  async getProfileImage(imagename: string, res) {
+  async getProfileImage(id: string, res) {
+    const imagename = await this.getAvatarName(id);
     try {
       const readStream = await this.s3Service.getFilesStream(
         `profiles/${imagename}`,
       );
+
       readStream.pipe(res);
     } catch (e) {
       console.log(e);
@@ -153,7 +155,9 @@ export class ProfileService {
     await this.authRepository.update(user.id, {
       profile_image: imageName,
     });
-    return await this.authRepository.findOne({ where: { id: id } });
+    const data = await this.authRepository.findOne({ where: { id: id } });
+
+    return data;
   }
 
   async deleteProfileImage(id: string, image_name: string) {
@@ -171,6 +175,24 @@ export class ProfileService {
       console.log(e);
       throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
     }
+  }
+
+  async deleteAvatar(id: string) {
+    console.log('🟥  ProfileService  id:', id);
+    const user = await this.authRepository.findOne({ where: { id: id } });
+    if (!user) {
+      throw new HttpException('USER IS NOT FOUND', HttpStatus.NOT_FOUND);
+    }
+
+    if (!!user.profile_image) {
+      await this.deleteProfileImage(id, user.profile_image);
+    }
+
+    await this.authRepository.update(user.id, {
+      profile_image: null,
+    });
+
+    return await this.authRepository.findOne({ where: { id: id } });
   }
 
   async updateProfile(id: string, body: UpdateProfileDTO) {

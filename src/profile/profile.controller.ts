@@ -92,6 +92,12 @@ export class ProfileController {
     return await this.profileService.uploadProfileImage(id, file);
   }
 
+  @Post(PROFILE_ROUTES.delete_photo)
+  @HttpCode(HttpStatus.OK)
+  public async deleteAvatar(@User('id') id: string) {
+    return await this.profileService.deleteAvatar(id);
+  }
+
   @Get(PROFILE_ROUTES.get_photo)
   @ApiOperation({ summary: PROFILE_SWAGGER.get_photo })
   @ApiResponse({
@@ -99,18 +105,7 @@ export class ProfileController {
     description: PROFILE_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)
-  public async getAvatar(@Param('imagename') imagename: string, @Res() res) {
-    return await this.profileService.getProfileImage(imagename, res);
-  }
-
-  @Get(PROFILE_ROUTES.get_avatar_name)
-  @ApiOperation({ summary: PROFILE_SWAGGER.get_avatar_name })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: PROFILE_SWAGGER.success,
-  })
-  @HttpCode(HttpStatus.OK)
-  public async getAvatarName(@User('id') id: string) {
-    return await this.profileService.getAvatarName(id);
+  public async getAvatar(@User('id') id: string, @Res() res) {
+    return await this.profileService.getProfileImage(id, res);
   }
 }

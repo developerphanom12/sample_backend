@@ -277,21 +277,6 @@ export class ReceiptService {
 
       return results;
     };
-    // const bal = await uploadAll(photos);
-    // console.log('🟥  ReceiptService  uploadAll:', bal);
-    // // const promises = photos.map((photo, i) => {
-    // //   const custom_id =
-    // //     (receipts.length > 0 &&
-    // //       +receipts[receipts.length - 1].custom_id.replace(/[^\d]/g, '')) +
-    // //       (i + 1) || i + 1;
-
-    // //   return this.getImageData(
-    // //     photo,
-    // //     custom_id,
-    // //     company.id,
-    // //     activeAccount.role,
-    // //   );
-    // // });
 
     const textractData = await uploadAll(photos);
 
