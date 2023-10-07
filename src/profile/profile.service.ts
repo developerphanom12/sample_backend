@@ -117,6 +117,9 @@ export class ProfileService {
 
   async getProfileImage(id: string, res) {
     const imagename = await this.getAvatarName(id);
+    if (!imagename) {
+      throw new HttpException('IMAGE NOT FOUND', HttpStatus.NOT_FOUND);
+    }
     try {
       const readStream = await this.s3Service.getFilesStream(
         `profiles/${imagename}`,
@@ -178,7 +181,6 @@ export class ProfileService {
   }
 
   async deleteAvatar(id: string) {
-    console.log('🟥  ProfileService  id:', id);
     const user = await this.authRepository.findOne({ where: { id: id } });
     if (!user) {
       throw new HttpException('USER IS NOT FOUND', HttpStatus.NOT_FOUND);
