@@ -1,5 +1,6 @@
 import {
   AnalyzeDocumentCommand,
+  AnalyzeDocumentCommandInput,
   TextractClient,
 } from '@aws-sdk/client-textract';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
@@ -76,7 +77,10 @@ export class S3Service {
       },
       FeatureTypes: ['TABLES', 'FORMS'],
     };
-    const aExpense = new AnalyzeDocumentCommand(params);
+    //@ts-ignore
+    const aExpense = new AnalyzeDocumentCommand(
+      params as AnalyzeDocumentCommandInput,
+    );
     const response = await this.textractClient.send(aExpense);
     const lines = response.Blocks.filter((b) => b.BlockType === 'LINE').map(
       (i) => i.Text,
