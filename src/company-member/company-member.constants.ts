@@ -12,6 +12,7 @@ export const COMPANY_MEMBER_ROUTES = {
   update_create_company_invite: 'update-create-company-invite/:inviteId',
   delete_create_company_invite: 'delete-create-company-invite/:inviteId',
   delete: 'delete/:accountId',
+  deleteOwn: 'delete-own/:accountId',
   get_accounts: 'get-all',
   select_active_account: 'select/:accountId',
   resend_invitation: 'resend-invitation/:invitationId',

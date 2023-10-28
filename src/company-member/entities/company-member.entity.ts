@@ -52,22 +52,30 @@ export class MemberEntity {
   company: CompanyEntity;
 
   @ApiProperty()
-  @OneToMany((type) => SupplierEntity, (data) => data.creator)
+  @OneToMany((type) => SupplierEntity, (data) => data.creator, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   suppliersAccounts: SupplierEntity[];
 
   @ApiProperty()
-  @OneToMany((type) => CategoryEntity, (data) => data.creator)
+  @OneToMany((type) => CategoryEntity, (data) => data.creator, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   categories: CategoryEntity[];
 
   @ApiProperty()
-  @OneToMany((type) => PaymentTypeEntity, (data) => data.creator)
+  @OneToMany((type) => PaymentTypeEntity, (data) => data.creator, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   payment_types: PaymentTypeEntity[];
 
   @ApiProperty()
-  @ManyToOne((type) => AuthEntity, (data) => data.accounts)
+  @ManyToOne((type) => AuthEntity, (data) => data.accounts, {
+    onDelete: 'CASCADE',
+  })
   user: AuthEntity;
 
   @ApiProperty()

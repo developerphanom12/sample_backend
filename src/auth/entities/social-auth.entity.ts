@@ -62,7 +62,9 @@ export class SocialAuthEntity {
   })
   capiumEmail: string;
 
-  @OneToOne((type) => AuthEntity, (data) => data.socialAuth)
+  @OneToOne((type) => AuthEntity, (data) => data.socialAuth, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   auth: AuthEntity;
 }

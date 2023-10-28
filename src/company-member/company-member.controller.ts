@@ -69,6 +69,16 @@ export class CompanyMemberController {
       body,
     );
   }
+  @Post('delete')
+  @UseGuards(new JwtAuthenticationGuard())
+  @HttpCode(HttpStatus.OK)
+  public async removeAccount(
+    @User('id') id: string,
+    @Param('accountId') accountId: string,
+    @Body() body: UpdateCompanyAccountDTO,
+  ) {
+    return await this.companyMemberService.removeAccount(id, accountId);
+  }
 
   @Put(COMPANY_MEMBER_ROUTES.update_create_company_invite)
   @UseGuards(new JwtAuthenticationGuard())
@@ -174,6 +184,21 @@ export class CompanyMemberController {
       accountId,
       body?.active_account,
     );
+  }
+  @Delete(COMPANY_MEMBER_ROUTES.deleteOwn)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: COMPANY_MEMBER_SWAGGER.delete })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: COMPANY_MEMBER_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async deleteOwnUser(
+    @User('id') id: string,
+    @Param('accountId') accountId: string,
+    @Query() body: { active_account?: string },
+  ) {
+    return await this.companyMemberService.deleteOwnUser(id, accountId);
   }
 
   @Get(PROFILE_ROUTES.get_photo)

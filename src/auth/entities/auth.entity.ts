@@ -64,7 +64,9 @@ export class AuthEntity {
   publicKey: string;
 
   @ApiProperty({ nullable: true })
-  @OneToOne((type) => SocialAuthEntity, (data) => data.auth)
+  @OneToOne((type) => SocialAuthEntity, (data) => data.auth, {
+    onDelete: 'CASCADE',
+  })
   socialAuth: SocialAuthEntity;
 
   @ApiProperty({ nullable: true })
@@ -73,6 +75,8 @@ export class AuthEntity {
 
   @ApiProperty({ nullable: true })
   @JoinColumn()
-  @OneToMany((type) => MemberEntity, (data) => data.user)
+  @OneToMany((type) => MemberEntity, (data) => data.user, {
+    onDelete: 'CASCADE',
+  })
   accounts: MemberEntity[];
 }

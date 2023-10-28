@@ -755,6 +755,17 @@ export class CompanyMemberService {
       message: 'The account has been deleted',
     };
   }
+  async deleteOwnUser(id: string, accountId: string) {
+    const user = await this.authRepository.findOne({
+      where: {
+        id: accountId,
+      },
+    });
+    if (!user) {
+      return;
+    }
+    await this.authRepository.delete(user.id);
+  }
 
   public async resendInvitation(id: string, invitationId: string) {
     // Check is user invitor exist
@@ -783,6 +794,14 @@ export class CompanyMemberService {
       return this.resendCompanyOwnerInvite(id, invite, userInvitor);
     }
     return this.resendCompanyMemberInvite(id, invite, userInvitor);
+  }
+
+  async removeAccount(id: string, accountId: string) {
+    const user = await this.memberRepository.findOne({
+      where: { id: accountId },
+      relations: ['company', 'memberInvite'],
+    });
+    console.log(user);
   }
 
   async updateCompanyMember(

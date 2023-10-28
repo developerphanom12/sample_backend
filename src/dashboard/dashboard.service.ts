@@ -153,6 +153,17 @@ export class DashboardService {
     const accountsWithCompanies = await Promise.all(promises);
     return await accountsWithCompanies.filter((el) => el.company.name);
   }
+  async getUser(id: string) {
+    const data = await this.authRepository.findOne({
+      where: { id: id },
+      relations: ['accounts'],
+    });
+    if (data) {
+      return data;
+    } else {
+      return 'USER DELETED';
+    }
+  }
 
   async getRecentReceipts(
     id: string,
