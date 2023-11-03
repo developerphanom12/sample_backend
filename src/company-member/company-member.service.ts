@@ -761,8 +761,17 @@ export class CompanyMemberService {
         id: accountId,
       },
     });
+
     if (!user) {
       return;
+    }
+    const company = await this.memberRepository.find({
+      relations: ['user', 'company'],
+    });
+    const current = company.find((el) => el?.user?.id === user.id);
+    if (current && current?.role === 'owner') {
+      await this.memberRepository.delete(current.id);
+      await this.companyRepository.delete(current.company.id);
     }
     await this.authRepository.delete(user.id);
   }
