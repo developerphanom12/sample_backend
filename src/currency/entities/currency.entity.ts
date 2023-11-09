@@ -43,9 +43,13 @@ export class CurrencyEntity {
   @Column({ nullable: true })
   symbol: string;
 
-  @OneToMany((type) => CompanyEntity, (data) => data.currency)
+  @OneToMany((type) => CompanyEntity, (data) => data.currency, {
+    onDelete: 'CASCADE',
+  })
   company: CompanyEntity;
 
-  @OneToMany((type) => ReceiptEntity, (data) => data.currency)
+  @OneToMany((type) => ReceiptEntity, (data) => data.currency, {
+    onDelete: 'CASCADE',
+  })
   receipts: ReceiptEntity;
 }

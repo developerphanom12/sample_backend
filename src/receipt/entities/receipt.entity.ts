@@ -104,11 +104,15 @@ export class ReceiptEntity {
   @JoinColumn()
   company: CompanyEntity;
 
-  @ManyToOne((type) => CurrencyEntity, (data) => data.receipts)
+  @ManyToOne((type) => CurrencyEntity, (data) => data.receipts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   currency: CurrencyEntity;
 
-  @ManyToOne((type) => SupplierEntity, (data) => data.receipts)
+  @ManyToOne((type) => SupplierEntity, (data) => data.receipts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   supplier_account: SupplierEntity;
 

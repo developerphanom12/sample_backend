@@ -31,7 +31,9 @@ export class PaymentTypeEntity {
   @Column()
   name: string;
 
-  @ManyToOne((type) => MemberEntity, (data) => data.payment_types)
+  @ManyToOne((type) => MemberEntity, (data) => data.payment_types, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   creator: MemberEntity;
 
@@ -42,6 +44,8 @@ export class PaymentTypeEntity {
   @JoinColumn()
   company: CompanyEntity;
 
-  @OneToMany((type) => ReceiptEntity, (data) => data.payment_type)
+  @OneToMany((type) => ReceiptEntity, (data) => data.payment_type, {
+    onDelete: 'CASCADE',
+  })
   receipts: ReceiptEntity[];
 }

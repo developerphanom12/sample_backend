@@ -31,7 +31,9 @@ export class SupplierEntity {
   @Column()
   name: string;
 
-  @ManyToOne((type) => MemberEntity, (data) => data.suppliersAccounts)
+  @ManyToOne((type) => MemberEntity, (data) => data.suppliersAccounts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   creator: MemberEntity;
 
@@ -42,6 +44,8 @@ export class SupplierEntity {
   @JoinColumn()
   company: CompanyEntity;
 
-  @OneToMany((type) => ReceiptEntity, (data) => data.supplier_account)
+  @OneToMany((type) => ReceiptEntity, (data) => data.supplier_account, {
+    onDelete: 'CASCADE',
+  })
   receipts: ReceiptEntity[];
 }

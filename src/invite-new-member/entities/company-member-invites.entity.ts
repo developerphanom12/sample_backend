@@ -40,7 +40,9 @@ export class MemberInvitesEntity {
   isActive: boolean;
 
   @ApiProperty()
-  @OneToMany((type) => MemberEntity, (data) => data.memberInvite)
+  @OneToMany((type) => MemberEntity, (data) => data.memberInvite, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   members: MemberEntity[];
 }

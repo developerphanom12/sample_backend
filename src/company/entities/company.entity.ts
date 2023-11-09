@@ -53,22 +53,32 @@ export class CompanyEntity {
   currency: CurrencyEntity;
 
   @ApiProperty({ nullable: true })
-  @OneToMany((type) => MemberEntity, (data) => data.company)
+  @OneToMany((type) => MemberEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
   members: MemberEntity[];
 
   @ApiProperty({ nullable: true })
-  @OneToMany((type) => ReceiptEntity, (data) => data.company)
+  @OneToMany((type) => ReceiptEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
   receipts: ReceiptEntity[];
 
   @ApiProperty({ nullable: true })
-  @OneToMany((type) => SupplierEntity, (data) => data.company)
+  @OneToMany((type) => SupplierEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
   suppliersAccounts: SupplierEntity[];
 
   @ApiProperty({ nullable: true })
-  @OneToMany((type) => CategoryEntity, (data) => data.company)
+  @OneToMany((type) => CategoryEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
   categories: CategoryEntity[];
 
   @ApiProperty({ nullable: true })
-  @OneToMany((type) => PaymentTypeEntity, (data) => data.company)
+  @OneToMany((type) => PaymentTypeEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
   payment_types: PaymentTypeEntity[];
 }

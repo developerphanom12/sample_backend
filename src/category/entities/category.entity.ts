@@ -31,7 +31,9 @@ export class CategoryEntity {
   @Column()
   name: string;
 
-  @ManyToOne((type) => MemberEntity, (data) => data.categories)
+  @ManyToOne((type) => MemberEntity, (data) => data.categories, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   creator: MemberEntity;
 
@@ -42,7 +44,9 @@ export class CategoryEntity {
   @JoinColumn()
   company: CompanyEntity;
 
-  @ApiProperty({nullable: true})
-  @OneToMany((type) => ReceiptEntity, (data) => data.category)
+  @ApiProperty({ nullable: true })
+  @OneToMany((type) => ReceiptEntity, (data) => data.category, {
+    onDelete: 'CASCADE',
+  })
   receipts: ReceiptEntity[];
 }

@@ -761,6 +761,7 @@ export class CompanyMemberService {
         id: accountId,
       },
     });
+    console.log('🟥  CompanyMemberService  user:', user);
 
     if (!user) {
       return;
@@ -768,6 +769,7 @@ export class CompanyMemberService {
     const company = await this.memberRepository.find({
       relations: ['user', 'company'],
     });
+
     const current = company.find((el) => el?.user?.id === user.id);
     if (current && current?.role === 'owner') {
       await this.memberRepository.delete(current.id);
