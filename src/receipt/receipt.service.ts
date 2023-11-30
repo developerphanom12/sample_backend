@@ -180,13 +180,35 @@ export class ReceiptService {
     photo: string;
   }) {
     const text = textData.join(' ').toLocaleLowerCase();
+    const newString = text.replace(/ /g, '');
+
+    const vatRegex = /(\d+(\.\d+)?)%/;
+
+    const matches = newString.match(vatRegex);
+    const vatPercent = Number(matches.find((item) => Number(item) > 0));
+    const vatRate = !isNaN(vatPercent)
+      ? vatPercent
+      : vatPercent
+      ? vatPercent
+      : 0;
+
+    const tax = extractVat(text) || 0;
+    const total = extractTotal(text) || 0;
+    const net = extractNet(text) || 0;
+
+    const taxCalculated = tax ? tax : total ? (total / 100) * vatRate : 0;
+
+    const netCalculated = net ? net : total - tax;
+
+    const totalCalculated = total ? total : taxCalculated / (vatRate / 100);
+
     const receiptData = {
       supplier: extractSupplier(textData[0]),
       receipt_date: extractDate(text),
-      tax: extractVat(text) || 0,
-      total: extractTotal(text) || 0,
-      net: extractNet(text) || 0,
-      vat_code: null,
+      tax: taxCalculated || 0,
+      total: totalCalculated || 0,
+      net: netCalculated || 0,
+      vat_code: vatRate || 0,
       currency: extractCurrency(text),
     };
 

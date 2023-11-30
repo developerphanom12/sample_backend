@@ -185,6 +185,7 @@ export const extractVatNumbers = (text: string, regex: RegExp) => {
   if (!results[0] || isNaN(+results[0])) {
     return null;
   }
+
   return +results[0];
 };
 
