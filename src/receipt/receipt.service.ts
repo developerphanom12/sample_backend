@@ -182,10 +182,17 @@ export class ReceiptService {
     const text = textData.join(' ').toLocaleLowerCase();
     const newString = text.replace(/ /g, '');
 
-    const vatRegex = /(\d+(\.\d+)?)%/;
+    const vatRegex = /(\d+(\.\d+)?)%/g;
 
     const matches = newString.match(vatRegex);
-    const vatPercent = Number(matches.find((item) => Number(item) > 0));
+
+    const vatPercent = parseInt(
+      matches.find((item) => {
+        return parseInt(item, 10) > 0;
+      }) || '',
+      10,
+    );
+
     const vatRate = !isNaN(vatPercent)
       ? vatPercent
       : vatPercent
