@@ -187,7 +187,7 @@ export class ReceiptService {
     const matches = newString.match(vatRegex);
 
     const vatPercent = parseInt(
-      matches.find((item) => {
+      matches?.find((item) => {
         return parseInt(item, 10) > 0;
       }) || '',
       10,
