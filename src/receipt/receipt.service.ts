@@ -199,8 +199,11 @@ export class ReceiptService {
       ? vatPercent
       : 0;
 
+    console.log('🟥  ReceiptService  vatRate:', vatRate);
     const tax = extractVat(text) || 0;
+
     const total = extractTotal(text) || 0;
+
     const net = extractNet(text) || 0;
 
     const taxCalculated = tax ? tax : total ? (total / 100) * vatRate : 0;
@@ -212,7 +215,7 @@ export class ReceiptService {
     const receiptData = {
       supplier: extractSupplier(textData[0]),
       receipt_date: extractDate(text),
-      tax: taxCalculated || 0,
+      tax: taxCalculated === totalCalculated ? 0 : taxCalculated || 0,
       total: totalCalculated || 0,
       net: netCalculated || 0,
       vat_code: vatRate || 0,
