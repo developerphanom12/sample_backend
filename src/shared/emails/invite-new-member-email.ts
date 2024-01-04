@@ -127,7 +127,7 @@ export const inviteNewMemberMailSes = (data: IInviteMember) => {
                             <td>
                               <p style="font-family:'Open Sans', sans-serif;font-size:16px;font-weight:600;line-height:22px;margin-bottom:43px;text-align:center;color:#000000;" class="mobile_paragraph">
                                 You are invited to join a company on 
-                                <a href="http://18.133.68.78/" target="_blank" style="color: #0092DB; text-decoration: underline;" >Receipthub.co.uk</a> 
+                                <a href="https://www.receipt-hub.co.uk/" target="_blank" style="color: #0092DB; text-decoration: underline;" >Receipthub.co.uk</a> 
                               </p>
                               <p style="font-family:'Open Sans', sans-serif;font-size:16px;font-weight:400;line-height:22px;margin-bottom:35px;text-align:center;" class="mobile_paragraph">
                               ${
