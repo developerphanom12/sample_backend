@@ -169,7 +169,7 @@ export class ReceiptService {
       console.log(error);
     }
   }
-
+    
   async extractData({ 
     textData,
     photo,
