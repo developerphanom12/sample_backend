@@ -88,6 +88,14 @@ export class ReceiptEntity {
   @ApiProperty({ nullable: true })
   @Column({ nullable: true, default: false })
   publish_status: boolean;
+ 
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true, default: false })
+  active_status: boolean;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true, default: false })
+  approved_status: boolean;
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true, default: false })

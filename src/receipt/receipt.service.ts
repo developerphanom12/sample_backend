@@ -7,7 +7,7 @@ import {
   extractCurrency,
   extractDate,
   extractNet,
-  extractTotal,
+  extractTotal,  
   extractVat,
 } from '../heplers/receipt.helper';
 import { EReceiptStatus, IFilters } from './receipt.constants';
@@ -88,7 +88,7 @@ export class ReceiptService {
       where: { id: user.active_account },
       relations: ['company'],
     });
-
+     
     if (!account) {
       throw new HttpException(
         'COMPANY ACCOUNT NOT FOUND',
@@ -111,7 +111,7 @@ export class ReceiptService {
     const imageName = photoPath.key.split('/')[2];
     return { textractImage, imageName };
   }
-
+ 
   async getImageData(
     photo,
     customId: number,
@@ -125,7 +125,7 @@ export class ReceiptService {
         textData: textractImage,
         photo: imageName,
         userRole,
-      });
+      }); 
 
       return {
         ...data,
@@ -141,7 +141,7 @@ export class ReceiptService {
     }
   }
 
-  async saveReceipt(
+  async saveReceipt( 
     receiptData,
     description: string,
     company: CompanyEntity,
@@ -152,15 +152,15 @@ export class ReceiptService {
         ? await this.currencyRepository.findOne({
             where: { country: receiptData.currency },
           })
-        : currency;
+        : currency; 
 
       const receipt = await this.receiptRepository.save({
-        ...receiptData,
+        ...receiptData, 
         description: description,
         currency: findedCurrency,
         company: { id: company.id },
         payment_status: true,
-      });
+      }); 
       return await this.receiptRepository.findOne({
         where: { id: receipt.id },
         relations: ['currency', 'company'],
@@ -170,7 +170,7 @@ export class ReceiptService {
     }
   }
 
-  async extractData({
+  async extractData({ 
     textData,
     photo,
     userRole,
@@ -183,7 +183,7 @@ export class ReceiptService {
     const newString = text.replace(/ /g, '');
 
     const vatRegex = /(\d+(\.\d+)?)%/g;
-
+ 
     const matches = newString.match(vatRegex);
 
     const vatPercent = parseInt(
@@ -196,7 +196,7 @@ export class ReceiptService {
     const vatRate = !isNaN(vatPercent)
       ? vatPercent
       : vatPercent
-      ? vatPercent
+      ? vatPercent 
       : 0;
 
     const tax = extractVat(text) || 0;
@@ -210,7 +210,7 @@ export class ReceiptService {
     const netCalculated = net ? net : total - tax;
 
     const totalCalculated = total ? total : taxCalculated / (vatRate / 100);
-
+ 
     const receiptData = {
       supplier: extractSupplier(textData[0]),
       receipt_date: extractDate(text),

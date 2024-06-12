@@ -50,7 +50,7 @@ export const RECEIPT_ROUTES = {
   delete_image: 'delete-image/:imagename',
 };
 
-export const RECEIPT_PHOTOS_LIMIT = 10;
+export const RECEIPT_PHOTOS_LIMIT = 50;
 export const RECEIPT_TOTAL_WORDS_REGEX =
   /prev bal|balance due|t o t a l|total|total sale|total amount|paid|total\samount|total\samount\s:|total sale|total to pay|payment|deficit|sale amount|amount|amt|amt.due/g;
 

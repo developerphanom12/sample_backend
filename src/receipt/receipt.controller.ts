@@ -45,7 +45,7 @@ export class ReceiptController {
     status: HttpStatus.OK,
     description: RECEIPT_SWAGGER.success,
     type: ReceiptEntity,
-  })
+  })     
   @HttpCode(HttpStatus.OK)
   public async creteReceipt(
     @User('id') id: string,
@@ -91,7 +91,7 @@ export class ReceiptController {
     res.download(`${result}`);
   }
 
-  @Post(RECEIPT_ROUTES.send_email)
+  @Post(RECEIPT_ROUTES.send_email)    
   @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: RECEIPT_SWAGGER.send_email })
   @ApiResponse({
