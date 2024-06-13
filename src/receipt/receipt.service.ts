@@ -194,7 +194,7 @@ export class ReceiptService {
     );
 
     const vatRate = !isNaN(vatPercent)
-      ? vatPercent
+      ? vatPercent     
       : vatPercent
       ? vatPercent 
       : 0;
