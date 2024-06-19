@@ -205,4 +205,116 @@ export class ReceiptController {
   ) {
     return await this.ReceiptService.markReceiptsAsPaid(id, body);
   }
+
+
+  @Post(RECEIPT_ROUTES.mark_unpaid)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.mark_unpaid })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsunPaid(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsunPaid(id, body);
+  }
+
+
+  @Post(RECEIPT_ROUTES.mark_approved)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.mark_approved })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsApproved(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsApproved(id, body);
+  }
+
+  @Post(RECEIPT_ROUTES.mark_rejected)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.mark_rejected })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsRejected(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsRejected(id, body);
+  }
+
+  @Post(RECEIPT_ROUTES.mark_published)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.mark_published })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsPublished(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsPublished(id, body);
+  }
+
+
+  @Post(RECEIPT_ROUTES.mark_unpublished)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.mark_unpublished })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsUnpublished(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsUnpublished(id, body);
+  }
+
+
+  @Post(RECEIPT_ROUTES.withdrawl_approval)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.withdrawl_approval })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsWithdrawlApproval(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsWithdrawlApproval(id, body);
+  }
+
+  @Post(RECEIPT_ROUTES.withdrawl_rejection)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: RECEIPT_SWAGGER.withdrawl_rejection })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: RECEIPT_SWAGGER.success,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async markReceiptsAsWithdrawlRejection(
+    @User('id') id: string,
+    @Body() body: DownloadCSVDTO,
+  ) {
+    return await this.ReceiptService.markReceiptsAsWithdrawlRejection(id, body);
+  }
 }
+
+
+

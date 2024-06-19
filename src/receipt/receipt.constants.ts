@@ -34,6 +34,13 @@ export const RECEIPT_SWAGGER = {
   delete: 'Delete receipt',
   mark_paid: 'Mark as paid',
   delete_image: 'Delete receipt image',
+  mark_unpaid: 'Mark as unpaid',
+  mark_approved : 'Mark as Approved',
+  mark_rejected :"Mark as Rejected",
+  mark_published:"Mark as Published",
+  mark_unpublished : "Mark as Unpublished",
+  withdrawl_approval : "Mark as Review",
+  withdrawl_rejection :"Mark as Rejection"
 };
 
 export const RECEIPT_ROUTES = {
@@ -48,6 +55,13 @@ export const RECEIPT_ROUTES = {
   mark_paid: 'mark-paid',
   get_image: 'images/:imagename',
   delete_image: 'delete-image/:imagename',
+  mark_unpaid:'mark-unpaid',
+  mark_approved :"mark-approved",
+  mark_rejected :"mark-rejected",
+  mark_published:"mark-published",
+  mark_unpublished: "mark-unpublished",
+  withdrawl_approval:"withdrawl-approval",
+  withdrawl_rejection:"withdrawl-rejection"
 };
 
 export const RECEIPT_PHOTOS_LIMIT = 50;

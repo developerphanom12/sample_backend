@@ -846,4 +846,252 @@ export class ReceiptService {
   async getBase64(file) {
     return await fs.readFileSync(file, 'base64');
   }
+
+
+
+
+  async markReceiptsAsunPaid(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      where: {
+        company: { id: company.id },
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { payment_status: false },
+      );
+      return 'RECEIPTS WERE MARKED AS UNPAID';
+    } catch (e) {
+      throw new HttpException('MARK AS UNPAID ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
+
+
+
+  async markReceiptsAsApproved(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      where: {
+        company: { id: company.id },
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { status: "approved" },
+      );
+      return 'RECEIPTS WERE MARKED AS approved';
+    } catch (e) {
+      throw new HttpException('MARK AS approved ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
+
+  async markReceiptsAsRejected(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      where: {
+        company: { id: company.id },
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { status: "rejected" },
+      );
+      return 'RECEIPTS WERE MARKED AS REJECTED';
+    } catch (e) {
+      throw new HttpException('MARK AS REJECTED ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
+
+  async markReceiptsAsPublished(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      where: {
+        company: { id: company.id },
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { publish_status: true },
+      );
+      return 'RECEIPTS WERE MARKED AS PUBLISH';
+    } catch (e) {
+      throw new HttpException('MARK AS PUBLISH ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
+
+
+
+  async markReceiptsAsUnpublished(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      where: {
+        company: { id: company.id },
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { publish_status: false },
+      );
+      return 'RECEIPTS WERE MARKED AS UNPUBLISH';
+    } catch (e) {
+      throw new HttpException('MARK AS UNPUBLISH ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
+
+  async markReceiptsAsWithdrawlApproval(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      where: {
+        company: { id: company.id },
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { status: "review" },
+      );
+      return 'RECEIPTS WERE MARKED AS WITHDRAWL APPROVAL';
+    } catch (e) {
+      throw new HttpException('MARK AS WITHDRAWL APPROVAL ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
+
+  async markReceiptsAsWithdrawlRejection(id: string, body: DownloadCSVDTO) {
+    const receiptsId: string[] = body.receipts;
+
+    if (!receiptsId) {
+      throw new HttpException('NO RECEIPTS ID', HttpStatus.FORBIDDEN);
+    }
+
+    const company = body.active_account
+      ? await this.extractCompanyFromActiveAccount(body.active_account)
+      : await this.extractCompanyFromUser(id);
+
+    const receipts = await this.receiptRepository.find({
+      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      where: {
+        company: { id: company.id },
+        id: In(receiptsId),
+      },
+    });
+
+    if (!receipts || receipts.length < 1) {
+      throw new HttpException('RECEIPTS NOT FOUND', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      await this.receiptRepository.update(
+        receipts.map((r) => r.id),
+        { status: "review" },
+      );
+      return 'RECEIPTS WERE MARKED AS WITHDRAWL REJECT';
+    } catch (e) {
+      throw new HttpException('MARK AS WITHDRAWL REJECT ERROR', HttpStatus.FORBIDDEN);
+    }
+  }
 }
+
+
+
