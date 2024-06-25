@@ -24,6 +24,7 @@ import { InviteNewMemberModule } from './invite-new-member/invite-new-member.mod
 import { ReceiptHubConnectModule } from './receipt-hub-connect/receipt-hub-connect.module';
 import { QuickbooksModule } from './integrations/quickbooks/quickbooks.module';
 import { FreeAgentModule } from './integrations/freeAgent/freeAgent.module';
+import { SaleModule } from './sales/sale.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -60,6 +61,7 @@ const currentEnv = process.env.NODE_ENV || 'local';
     ReceiptHubConnectModule,
     QuickbooksModule,
     FreeAgentModule,
+    SaleModule
   ],
   controllers: [AppController],
   providers: [

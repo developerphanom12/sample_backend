@@ -675,7 +675,7 @@ export class ReceiptService {
       : await this.extractCompanyFromUser(id);
 
     const receipts = await this.receiptRepository.find({
-      relations: ['currency', 'supplier_account', 'category', 'payment_type'],
+      relations: ['currency',],
       where: { company: { id: company.id }, id: In(receiptsId) },
       order: { custom_id: 'ASC' },
     });
@@ -684,12 +684,6 @@ export class ReceiptService {
       return {
         id: receipt.custom_id.toUpperCase(),
         date: receipt.receipt_date || null,
-        supplier: receipt.supplier || null,
-        supplierAccount: receipt.supplier_account
-          ? receipt.supplier_account.name
-          : null,
-        category: receipt.category ? receipt.category.name : null,
-        vatCode: receipt.vat_code || null,
         currency: receipt.currency ? receipt.currency.value : null,
         net: receipt.net || null,
         tax: receipt.tax || null,
@@ -703,10 +697,6 @@ export class ReceiptService {
     const fields = [
       'ID',
       'Date',
-      'Supplier',
-      'Supplier Account',
-      'Category',
-      'VAT code',
       'Currency',
       'Net',
       'Tax',

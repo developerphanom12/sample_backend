@@ -47,7 +47,7 @@ export class ReceiptController {
     type: ReceiptEntity,
   })     
   @HttpCode(HttpStatus.OK)
-  public async creteReceipt(
+  public async creteSaleReceipt(
     @User('id') id: string,
     @Body() body: CreateReceiptDTO,
     @UploadedFiles() files,

@@ -1,0 +1,133 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
+import { EReceiptStatus } from '../sales.constants';
+import { CurrencyEntity } from '../../currency/entities/currency.entity';
+import { CompanyEntity } from '../../company/entities/company.entity';
+import { ColumnNumericTransformer } from '../types/sale.types';
+
+@Entity('sales-invoice')
+export class SalesEntity {
+  @ApiProperty()
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @CreateDateColumn()
+  created: Date;
+
+  @UpdateDateColumn()
+  @Exclude()
+  updated: Date;
+
+  @ApiProperty()
+  @Column({ default: EReceiptStatus.processing })
+  status: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
+  custom_id: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  invoice_date: Date;
+
+  @ApiProperty({ nullable: true })
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  due_date: Date;
+
+  @ApiProperty({ nullable: true })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
+  net: number;
+
+  @ApiProperty({ nullable: true })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
+  tax: number;
+
+  @ApiProperty({ nullable: true })
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
+  total: number;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true, default: false })
+  publish_status: boolean;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true, default: false })
+  payment_status: boolean;
+
+  @ApiProperty({ nullable: true })
+  @Column('simple-array', { nullable: true })
+  photos: string[];
+
+  @ManyToOne((type) => CompanyEntity, (data) => data.receipts, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  company: CompanyEntity;
+
+  @ManyToOne((type) => CurrencyEntity, (data) => data.receipts, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  currency: CurrencyEntity;
+
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
+  vat_code: string;
+
+  // @ManyToOne((type) => SupplierEntity, (data) => data.receipts, {
+  //   onDelete: 'CASCADE',
+  // })
+  // @JoinColumn()
+  // supplier_account: SupplierEntity;
+
+  // @ManyToOne((type) => CategoryEntity, (data) => data.receipts, {
+  //   cascade: true,
+  //   onDelete: 'SET NULL',
+  // })
+  // @JoinColumn()
+  // category: CategoryEntity;
+
+  // @ManyToOne((type) => PaymentTypeEntity, (data) => data.receipts, {
+  //   cascade: true,
+  //   onDelete: 'SET NULL',
+  // })
+  // @JoinColumn()
+  // payment_type: PaymentTypeEntity;
+}
