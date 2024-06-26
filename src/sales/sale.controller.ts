@@ -122,7 +122,7 @@ export class SaleController {
     @User('id') id: string,
     @Body() body: SalesDownloadCSVDTO,
     @Res() res,
-  ) {
+  ){
     const result = await this.SaleService.downloadCSV(id, body);
     res.download(`${result}`);
   }

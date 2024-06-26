@@ -44,7 +44,7 @@ export const SALE_SWAGGER = {
 };
 
 export const SALE_ROUTES = {
-  main: 'sale',
+  main: 'sale-invoice',
   create: 'create',
   update: 'update',
   get_all: 'get-all',
