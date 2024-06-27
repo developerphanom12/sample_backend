@@ -10,14 +10,14 @@ import { AuthEntity } from '../auth/entities/auth.entity';
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CompanyEntity } from '../company/entities/company.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
-import { SalesEntity } from './entities/sale.entity';
-import { SaleController } from './sale.controller';
 import { SaleService } from './sale.service';
+import { SaleEntity } from './entities/sale.entity';
+import { SaleController } from './sale.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      SalesEntity,
+      SaleEntity,
       AuthEntity,
       CurrencyEntity,
       CompanyEntity,

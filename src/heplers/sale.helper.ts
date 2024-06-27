@@ -2,7 +2,7 @@ import { ExpenseField } from '@aws-sdk/client-textract';
 import { CurrencySeed } from '../constants/seed';
 
 import { parse } from 'date-fns';
-import { CURRENCY_SYMBOL_REGEX, SALE_DATE_REGEX, SALE_NET_REGEX, SALE_TOTAL_REGEX, SALE_TOTAL_WORDS_REGEX, SALE_VAT_REGEX } from 'src/sales/sales.constants';
+import { CURRENCY_SYMBOL_REGEX, RECEIPT_DATE_REGEX, RECEIPT_NET_REGEX, RECEIPT_TAX_REGEX, RECEIPT_TOTAL_REGEX, RECEIPT_TOTAL_WORDS_REGEX, RECEIPT_VAT_REGEX } from 'src/sales/sales.constants';
 
 export const extractDate = (text: string) => {
   try {
@@ -23,7 +23,7 @@ export const extractDate = (text: string) => {
     const regex15 = /(\d{1,2})([A-Za-z]+)'(\d{2})/;
 
     const receiptData: string[] | null =
-      text.match(SALE_DATE_REGEX) ||
+      text.match(RECEIPT_DATE_REGEX) ||
       text.match(regex1) ||
       text.match(regex2) ||
       text.match(regex3) ||
@@ -119,7 +119,7 @@ export const extractNumbers = (text: string, regex: RegExp) => {
   }
 
   if (
-    matchKeyword.filter((el) => el.match(SALE_TOTAL_WORDS_REGEX)).length > 1
+    matchKeyword.filter((el) => el.match(RECEIPT_TOTAL_WORDS_REGEX)).length > 1
   ) {
     const results = matchKeyword.flatMap((item) => item.match(/\d+.\d+/g));
     const result = Math.max(...results.map((el) => +el));
@@ -184,7 +184,7 @@ export const extractVatNumbers = (text: string, regex: RegExp) => {
 
 export const extractTotal = (text: string) => {
   try {
-    return extractNumbers(text, SALE_TOTAL_REGEX);
+    return extractNumbers(text, RECEIPT_TOTAL_REGEX);
   } catch (err) {
     console.log(err);
     return null;
@@ -193,7 +193,7 @@ export const extractTotal = (text: string) => {
 
 export const extractTax = (text: string) => {
   try {
-    return extractNumbers(text, SALE_TOTAL_REGEX);
+    return extractNumbers(text, RECEIPT_TAX_REGEX);
   } catch (err) {
     console.log(err);
     return null;
@@ -202,7 +202,7 @@ export const extractTax = (text: string) => {
 
 export const extractVat = (text: string) => {
   try {
-    return extractVatNumbers(text, SALE_VAT_REGEX);
+    return extractVatNumbers(text, RECEIPT_VAT_REGEX);
   } catch (err) {
     console.log(err);
     return null;
@@ -233,7 +233,7 @@ export const extractCurrency = (text: string) => {
 
 export const extractNet = (text: string) => {
   try {
-    return extractNumbers(text, SALE_NET_REGEX);
+    return extractNumbers(text, RECEIPT_NET_REGEX);
   } catch (err) {
     console.log(err);
     return null;

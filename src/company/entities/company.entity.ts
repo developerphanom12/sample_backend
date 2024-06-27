@@ -16,6 +16,7 @@ import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { SaleEntity } from 'src/sales/entities/sale.entity';
 
 @Entity('company')
 export class CompanyEntity {
@@ -81,4 +82,11 @@ export class CompanyEntity {
     onDelete: 'CASCADE',
   })
   payment_types: PaymentTypeEntity[];
+
+  @ApiProperty({ nullable: true })
+  @OneToMany((type) => SaleEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
+  sales: SaleEntity[];
+  
 }

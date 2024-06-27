@@ -129,13 +129,13 @@ export class ReceiptService {
 
       return {
         ...data,
-        custom_id: `rc ${customId}`,
+        custom_id: `in ${customId}`,
       };
     } catch (err) {
       console.log('Error', err);
       return {
         status: EReceiptStatus.rejected,
-        custom_id: `rc ${customId}`,
+        custom_id: `in ${customId}`,
         photos: [photo.filename],
       };
     }

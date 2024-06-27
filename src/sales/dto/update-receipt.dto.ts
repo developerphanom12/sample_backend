@@ -7,6 +7,10 @@ export class UpdateSaleDTO {
   @IsString()
   id: string;
 
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  description?: string | null;
 
   @ApiProperty({ required: false, nullable: true })
   @IsOptional()
@@ -14,13 +18,22 @@ export class UpdateSaleDTO {
 
   @ApiProperty({ required: false, nullable: true })
   @IsOptional()
-  invoice_date?: Date | null;
+  saleinvoice_date?: Date | null;
 
   @ApiProperty({ required: false, nullable: true })
   @IsOptional()
-  due_date?: Date | null;
+  @IsString()
+  supplier?: string | null;
 
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  supplier_account?: string | null;
 
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  category?: string | null;
 
   @ApiProperty({ required: false, nullable: true })
   @IsOptional()
@@ -60,6 +73,4 @@ export class UpdateSaleDTO {
   @IsOptional()
   @IsString()
   active_account?: string;
-
-
 }

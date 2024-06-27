@@ -9,13 +9,17 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { EReceiptStatus } from '../sales.constants';
+
 import { CurrencyEntity } from '../../currency/entities/currency.entity';
 import { CompanyEntity } from '../../company/entities/company.entity';
+import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
+import { CategoryEntity } from 'src/category/entities/category.entity';
+import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
+import { EReceiptStatus } from '../sales.constants';
 import { ColumnNumericTransformer } from '../types/sale.types';
 
 @Entity('sales-invoice')
-export class SalesEntity {
+export class SaleEntity {
   @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -36,20 +40,21 @@ export class SalesEntity {
   custom_id: string;
 
   @ApiProperty({ nullable: true })
-  @Column({
-    type: 'timestamp',
-    nullable: true,
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  invoice_date: Date;
+  @Column({ nullable: true })
+  saleinvoice_date: Date;
 
   @ApiProperty({ nullable: true })
-  @Column({
-    type: 'timestamp',
-    nullable: true,
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  due_date: Date;
+  @Column({ nullable: true })
+  supplier: string;
+
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true,  default:null})
+  customer_account: string;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
+  vat_code: string;
 
   @ApiProperty({ nullable: true })
   @Column({
@@ -82,8 +87,17 @@ export class SalesEntity {
   total: number;
 
   @ApiProperty({ nullable: true })
+  @Column({ nullable: true })
+  description: string;
+
+  
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true, default: false })
-  publish_status: boolean;
+  active_status: boolean;
+
+  @ApiProperty({ nullable: true })
+  @Column({ nullable: true, default: false })
+  approved_status: boolean;
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true, default: false })
@@ -107,27 +121,21 @@ export class SalesEntity {
   currency: CurrencyEntity;
 
 
+  @ManyToOne((type) => CategoryEntity, (data) => data.receipts, {
+    cascade: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn()
+  category: CategoryEntity;
+
+  @ManyToOne((type) => PaymentTypeEntity, (data) => data.receipts, {
+    cascade: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn()
+  payment_type: PaymentTypeEntity;
+
   @ApiProperty({ nullable: true })
-  @Column({ nullable: true })
-  vat_code: string;
-
-  // @ManyToOne((type) => SupplierEntity, (data) => data.receipts, {
-  //   onDelete: 'CASCADE',
-  // })
-  // @JoinColumn()
-  // supplier_account: SupplierEntity;
-
-  // @ManyToOne((type) => CategoryEntity, (data) => data.receipts, {
-  //   cascade: true,
-  //   onDelete: 'SET NULL',
-  // })
-  // @JoinColumn()
-  // category: CategoryEntity;
-
-  // @ManyToOne((type) => PaymentTypeEntity, (data) => data.receipts, {
-  //   cascade: true,
-  //   onDelete: 'SET NULL',
-  // })
-  // @JoinColumn()
-  // payment_type: PaymentTypeEntity;
+  @Column({ nullable: true, default: false })
+  publish_status: boolean;
 }
