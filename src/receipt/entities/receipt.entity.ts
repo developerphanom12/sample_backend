@@ -43,6 +43,8 @@ export class ReceiptEntity {
   @Column({ nullable: true })
   receipt_date: Date;
 
+
+  
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   supplier: string;

@@ -25,6 +25,7 @@ import { ReceiptHubConnectModule } from './receipt-hub-connect/receipt-hub-conne
 import { QuickbooksModule } from './integrations/quickbooks/quickbooks.module';
 import { FreeAgentModule } from './integrations/freeAgent/freeAgent.module';
 import { SaleModule } from './sales/sale.module';
+import { ExpenseModule } from './expense-report/expense.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 @Module({
@@ -61,7 +62,8 @@ const currentEnv = process.env.NODE_ENV || 'local';
     ReceiptHubConnectModule,
     QuickbooksModule,
     FreeAgentModule,
-    SaleModule
+    SaleModule,
+    ExpenseModule
   ],
   controllers: [AppController],
   providers: [
