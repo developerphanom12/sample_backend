@@ -212,7 +212,7 @@ export class SaleService {
     const totalCalculated = total ? total : taxCalculated / (vatRate / 100);
  
     const receiptData = {
-      supplier: extractSupplier(textData[0]),
+      customer: extractSupplier(textData[0]),
       saleinvoice_date: extractDate(text),
       tax: taxCalculated === totalCalculated ? 0 : taxCalculated || 0,
       total: totalCalculated || 0,

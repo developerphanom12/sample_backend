@@ -7,6 +7,8 @@ import { AuthEntity } from '../auth/entities/auth.entity';
 import { CompanyEntity } from '../company/entities/company.entity';
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
+import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
+import { isValidUUID } from './expense.constants';
 
 @Injectable()
 export class ExpenseService {
@@ -21,6 +23,8 @@ export class ExpenseService {
     private companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CurrencyEntity)
     private currencyRepository: Repository<CurrencyEntity>,
+    @InjectRepository(ReceiptEntity)
+    private receiptRepository:Repository<ReceiptEntity>
   ) {}
 
   private async extractCompanyFromActiveAccount(active_account: string) {
@@ -71,38 +75,62 @@ export class ExpenseService {
   }
 
   async createExpense(id: string, body: CreateExpenseDTO) {
-    const company = body.active_account
-      ? await this.extractCompanyFromActiveAccount(body.active_account)
-      : await this.extractCompanyFromUser(id);
-
-    if (!body.expenseReceipt || body.expenseReceipt.length === 0) {
-      const expense = new ExpenseEntity();
-      expense.report_for = body.report_for;
-      expense.report_name = body.report_name;
-      expense.expenseReceipt = null;
-      expense.date = body.date;
-      expense.company = company;
-
-      await this.expenseRepository.save(expense);
-      return expense;
+    try {
+      const company = body.active_account
+        ? await this.extractCompanyFromActiveAccount(body.active_account)
+        : await this.extractCompanyFromUser(id);
+  
+      let expenses = [];
+  
+      if (body.expenseReceipt && body.expenseReceipt.length > 0) {
+        const receiptIds = body.expenseReceipt;
+  
+        const invalidReceiptIds = receiptIds.filter(id => !isValidUUID(id));
+        if (invalidReceiptIds.length > 0) {
+          throw new HttpException(`Invalid UUIDs: ${invalidReceiptIds.join(', ')}`, HttpStatus.BAD_REQUEST);
+        }
+  
+        const receipts = await this.receiptRepository.findByIds(receiptIds);
+  
+        const validReceiptIds = receipts.map(receipt => receipt.id);
+        const missingReceiptIds = receiptIds.filter(id => !validReceiptIds.includes(id));
+        if (missingReceiptIds.length > 0) {
+          throw new HttpException(`Receipts not found for IDs: ${missingReceiptIds.join(', ')}`, HttpStatus.BAD_REQUEST);
+        }
+  
+        const currentDate = new Date();
+        expenses = receiptIds.map(receiptId => {
+          const expense = new ExpenseEntity();
+          expense.report_for = body.report_for;
+          expense.report_name = body.report_name;
+          expense.expenseReceipt = [receiptId];
+          expense.date = body.date || currentDate;
+          expense.company = company;
+          return expense;
+        });
+      } else {
+        const expense = new ExpenseEntity();
+        expense.report_for = body.report_for;
+        expense.report_name = body.report_name;
+        expense.expenseReceipt = null; // Set to null if not provided
+        expense.date = body.date || new Date();
+        expense.company = company;
+        expenses.push(expense);
+      }
+  
+      const savedExpenses = await this.expenseRepository.save(expenses);
+      return {
+        status: '200',
+        data: savedExpenses.filter(expense => expense.company.id === company.id), // Filter expenses by company ID
+      };
+    } catch (error) {
+      // Log any unexpected errors for debugging
+      console.error('Unexpected error in createExpense:', error);
+      // Rethrow the error to let NestJS handle it with default behavior (500 Internal Server Error)
+      throw error;
     }
-
-    const currentDate = new Date();
-
-    const expenses = body.expenseReceipt.map(receipt => {
-      const expense = new ExpenseEntity();
-      expense.report_for = body.report_for;
-      expense.report_name = body.report_name;
-      expense.expenseReceipt = [receipt] ;
-      expense.date = body.date || currentDate;
-      expense.company = company;
-      return expense;
-    });
-
-    const savedExpenses = await this.expenseRepository.save(expenses);
-    return {
-      status: '200',
-      data: savedExpenses.filter(expense => expense.company.id === company.id), // Filter expenses by company ID
-    };
   }
+  
+
+  
 }

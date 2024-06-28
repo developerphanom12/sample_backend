@@ -13,6 +13,7 @@ import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { ExpenseEntity } from './entities/expense.entity';
 import { ExpenseController } from './expense.controller';
 import { ExpenseService } from './expense.service';
+import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ExpenseService } from './expense.service';
       SupplierEntity,
       CategoryEntity,
       PaymentTypeEntity,
+      ReceiptEntity
     ]),
     S3Module,
     DownloadModule,

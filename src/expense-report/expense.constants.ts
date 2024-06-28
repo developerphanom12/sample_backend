@@ -41,7 +41,7 @@ export const EXPENSE_SWAGGER = {
 };
 
 export const EXPENSE_ROUTES = {
-  main: 'Expense-report',
+  main: 'expense-report',
   create: 'create',
   update: 'update',
   get_all: 'get-all',
@@ -71,4 +71,7 @@ export interface IFilters {
 export enum ExpenseStatus {
     purchase = 'purchase',
   }
-  
+  export function isValidUUID(uuid: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  }

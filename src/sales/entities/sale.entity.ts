@@ -45,7 +45,7 @@ export class SaleEntity {
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })
-  supplier: string;
+  customer: string;
 
 
   @ApiProperty({ nullable: true })
