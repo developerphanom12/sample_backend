@@ -23,7 +23,7 @@ export class UpdateSaleDTO {
   @ApiProperty({ required: false, nullable: true })
   @IsOptional()
   @IsString()
-  supplier?: string | null;
+  customer?: string | null;
 
   @ApiProperty({ required: false, nullable: true })
   @IsOptional()
