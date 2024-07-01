@@ -186,7 +186,7 @@ export class ExpenseService {
             active_status: expenseReceipt.receipt.active_status,
             approved_status: expenseReceipt.receipt.approved_status,
             payment_status: expenseReceipt.receipt.payment_status,
-            photos: expenseReceipt.receipt.photos,
+            photos: expenseReceipt.receipt.photos,       
             currency: expenseReceipt.receipt.currency,
             category: expenseReceipt.receipt.category,
           };
