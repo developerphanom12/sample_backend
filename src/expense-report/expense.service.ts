@@ -150,13 +150,15 @@ export class ExpenseService {
       .createQueryBuilder('expense')
       .leftJoinAndSelect('expense.expenseReceipts', 'expenseReceipt')
       .leftJoinAndSelect('expenseReceipt.receipt', 'receipt')
+      .leftJoinAndSelect('receipt.currency', 'currency')
+      .leftJoinAndSelect('receipt.category', 'category')
       .where('expense.companyId = :companyId', { companyId: company.id })
       .take(body.take ?? 10)
       .skip(body.skip ?? 0)
       .getManyAndCount();
 
-    let report_tax_total = 0;
-    let report_total = 0;
+    let totalTax = 0;
+    let totalAmount = 0;
 
     const response = {
       status: '200',
@@ -185,26 +187,32 @@ export class ExpenseService {
             approved_status: expenseReceipt.receipt.approved_status,
             payment_status: expenseReceipt.receipt.payment_status,
             photos: expenseReceipt.receipt.photos,
+            currency: expenseReceipt.receipt.currency,
+            category: expenseReceipt.receipt.category,
           };
         });
 
-        report_tax_total += reportTotalTax;
-        report_total += reportTotalAmount;
+        totalTax += reportTotalTax;
+        totalAmount += reportTotalAmount;
 
         return {
           expense_report_id: expense.id,
           expense_report_name: expense.report_name,
           expense_report_for: expense.report_for,
-          expense_created_date: expense.created,
+          expense_created_date: expense.date,
           report_receipt: receiptsData,
           report_total_tax: reportTotalTax,
           report_total_amount: reportTotalAmount,
         };
       }),
+      totalTax: totalTax,
+      totalAmount: totalAmount,
+      totalCount: totalCount,
     };
 
     return response;
   }
+
 
   
 }
