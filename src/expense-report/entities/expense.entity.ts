@@ -1,8 +1,8 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { CompanyEntity } from '../../company/entities/company.entity';
-import { ExpenseStatus } from '../expense.constants';
+import { ExpenseReceiptEntity } from './expense-receipt.entity';
 
 @Entity('expense-report')
 export class ExpenseEntity {
@@ -18,23 +18,23 @@ export class ExpenseEntity {
   updated: Date;
 
   @ApiProperty()
-  @Column({default: null  })
+  @Column({ default: null })
   report_name: string;
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   report_for: string;
 
-  @ApiProperty({nullable: true ,default:null })
-  @Column('simple-array', { nullable: true ,default:null })
-  expenseReceipt: string[];
+  @OneToMany(() => ExpenseReceiptEntity, expenseReceipt => expenseReceipt.expense, {
+    cascade: true,
+  })
+  expenseReceipts: ExpenseReceiptEntity[];
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true })
   date: Date;
 
-
-  @ManyToOne((type) => CompanyEntity, (company) => company.expense, {
+  @ManyToOne(() => CompanyEntity, company => company.expense, {
     cascade: true,
     onDelete: 'CASCADE',
   })

@@ -4,6 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -17,6 +18,8 @@ import { SupplierEntity } from 'src/supplier/entities/supplier.entity';
 import { CategoryEntity } from 'src/category/entities/category.entity';
 import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity';
 import { ColumnNumericTransformer } from '../types/receipt.types';
+import { ExpenseEntity } from 'src/expense-report/entities/expense.entity';
+import { ExpenseReceiptEntity } from 'src/expense-report/entities/expense-receipt.entity';
 
 @Entity('receipt')
 export class ReceiptEntity {
@@ -139,4 +142,7 @@ export class ReceiptEntity {
   })
   @JoinColumn()
   payment_type: PaymentTypeEntity;
+
+  @OneToMany(() => ExpenseReceiptEntity, expenseReceipt => expenseReceipt.receipt)
+  expenseReceipts: ExpenseReceiptEntity[];
 }
