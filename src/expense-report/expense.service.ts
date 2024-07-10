@@ -172,23 +172,6 @@ export class ExpenseService {
 
           return {
             id: expenseReceipt.receipt.id,
-            created: expenseReceipt.receipt.created,
-            status: expenseReceipt.receipt.status,
-            custom_id: expenseReceipt.receipt.custom_id,
-            receipt_date: expenseReceipt.receipt.receipt_date,
-            supplier: expenseReceipt.receipt.supplier,
-            vat_code: expenseReceipt.receipt.vat_code,
-            net: expenseReceipt.receipt.net,
-            tax: expenseReceipt.receipt.tax,
-            total: expenseReceipt.receipt.total,
-            description: expenseReceipt.receipt.description,
-            publish_status: expenseReceipt.receipt.publish_status,
-            active_status: expenseReceipt.receipt.active_status,
-            approved_status: expenseReceipt.receipt.approved_status,
-            payment_status: expenseReceipt.receipt.payment_status,
-            photos: expenseReceipt.receipt.photos,       
-            currency: expenseReceipt.receipt.currency,
-            category: expenseReceipt.receipt.category,
           };
         });
 
