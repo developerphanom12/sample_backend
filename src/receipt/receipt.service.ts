@@ -9,6 +9,7 @@ import {
   extractNet,
   extractTotal,  
   extractVat,
+  extractTables
 } from '../heplers/receipt.helper';
 import { EReceiptStatus, IFilters } from './receipt.constants';
 import { AuthEntity } from '../auth/entities/auth.entity';
@@ -107,9 +108,9 @@ export class ReceiptService {
   }
 
   async textractImage(photoPath) {
-    const textractImage = await this.s3Service.textractFile(photoPath);
+    const { lines, tables } = await this.s3Service.textractFile(photoPath);
     const imageName = photoPath.key.split('/')[2];
-    return { textractImage, imageName };
+    return { imageName, lines, tables };
   }
  
   async getImageData(
@@ -120,15 +121,16 @@ export class ReceiptService {
   ) {
     const photoPath = await this.uploadPhotoToBucket(photo, companyId);
     try {
-      const { imageName, textractImage } = await this.textractImage(photoPath);
+      const { imageName, lines, tables } = await this.textractImage(photoPath);
       const data = await this.extractData({
-        textData: textractImage,
+        textData: lines,
         photo: imageName,
         userRole,
       }); 
-
+      const tableData =  await extractTables(tables);
       return {
         ...data,
+        tableData,
         custom_id: `rc ${customId}`,
       };
     } catch (err) {
@@ -142,7 +144,7 @@ export class ReceiptService {
   }
 
   async saveReceipt( 
-    receiptData,
+    receiptData: { currency: any; },
     description: string,
     company: CompanyEntity,
     currency: CurrencyEntity,
@@ -210,7 +212,9 @@ export class ReceiptService {
     const netCalculated = net ? net : total - tax;
 
     const totalCalculated = total ? total : taxCalculated / (vatRate / 100);
- 
+    
+    
+
     const receiptData = {
       supplier: extractSupplier(textData[0]),
       receipt_date: extractDate(text),
@@ -258,7 +262,7 @@ export class ReceiptService {
     };
   }
 
-  async createReceipt(id: string, body: CreateReceiptDTO, photos) {
+  async createReceipt(id: string, body: CreateReceiptDTO, photos: string | any[]) {
     const company = body.active_account
       ? await this.extractCompanyFromActiveAccount(body.active_account)
       : await this.extractCompanyFromUser(id);
@@ -282,9 +286,9 @@ export class ReceiptService {
       order: { created: 'ASC' },
     });
 
-    const delay = (t) => new Promise((resolve) => setTimeout(resolve, t));
+    const delay = (t: number) => new Promise((resolve) => setTimeout(resolve, t));
 
-    const uploadAll = async (files) => {
+    const uploadAll = async (files: string | any[]) => {
       const results = [];
 
       for (let i = 0; i < files.length; i++) {
@@ -325,7 +329,7 @@ export class ReceiptService {
     return newReceipts;
   }
 
-  async uploadPhotoToBucket(file, companyId: string) {
+  async uploadPhotoToBucket(file: { originalname: any; buffer: any; mimetype: any; }, companyId: string) {
     if (!file) {
       throw new HttpException('NO RECEIPT PHOTO', HttpStatus.BAD_REQUEST);
     }
@@ -596,7 +600,7 @@ export class ReceiptService {
   async getReceiptImage(
     id: string,
     image_name: string,
-    res,
+    res: any,
     active_account?: string,
   ) {
     const company = active_account

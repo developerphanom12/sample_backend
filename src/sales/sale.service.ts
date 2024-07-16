@@ -107,9 +107,9 @@ export class SaleService {
   }
 
   async textractImage(photoPath) {
-    const textractImage = await this.s3Service.textractFile(photoPath);
+    const { lines, tables } = await this.s3Service.textractFile(photoPath);
     const imageName = photoPath.key.split('/')[2];
-    return { textractImage, imageName };
+    return {  imageName, lines, tables };
   }
  
   async getImageData(
@@ -120,9 +120,9 @@ export class SaleService {
   ) {
     const photoPath = await this.uploadPhotoToBucket(photo, companyId);
     try {
-      const { imageName, textractImage } = await this.textractImage(photoPath);
+      const { imageName, lines, tables } = await this.textractImage(photoPath);
       const data = await this.extractData({
-        textData: textractImage,
+        textData: lines,
         photo: imageName,
         userRole,
       }); 

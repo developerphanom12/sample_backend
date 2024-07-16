@@ -85,7 +85,26 @@ export class S3Service {
     const lines = response.Blocks.filter((b) => b.BlockType === 'LINE').map(
       (i) => i.Text,
     );
-    return lines;
+
+    const tables = response.Blocks
+    .filter(b => b.BlockType === 'TABLE')
+    .map(tableBlock => {
+      return tableBlock.Relationships
+      .filter(relationship => relationship.Type === 'CHILD')
+      .map(relationship => {
+        return relationship.Ids.map(id => {
+          const cell = response.Blocks.find(b => b.Id === id);
+          if (cell && cell.BlockType === 'CELL') {
+            return cell.Relationships
+              .filter(r => r.Type === 'CHILD')
+              .map(r => r.Ids.map(id => response.Blocks.find(b => b.Id === id).Text).join(' '));
+          }
+          return '';
+        });
+      });
+    });
+    return { lines, tables }
+    // return lines;
   }
 
   public async deleteFile(key: string): Promise<number> {

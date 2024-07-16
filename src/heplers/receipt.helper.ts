@@ -8,6 +8,7 @@ import {
   RECEIPT_TOTAL_REGEX,
   RECEIPT_TOTAL_WORDS_REGEX,
   RECEIPT_VAT_REGEX,
+  TABLE_HEADERS
 } from '../receipt/receipt.constants';
 import { parse } from 'date-fns';
 
@@ -261,5 +262,36 @@ export const extractSupplier = (text: string) => {
   } catch (err) {
     console.log(err);
     return null;
+  }
+};
+
+export const extractTables = async (data: any) => {
+  try {
+    let response = { raw : data }
+      
+    if(data.length > 0){
+      const headerTexts = TABLE_HEADERS.split(',');
+      const items   = [];
+      const headers = [];
+      for (const row of data[0][0]) {
+        if (headerTexts.includes(row[0].toLowerCase())) {
+          headers.push(row[0]);
+        } else {
+          items.push(row[0])
+        }
+      }
+      const result = items.reduce((resultArray, item, index) => { 
+        const chunkIndex = Math.floor(index/headers.length)
+        if(!resultArray[chunkIndex]) {
+          resultArray[chunkIndex] = []
+        }
+        resultArray[chunkIndex].push(item)
+        return resultArray
+      },[]);
+      Object.assign(response, {headers, items: result})
+    }
+    return response
+  } catch (err) {
+    return { raw : data };
   }
 };

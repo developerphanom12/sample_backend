@@ -91,6 +91,10 @@ export class ReceiptEntity {
   description: string;
 
   @ApiProperty({ nullable: true })
+  @Column({ type :'jsonb', nullable: true })
+  tableData ?: object[];
+
+  @ApiProperty({ nullable: true })
   @Column({ nullable: true, default: false })
   publish_status: boolean;
  

@@ -80,6 +80,8 @@ export const RECEIPT_NET_REGEX = /(net ttl|net)([\s|:|.]\s?\p{Sc}?\d+\.\d+)/gu;
 
 export const CURRENCY_SYMBOL_REGEX = /\p{Sc}/gu;
 
+export const TABLE_HEADERS = 'name,item,qty,quantity,desc,amt,price,unit price,description,total,sub-total,tax,balance';
+
 export enum EReceiptStatus {
   processing = 'processing',
   review = 'review',

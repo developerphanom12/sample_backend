@@ -33,8 +33,8 @@ export class ReceiptHubConnectService {
   async getImageDataForCapium(photo: string) {
     const photoPath = await this.uploadPhotoToBucket(photo);
     try {
-      const { imageName, textractImage } = await this.textractImage(photoPath);
-      const data = await this.extractData(textractImage);
+      const { imageName, lines, tables } = await this.textractImage(photoPath);
+      const data = await this.extractData(lines);
       await this.deleteImage(imageName);
 
       return data;
@@ -124,9 +124,9 @@ export class ReceiptHubConnectService {
   }
 
   async textractImage(photoPath) {
-    const textractImage = await this.s3Service.textractFile(photoPath);
+    const { lines, tables } = await this.s3Service.textractFile(photoPath);
     const imageName = photoPath.key.split('/')[2];
-    return { textractImage, imageName };
+    return { imageName, lines, tables };
   }
 
   async deleteImage(image_name: string) {
