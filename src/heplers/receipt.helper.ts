@@ -8,7 +8,8 @@ import {
   RECEIPT_TOTAL_REGEX,
   RECEIPT_TOTAL_WORDS_REGEX,
   RECEIPT_VAT_REGEX,
-  TABLE_HEADERS
+  TABLE_HEADERS,
+  TABLE_ITEMS_PRICE
 } from '../receipt/receipt.constants';
 import { parse } from 'date-fns';
 
@@ -273,6 +274,8 @@ export const extractTables = async (data: any) => {
       const headerTexts = TABLE_HEADERS.split(',');
       const items   = [];
       const headers = [];
+      let result = [];
+
       for (const row of data[0][0]) {
         if (headerTexts.includes(row[0].toLowerCase())) {
           headers.push(row[0]);
@@ -280,14 +283,37 @@ export const extractTables = async (data: any) => {
           items.push(row[0])
         }
       }
-      const result = items.reduce((resultArray, item, index) => { 
-        const chunkIndex = Math.floor(index/headers.length)
-        if(!resultArray[chunkIndex]) {
-          resultArray[chunkIndex] = []
+
+      if(headers.length > 0){
+        result = items.reduce((resultArray, item, index) => { 
+          const chunkIndex = Math.floor(index/headers.length)
+          if(!resultArray[chunkIndex]) {
+            resultArray[chunkIndex] = []
+          }
+          resultArray[chunkIndex].push(item)
+          return resultArray
+        },[]);
+      } else {
+        let chunk_size = 1;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].match(TABLE_ITEMS_PRICE)){
+            chunk_size += i;
+            break;
+          } 
         }
-        resultArray[chunkIndex].push(item)
-        return resultArray
-      },[]);
+        for(let i=1; i < chunk_size; i++) 
+          headers.push('#');
+        headers.push('PRICE');
+        
+        result = items.reduce((resultArray, item, index) => { 
+          const chunkIndex = Math.floor(index/chunk_size)
+          if(!resultArray[chunkIndex]) {
+            resultArray[chunkIndex] = []
+          }
+          resultArray[chunkIndex].push(item)
+          return resultArray
+        }, []);
+      }
       Object.assign(response, {headers, items: result})
     }
     return response
