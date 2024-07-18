@@ -85,7 +85,7 @@ export class ExpenseService {
         : await this.extractCompanyFromUser(id);
 
       let expenses = [];
-
+     
       if (body.expenseReceipt && body.expenseReceipt.length > 0) {
         const receiptIds = body.expenseReceipt;
 
