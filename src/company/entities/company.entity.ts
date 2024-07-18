@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Exclude } from 'class-transformer';
+import { Exclude } from 'class-transformer';       
 import { CurrencyEntity } from '../../currency/entities/currency.entity';
 import { MemberEntity } from '../../company-member/entities/company-member.entity';
 import { ReceiptEntity } from '../../receipt/entities/receipt.entity';
