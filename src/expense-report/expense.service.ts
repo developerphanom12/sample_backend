@@ -8,7 +8,7 @@ import { CompanyEntity } from '../company/entities/company.entity';
 import { MemberEntity } from '../company-member/entities/company-member.entity';
 import { CurrencyEntity } from '../currency/entities/currency.entity';
 import { ReceiptEntity } from 'src/receipt/entities/receipt.entity';
-import { isValidUUID } from './expense.constants';
+import { ExpenseNotFoundException, isValidUUID } from './expense.constants';
 import { PaginationDTO } from './dto/update-expense.dto';
 import { ExpenseReceiptEntity } from './entities/expense-receipt.entity';
 
@@ -195,7 +195,65 @@ export class ExpenseService {
 
     return response;
   }
-
-
+  public async getExpenseById(id: string, userId: string): Promise<any> {
+    const company = await this.extractCompanyFromUser(userId);
+  
+    const expense = await this.expenseRepository.findOne({
+      where: { id, company: { id: company.id } },
+      relations: [
+        'expenseReceipts',
+        'expenseReceipts.receipt',
+        'expenseReceipts.receipt.currency',
+        'expenseReceipts.receipt.category',
+      ],
+    });
+  
+    if (!expense) {
+      throw new ExpenseNotFoundException(id);
+    }
+  
+    let totalTax = 0;
+    let totalAmount = 0;
+  
+    const receiptsData = expense.expenseReceipts.map(expenseReceipt => {
+      const receipt = expenseReceipt.receipt;
+      totalTax += receipt.tax || 0;
+      totalAmount += receipt.total || 0;
+  
+      return {
+        id: expenseReceipt.receipt.id,
+        created: expenseReceipt.receipt.created,
+        status: expenseReceipt.receipt.status,
+        custom_id: expenseReceipt.receipt.custom_id,
+        receipt_date: expenseReceipt.receipt.receipt_date,
+        supplier: expenseReceipt.receipt.supplier,
+        vat_code: expenseReceipt.receipt.vat_code,
+        net: expenseReceipt.receipt.net,
+        tax: expenseReceipt.receipt.tax,
+        total: expenseReceipt.receipt.total,
+        description: expenseReceipt.receipt.description,
+        publish_status: expenseReceipt.receipt.publish_status,
+        active_status: expenseReceipt.receipt.active_status,
+        approved_status: expenseReceipt.receipt.approved_status,
+        payment_status: expenseReceipt.receipt.payment_status,
+        photos: expenseReceipt.receipt.photos,       
+        currency: expenseReceipt.receipt.currency,
+        category: expenseReceipt.receipt.category,
+      };
+    });
+  
+    return {
+      status: '200',
+      data: {
+        expense_report_id: expense.id,
+        expense_report_name: expense.report_name,
+        expense_report_for: expense.report_for,
+        expense_created_date: expense.date,
+        report_receipt: receiptsData,
+       
+      },
+    };
+  }
+  
   
 }

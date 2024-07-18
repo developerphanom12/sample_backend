@@ -113,6 +113,7 @@ export class SupplierService {
 
     const supplier = await this.supplierRepository.save({
       name: body.name,
+      code:body.code,
       company: { id: company.id },
       creator: creator,
     });

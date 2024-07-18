@@ -31,6 +31,12 @@ export class SupplierEntity {
   @Column()
   name: string;
 
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  code: string;
+
+
   @ManyToOne((type) => MemberEntity, (data) => data.suppliersAccounts, {
     onDelete: 'CASCADE',
   })

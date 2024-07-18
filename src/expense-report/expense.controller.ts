@@ -1,12 +1,12 @@
 // expense.controller.ts
-import { Body, Controller, Post, UseGuards, HttpCode, HttpStatus, Get, Query } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, HttpCode, HttpStatus, Get, Query, Param, Res, HttpException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthenticationGuard } from '../shared/guards';
 import { User } from '../shared/decorators/user.decorator';
 import { CreateExpenseDTO } from './dto/create-expense.dto';
 import { ExpenseService } from './expense.service';
 import { ExpenseEntity } from './entities/expense.entity';
-import { EXPENSE_ROUTES, EXPENSE_SWAGGER } from './expense.constants';
+import { EXPENSE_ROUTES, EXPENSE_SWAGGER, ExpenseNotFoundException } from './expense.constants';
 import { PaginationDTO } from './dto/update-expense.dto';
 
 @ApiTags(EXPENSE_ROUTES.main)
@@ -46,5 +46,27 @@ export class ExpenseController {
     return await this.expenseService.getReceipts(id, body);
   }
 
+  
+  @Get(EXPENSE_ROUTES.get_by_id)
+  @UseGuards(new JwtAuthenticationGuard())
+  @ApiOperation({ summary: EXPENSE_SWAGGER.get_by_id })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: EXPENSE_SWAGGER.success,
+    type: ExpenseEntity,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Expense not found',
+    type: ExpenseNotFoundException,
+  })
+  @HttpCode(HttpStatus.OK)
+  public async getExpenseById(
+    @Param('id') id: string,
+    @User('id') userId: string,
+    
+  ) {
+    return await this.expenseService.getExpenseById(id, userId);
+  }
 
 }

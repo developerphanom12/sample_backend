@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path = require('path');
 import { CompanyEntity } from 'src/company/entities/company.entity';
 import { FindOperator, FindOptionsWhere } from 'typeorm';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 
 
@@ -37,7 +38,9 @@ export const EXPENSE_SWAGGER = {
   mark_published:"Mark as Published",
   mark_unpublished : "Mark as Unpublished",
   withdrawl_approval : "Mark as Review",
-  withdrawl_rejection :"Mark as Rejection"
+  withdrawl_rejection :"Mark as Rejection",
+  get_by_id: 'Get an expense report by ID',
+
 };
 
 export const EXPENSE_ROUTES = {
@@ -58,7 +61,9 @@ export const EXPENSE_ROUTES = {
   mark_published:"mark-published",
   mark_unpublished: "mark-unpublished",
   withdrawl_approval:"withdrawl-approval",
-  withdrawl_rejection:"withdrawl-rejection"
+  withdrawl_rejection:"withdrawl-rejection",
+  get_by_id: 'get-by-id/:id',
+
 };
 
 
@@ -74,4 +79,10 @@ export enum ExpenseStatus {
   export function isValidUUID(uuid: string): boolean {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(uuid);
+  }
+
+  export class ExpenseNotFoundException extends HttpException {
+    constructor(expenseId: string) {
+      super(`Expense with ID ${expenseId} not found`, HttpStatus.NOT_FOUND);
+    }
   }

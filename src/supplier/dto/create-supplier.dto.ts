@@ -6,6 +6,12 @@ export class CreateSupplierDTO {
   @IsString()
   name: string;
 
+
+  @ApiProperty()
+  @IsString()
+  code: string;
+
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()

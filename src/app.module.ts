@@ -28,6 +28,7 @@ import { SaleModule } from './sales/sale.module';
 import { ExpenseModule } from './expense-report/expense.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
+console.log("curr",currentEnv)
 @Module({
   imports: [
     ConfigModule.forRoot({
