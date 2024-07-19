@@ -108,6 +108,7 @@ export class CompanyEntity {
   @ApiProperty({ nullable: true })
   @OneToMany((type) => CustomerEntity, (data) => data.company, {
     onDelete: 'CASCADE',
-  })
+  })       
   customerNEWaccount: CustomerEntity[];
 }
+      
