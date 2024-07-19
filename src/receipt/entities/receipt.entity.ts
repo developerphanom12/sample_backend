@@ -20,6 +20,7 @@ import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity
 import { ColumnNumericTransformer } from '../types/receipt.types';
 import { ExpenseEntity } from 'src/expense-report/entities/expense.entity';
 import { ExpenseReceiptEntity } from 'src/expense-report/entities/expense-receipt.entity';
+import { SupplierAccEntity } from 'src/supplier-new/entities/suppliernew.entity';
 
 @Entity('receipt')
 export class ReceiptEntity {
@@ -146,6 +147,12 @@ export class ReceiptEntity {
   })
   @JoinColumn()
   payment_type: PaymentTypeEntity;
+
+  @ManyToOne((type) => SupplierAccEntity, (data) => data.receipts, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  supplier_accountid: SupplierAccEntity;
 
   @OneToMany(() => ExpenseReceiptEntity, expenseReceipt => expenseReceipt.receipt)
   expenseReceipts: ExpenseReceiptEntity[];

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
-export class UpdateSupplierDTO {
+export class UpdateSupplierAccDTO {
   @ApiProperty()
   @IsString()
   id: string;
@@ -10,6 +10,9 @@ export class UpdateSupplierDTO {
   @IsString()
   name: string;
   
+  @ApiProperty()
+  @IsString()
+  purchase_invoice: string;
 
   @ApiProperty({ required: false })
   @IsString()

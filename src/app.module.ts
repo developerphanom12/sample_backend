@@ -28,6 +28,7 @@ import { SaleModule } from './sales/sale.module';
 import { ExpenseModule } from './expense-report/expense.module';
 import { CustomerAccModule } from './customer-account/customeracc.module';
 import { CustomerModule } from './customernew/customernew.module';
+import { SupplierAccModule } from './supplier-new/suppliernew.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 console.log("curr",currentEnv)
@@ -68,7 +69,8 @@ console.log("curr",currentEnv)
     SaleModule,
     ExpenseModule,
     CustomerAccModule,
-    CustomerModule
+    CustomerModule,
+    SupplierAccModule
   ],
   controllers: [AppController],
   providers: [

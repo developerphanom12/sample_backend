@@ -20,6 +20,7 @@ import { SaleEntity } from 'src/sales/entities/sale.entity';
 import { ExpenseEntity } from 'src/expense-report/entities/expense.entity';
 import { CustomerAccEntity } from 'src/customer-account/entities/customeracc.entity';
 import { CustomerEntity } from 'src/customernew/entities/customernew.entity';
+import { SupplierAccEntity } from 'src/supplier-new/entities/suppliernew.entity';
 
 @Entity('company')
 export class CompanyEntity {
@@ -110,5 +111,12 @@ export class CompanyEntity {
     onDelete: 'CASCADE',
   })       
   customerNEWaccount: CustomerEntity[];
+
+
+  @ApiProperty({ nullable: true })
+  @OneToMany((type) => SupplierAccEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
+  suppliersAccAccounts: SupplierAccEntity[];
 }
       
