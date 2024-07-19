@@ -27,6 +27,7 @@ import { FreeAgentModule } from './integrations/freeAgent/freeAgent.module';
 import { SaleModule } from './sales/sale.module';
 import { ExpenseModule } from './expense-report/expense.module';
 import { CustomerAccModule } from './customer-account/customeracc.module';
+import { CustomerModule } from './customernew/customernew.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 console.log("curr",currentEnv)
@@ -66,7 +67,8 @@ console.log("curr",currentEnv)
     FreeAgentModule,
     SaleModule,
     ExpenseModule,
-    CustomerAccModule
+    CustomerAccModule,
+    CustomerModule
   ],
   controllers: [AppController],
   providers: [

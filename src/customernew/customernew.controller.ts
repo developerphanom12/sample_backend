@@ -14,60 +14,60 @@ import {
   import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
   import { User } from 'src/shared/decorators/user.decorator';
   import { JwtAuthenticationGuard } from 'src/shared/guards';
-import { CUSTOMERACC_ROUTES, CUSTOMERACC_SWAGGER } from './customeracc.constants';
-import { CustomerAccEntity } from './entities/customeracc.entity';
-import { CustomerAccDto } from './dto/create-customeracc.dto';
-import { UpdateCustomerAccDTO } from './dto/update-customeracc.dto';
+import { CUSTOMER_ROUTES, CUSTOMER_SWAGGER } from './customernew.constants';
+import { CustomerEntity } from './entities/customernew.entity';
+import { CustomerDto } from './dto/create-customernew.dto';
+import { UpdateCustomerDTO } from './dto/update-customernew.dto';
 import { PaginationDTO } from './dto/pagination.dto';
-import { CustomerAccService } from './customeracc.service';
+import { CustomerService } from './customernew.service';
   
-  @ApiTags(CUSTOMERACC_ROUTES.main)
-  @Controller(CUSTOMERACC_ROUTES.main)
+  @ApiTags(CUSTOMER_ROUTES.main)
+  @Controller(CUSTOMER_ROUTES.main)
   export class CustomerAccController {
-    constructor(private readonly CustomerAccService: CustomerAccService) {}
+    constructor(private readonly CustomerAccService: CustomerService) {}
   
-    @Post(CUSTOMERACC_ROUTES.create)
+    @Post(CUSTOMER_ROUTES.create)
     @UseGuards(new JwtAuthenticationGuard())
-    @ApiOperation({ summary: CUSTOMERACC_SWAGGER.create })
+    @ApiOperation({ summary: CUSTOMER_SWAGGER.create })
     @ApiResponse({
       status: HttpStatus.OK,
-      description: CUSTOMERACC_SWAGGER.success,
-      type: CustomerAccEntity,
+      description: CUSTOMER_SWAGGER.success,
+      type: CustomerEntity,
     })
     @HttpCode(HttpStatus.OK)
     public async createSupplier(
       @User('id') id: string,
-      @Body() body: CustomerAccDto,
+      @Body() body: CustomerDto,
     ) {
       return await this.CustomerAccService.createSupplier(id, body);
     }
 
 
 
-  @Put(CUSTOMERACC_ROUTES.update)
+  @Put(CUSTOMER_ROUTES.update)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: CUSTOMERACC_SWAGGER.update })
+  @ApiOperation({ summary: CUSTOMER_SWAGGER.update })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: CUSTOMERACC_SWAGGER.success,
-    type: CustomerAccEntity,
+    description: CUSTOMER_SWAGGER.success,
+    type: CustomerEntity,
   })
   @HttpCode(HttpStatus.OK)
   public async updateSupplier(
     @User('id') id: string,
-    @Body() body: UpdateCustomerAccDTO,
+    @Body() body: UpdateCustomerDTO,
   ) {
     return await this.CustomerAccService.updateSupplier(id, body);
   }
 
 
-  @Get(CUSTOMERACC_ROUTES.get)
+  @Get(CUSTOMER_ROUTES.get)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: CUSTOMERACC_SWAGGER.get })
+  @ApiOperation({ summary: CUSTOMER_SWAGGER.get })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: CUSTOMERACC_SWAGGER.success,
-    type: CustomerAccEntity,
+    description: CUSTOMER_SWAGGER.success,
+    type: CustomerEntity,
   })
   @HttpCode(HttpStatus.OK)
   public async getSupplier(
@@ -82,13 +82,13 @@ import { CustomerAccService } from './customeracc.service';
     );
   }
 
-  @Get(CUSTOMERACC_ROUTES.get_all)
+  @Get(CUSTOMER_ROUTES.get_all)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: CUSTOMERACC_SWAGGER.get_all })
+  @ApiOperation({ summary: CUSTOMER_SWAGGER.get_all })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: CUSTOMERACC_SWAGGER.success,
-    type: CustomerAccEntity,
+    description: CUSTOMER_SWAGGER.success,
+    type: CustomerEntity,
   })
   @HttpCode(HttpStatus.OK)
   public async getAllSuppliers(
@@ -99,13 +99,13 @@ import { CustomerAccService } from './customeracc.service';
   }
 
 
-  @Get(CUSTOMERACC_ROUTES.get_many)
+  @Get(CUSTOMER_ROUTES.get_many)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: CUSTOMERACC_SWAGGER.get_many })
+  @ApiOperation({ summary: CUSTOMER_SWAGGER.get_many })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: CUSTOMERACC_SWAGGER.success,
-    type: CustomerAccEntity,
+    description: CUSTOMER_SWAGGER.success,
+    type: CustomerEntity,
   })
   @HttpCode(HttpStatus.OK)
   public async getSuppliers(
@@ -116,12 +116,12 @@ import { CustomerAccService } from './customeracc.service';
   }
 
 
-  @Delete(CUSTOMERACC_ROUTES.delete)
+  @Delete(CUSTOMER_ROUTES.delete)
   @UseGuards(new JwtAuthenticationGuard())
-  @ApiOperation({ summary: CUSTOMERACC_SWAGGER.delete })
+  @ApiOperation({ summary: CUSTOMER_SWAGGER.delete })
   @ApiResponse({
     status: HttpStatus.OK,     
-    description: CUSTOMERACC_SWAGGER.success,
+    description: CUSTOMER_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)    
   public async deleteReceipt(    

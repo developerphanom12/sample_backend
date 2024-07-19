@@ -19,6 +19,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SaleEntity } from 'src/sales/entities/sale.entity';
 import { ExpenseEntity } from 'src/expense-report/entities/expense.entity';
 import { CustomerAccEntity } from 'src/customer-account/entities/customeracc.entity';
+import { CustomerEntity } from 'src/customernew/entities/customernew.entity';
 
 @Entity('company')
 export class CompanyEntity {
@@ -104,4 +105,9 @@ export class CompanyEntity {
   })
   expense: ExpenseEntity[];
   
+  @ApiProperty({ nullable: true })
+  @OneToMany((type) => CustomerEntity, (data) => data.company, {
+    onDelete: 'CASCADE',
+  })
+  customerNEWaccount: CustomerEntity[];
 }

@@ -18,6 +18,7 @@ import { PaymentTypeEntity } from 'src/payment-type/entities/payment-type.entity
 import { EReceiptStatus } from '../sales.constants';
 import { ColumnNumericTransformer } from '../types/sale.types';
 import { CustomerAccEntity } from 'src/customer-account/entities/customeracc.entity';
+import { CustomerEntity } from 'src/customernew/entities/customernew.entity';
 
 @Entity('sales-invoice')
 export class SaleEntity {
@@ -146,4 +147,11 @@ export class SaleEntity {
   })
   @JoinColumn()
   supplier_account: CustomerAccEntity;
+
+  @ManyToOne((type) => CustomerEntity, (data) => data.sales, {
+    cascade: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn()
+  supplier_accounts: CustomerEntity;
 }
