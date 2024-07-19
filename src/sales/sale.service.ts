@@ -395,14 +395,11 @@ export class SaleService {
       if (body.search) {
         query.andWhere(
           new Brackets((qb) => {
-            qb.orWhere('LOWER(sales-invoice.supplier) like LOWER(:supplier)', {
-              supplier: `%${body.search || ''}%`,
+            qb.orWhere('LOWER(sales-invoice.customer) like LOWER(:customer)', {
+              customer: `%${body.search || ''}%`,
             })
               .orWhere('sales-invoice.custom_id like LOWER(:custom_id)', {
                 custom_id: `%${body.search || ''}%`,
-              })
-              .orWhere('LOWER(supplier_account.name) like LOWER(:name)', {
-                name: `%${body.search || ''}%`,
               })
               .orWhere('LOWER(category.name) like LOWER(:name)', {
                 name: `%${body.search || ''}%`,
