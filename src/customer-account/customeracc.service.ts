@@ -240,6 +240,6 @@ export class CustomerAccService {
       return 'Customer DELETED';
     } catch (e) {
       throw new HttpException('DELETE ERROR', HttpStatus.FORBIDDEN);
-    }
+    }  
   }
 }
