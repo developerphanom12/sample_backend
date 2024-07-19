@@ -120,7 +120,7 @@ import { PaginationDTO } from './dto/pagination.dto';
   @UseGuards(new JwtAuthenticationGuard())
   @ApiOperation({ summary: CUSTOMERACC_SWAGGER.delete })
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.OK,     
     description: CUSTOMERACC_SWAGGER.success,
   })
   @HttpCode(HttpStatus.OK)    
