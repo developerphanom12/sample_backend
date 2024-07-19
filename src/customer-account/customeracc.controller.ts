@@ -123,7 +123,7 @@ import { PaginationDTO } from './dto/pagination.dto';
     status: HttpStatus.OK,
     description: CUSTOMERACC_SWAGGER.success,
   })
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.OK)    
   public async deleteReceipt(
     @User('id') id: string,
     @Param('customerId') customerId: string,

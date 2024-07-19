@@ -370,7 +370,7 @@ export class SaleService {
         .leftJoinAndSelect('sales-invoice.payment_type', 'payment_type')
         .orderBy('sales-invoice.created', 'DESC')
         .where('company.id = :companyId', {
-          companyId: company.id,
+          companyId: company.id,    
         })
         .take(body.take ?? 10)
         .skip(body.skip ?? 0);

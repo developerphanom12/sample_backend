@@ -5,7 +5,7 @@ export const CUSTOMERACC_ROUTES = {
     get: 'get/:customerId',
     get_all: 'get-all',
     get_many: 'get-many',
-    delete: 'delete/:customerId',
+    delete: 'delete/:customerId',   
   };
   
   export const CUSTOMERACC_SWAGGER = {
