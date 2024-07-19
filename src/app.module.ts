@@ -26,6 +26,7 @@ import { QuickbooksModule } from './integrations/quickbooks/quickbooks.module';
 import { FreeAgentModule } from './integrations/freeAgent/freeAgent.module';
 import { SaleModule } from './sales/sale.module';
 import { ExpenseModule } from './expense-report/expense.module';
+import { CustomerAccModule } from './customer-account/customeracc.module';
 
 const currentEnv = process.env.NODE_ENV || 'local';
 console.log("curr",currentEnv)
@@ -64,7 +65,8 @@ console.log("curr",currentEnv)
     QuickbooksModule,
     FreeAgentModule,
     SaleModule,
-    ExpenseModule
+    ExpenseModule,
+    CustomerAccModule
   ],
   controllers: [AppController],
   providers: [
